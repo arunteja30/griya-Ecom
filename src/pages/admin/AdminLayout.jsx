@@ -15,6 +15,7 @@ export default function AdminLayout({ children }) {
           <Link to="/admin/home" className="text-sm">Homepage Sections</Link>
           <Link to="/admin/gallery" className="text-sm">Gallery</Link>
           <Link to="/admin/testimonials" className="text-sm">Testimonials</Link>
+          <Link to="/admin/orders" className="text-sm">Orders</Link>
         </nav>
         <div className="mt-6">
           <button className="text-sm text-red-600" onClick={()=>signOut(auth)}>Sign out</button>

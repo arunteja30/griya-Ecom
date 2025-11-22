@@ -5,11 +5,13 @@ import Loader from "../components/Loader";
 import Modal from "../components/Modal";
 import { showToast } from "../components/Toast";
 import { normalizeImageUrl } from '../utils/imageHelpers'; 
+import { useNavigate } from 'react-router-dom';
 
 export default function CartPage() {
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart } = useContext(CartContext);
   const { data: siteSettings, loading } = useFirebaseObject("/siteSettings");
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+  const navigate = useNavigate();
 
   if (loading) return <Loader />;
 
@@ -105,9 +107,11 @@ export default function CartPage() {
             <div className="sticky top-24">
               <h3 className="font-semibold text-lg mb-2">Order Summary</h3>
               <div className="mb-4 text-sm text-neutral-600">Items: {cartItems.length}</div>
-              <div className="mb-6 text-2xl font-bold">₹{cartTotal}</div>
-              <button onClick={handleCheckout} className="btn btn-accent w-full">Checkout via WhatsApp</button>
-              <button onClick={confirmClear} className="mt-3 w-full btn btn-ghost">Clear Cart</button>
+              <div className="mb-4">Total: ₹{cartTotal}</div>
+              <div className="space-y-2">
+                <button onClick={handleCheckout} className="w-full bg-green-600 text-white py-2 rounded">Checkout via WhatsApp</button>
+                <button onClick={() => navigate('/checkout')} className="w-full bg-primary-500 text-white py-2 rounded">Proceed to Checkout</button>
+              </div>
             </div>
           </aside>
         </div>

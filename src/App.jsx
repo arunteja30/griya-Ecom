@@ -17,8 +17,10 @@ import ProductsAdmin from "./pages/admin/ProductsAdmin";
 import HomepageAdmin from "./pages/admin/HomepageAdmin";
 import GalleryAdmin from "./pages/admin/GalleryAdmin";
 import TestimonialsAdmin from "./pages/admin/TestimonialsAdmin";
+import OrdersAdmin from "./pages/admin/OrdersAdmin";
 import { CartProvider } from "./context/CartContext";
 import ToastContainer from "./components/Toast";
+import CheckoutPage from "./pages/CheckoutPage";
 
 export default function App() {
   return (
@@ -29,6 +31,7 @@ export default function App() {
         <Route path="/collections/:categorySlug" element={<Layout><CategoryProductsPage /></Layout>} />
         <Route path="/product/:productSlug" element={<Layout><ProductDetailPage /></Layout>} />
         <Route path="/gallery" element={<Layout><GalleryPage /></Layout>} />
+        <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
         <Route path="/cart" element={<Layout><CartPage /></Layout>} />
 
@@ -40,6 +43,7 @@ export default function App() {
         <Route path="/admin/home" element={<AdminRoute><AdminLayout><HomepageAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/gallery" element={<AdminRoute><AdminLayout><GalleryAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/testimonials" element={<AdminRoute><AdminLayout><TestimonialsAdmin /></AdminLayout></AdminRoute>} />
+        <Route path="/admin/orders" element={<AdminRoute><AdminLayout><OrdersAdmin /></AdminLayout></AdminRoute>} />
       </Routes>
       <ToastContainer />
     </CartProvider>

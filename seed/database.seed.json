@@ -268,5 +268,40 @@
       "message": "Lovely designs and superb customer support.",
       "rating": 5
     }
+  },
+
+
+  "orders": {
+      "order_id_123": {
+        "orderId": "order_xyz",
+        "paymentId": "pay_abc", 
+        "signature": "signature_hash",
+        "amount": 25000,
+        "currency": "INR",
+        "status": "paid",
+        "createdAt": "2025-11-23T10:30:00.000Z",
+        "customer": {
+          "name": "John Doe",
+          "email": "john@example.com", 
+          "phone": "9876543210"
+        },
+        "shipping": {
+          "line1": "123 Main Street",
+          "city": "Mumbai",
+          "state": "Maharashtra",
+          "pincode": "400001"
+        },
+        "items": [
+          {
+            "id": "prod_001",
+            "name": "Gold Ring",
+            "price": 25000,
+            "quantity": 1,
+            "image": "product_image_url"
+          }
+        ]
+      }
   }
+  
+
 }
