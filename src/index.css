@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root{
+    --site-bg-1: #cf672b; /* warm cream */
+    --site-bg-2: #38aa6d; /* lighter */
+    --surface: #523284;
+  }
+
+  html, body, #root { height: 100%; }
+  body {
+    @apply bg-white text-primary font-sans antialiased;
+    background: linear-gradient(180deg, var(--site-bg-1) 0%, var(--site-bg-2) 100%);
+    color: #111827;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    background-attachment: fixed;
+  }
+  a { @apply text-primary; }
+
+  /* subtle paper/noise overlay using CSS radial-gradient */
+  body::before {
+    content: '';
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(rgba(0,0,0,0.02) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.6;
+    mix-blend-mode: overlay;
+  }
+}
+
+@layer components {
+  .btn { @apply inline-block px-4 py-2 rounded text-sm font-medium };
+  .btn-primary { @apply bg-accent text-white shadow-md hover:opacity-95 }
+  .card { @apply bg-white rounded-lg shadow-sm overflow-hidden }
+}
+
+@layer utilities {
+  .text-gold { color: #b28b6b }
+
+  /* Elevated surfaces */
+  .app-surface, .card, .site-card {
+    background: var(--surface);
+    box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+    border-radius: 8px;
+  }
+
+  /* Utility to make full-width sections transparent */
+  .section-bleed {
+    background: transparent;
+  }
+}
+
+/* Small helpers */
+.container { max-width: 1100px; margin-left: auto; margin-right: auto; }
+
+/* Product hero tweaks */
+.hero-overlay { background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.15)); }

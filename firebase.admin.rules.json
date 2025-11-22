@@ -1,0 +1,40 @@
+{
+  "rules": {
+    "siteSettings": {
+      ".read": true,
+      ".write": "auth != null && auth.token.isAdmin === true"
+    },
+    "navigation": {
+      ".read": true,
+      ".write": "auth != null && auth.token.isAdmin === true"
+    },
+    "home": {
+      ".read": true,
+      ".write": "auth != null && auth.token.isAdmin === true"
+    },
+    "categories": {
+      ".read": true,
+      ".write": "auth != null && auth.token.isAdmin === true"
+    },
+    "products": {
+      ".read": true,
+      ".write": "auth != null && auth.token.isAdmin === true"
+    },
+    "gallery": {
+      ".read": true,
+      ".write": "auth != null && auth.token.isAdmin === true"
+    },
+    "testimonials": {
+      ".read": true,
+      ".write": "auth != null && auth.token.isAdmin === true"
+    },
+
+    "orders": {
+      ".read": "auth != null && (auth.token.isAdmin === true || data.child('customerId').val() === auth.uid)",
+      ".write": "auth != null"
+    },
+
+    ".read": false,
+    ".write": false
+  }
+}
