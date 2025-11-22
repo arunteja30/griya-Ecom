@@ -2,7 +2,7 @@
   "siteSettings": {
     "brandName": "Griya Jewellery",
     "tagline": "Timeless elegance, crafted with care",
-    "logoUrl": "https://cdn.example.com/logo.png",
+    "logoUrl": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
     "whatsapp": "+919812345678",
     "instagram": "https://instagram.com/griya_jewellery",
     "address": "123, Jewelry Lane, Mumbai, India",
@@ -27,7 +27,7 @@
       "subtitle": "Ethically sourced gemstones, masterfully crafted",
       "buttonText": "Shop Now",
       "buttonUrl": "/collections",
-      "image": "https://cdn.example.com/hero-1.jpg"
+      "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
     },
     "sections": {
       "newArrivals": {
@@ -58,7 +58,7 @@
     "hero": {
       "title": "About Griya Jewellery",
       "subtitle": "Crafting heirlooms with care and conscience",
-      "image": "https://cdn.example.com/about-hero.jpg"
+      "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
     },
     "content": [
       "Griya Jewellery began with a simple belief: jewellery should tell a story. We design and craft pieces that celebrate life's special moments — from everyday elegance to once-in-a-lifetime celebrations.",
@@ -72,13 +72,13 @@
       "m1": {
         "name": "Anita Rao",
         "role": "Founder & Head Designer",
-        "photo": "https://cdn.example.com/team/anita.jpg",
+        "photo": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
         "bio": "Anita trained in traditional jewellery techniques and leads our design team with a focus on timeless aesthetics."
       },
       "m2": {
         "name": "Ravi Sharma",
         "role": "Master Goldsmith",
-        "photo": "https://cdn.example.com/team/ravi.jpg",
+        "photo": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
         "bio": "Ravi heads production and ensures every piece meets our strict quality standards."
       }
     },
@@ -99,7 +99,7 @@
       "id": "cat_gold",
       "name": "Gold Jewellery",
       "slug": "gold-jewellery",
-      "thumbnail": "https://cdn.example.com/cat-gold.jpg",
+      "thumbnail": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
       "description": "Elegant gold pieces for every occasion.",
       "sortOrder": 1
     },
@@ -107,7 +107,7 @@
       "id": "cat_pearls",
       "name": "Pearl Collection",
       "slug": "pearls",
-      "thumbnail": "https://cdn.example.com/cat-pearls.jpg",
+      "thumbnail": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
       "description": "Classic pearl necklaces and earrings.",
       "sortOrder": 2
     }
@@ -123,14 +123,15 @@
       "mrp": 50000,
       "discount": 10,
       "images": [
-        "https://cdn.example.com/products/prod_001_1.jpg",
-        "https://cdn.example.com/products/prod_001_2.jpg"
+        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
+        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
       ],
       "categoryId": "cat_gold",
       "tags": ["ring", "rose-gold", "ruby"],
       "isFeatured": true,
       "isNewArrival": true,
       "sku": "RG-001",
+      "inStock": true,
       "stock": 12
     },
     "prod_002": {
@@ -141,12 +142,15 @@
       "price": 32000,
       "mrp": 35000,
       "discount": 8,
-      "images": ["https://cdn.example.com/products/prod_002_1.jpg"],
+      "images": [
+        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+      ],
       "categoryId": "cat_pearls",
       "tags": ["necklace", "pearls"],
       "isFeatured": true,
       "isNewArrival": false,
       "sku": "PN-002",
+      "inStock": true,
       "stock": 6
     },
     "prod_003": {
@@ -157,12 +161,15 @@
       "price": 22000,
       "mrp": 24000,
       "discount": 8,
-      "images": ["https://cdn.example.com/products/prod_003_1.jpg"],
+      "images": [
+        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+      ],
       "categoryId": "cat_gold",
       "tags": ["earrings", "gold"],
       "isFeatured": true,
       "isNewArrival": false,
       "sku": "GE-003",
+      "inStock": true,
       "stock": 8
     },
     "prod_004": {
@@ -173,12 +180,15 @@
       "price": 38000,
       "mrp": 40000,
       "discount": 5,
-      "images": ["https://cdn.example.com/products/prod_004_1.jpg"],
+      "images": [
+        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+      ],
       "categoryId": "cat_gold",
       "tags": ["bracelet", "gold"],
       "isFeatured": false,
       "isNewArrival": false,
       "sku": "GB-004",
+      "inStock": true,
       "stock": 5
     },
     "prod_005": {
@@ -189,12 +199,15 @@
       "price": 12000,
       "mrp": 13000,
       "discount": 7,
-      "images": ["https://cdn.example.com/products/prod_005_1.jpg"],
+      "images": [
+        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+      ],
       "categoryId": "cat_gold",
       "tags": ["pendant", "gold"],
       "isFeatured": true,
       "isNewArrival": true,
       "sku": "GP-005",
+      "inStock": true,
       "stock": 20
     },
     "prod_007": {
@@ -205,12 +218,15 @@
       "price": 8000,
       "mrp": 9000,
       "discount": 11,
-      "images": ["https://cdn.example.com/products/prod_007_1.jpg"],
+      "images": [
+        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+      ],
       "categoryId": "cat_pearls",
       "tags": ["earrings", "pearls"],
       "isFeatured": false,
       "isNewArrival": false,
       "sku": "PS-007",
+      "inStock": true,
       "stock": 15
     },
     "prod_010": {
@@ -221,19 +237,22 @@
       "price": 55000,
       "mrp": 60000,
       "discount": 8,
-      "images": ["https://cdn.example.com/products/prod_010_1.jpg"],
+      "images": [
+        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+      ],
       "categoryId": "cat_gold",
       "tags": ["ring", "sapphire"],
       "isFeatured": false,
       "isNewArrival": true,
       "sku": "SR-010",
+      "inStock": true,
       "stock": 4
     }
   },
 
   "gallery": {
-    "img_1": { "url": "https://cdn.example.com/gallery/img1.jpg", "caption": "Handcrafted studio shot", "order": 1 },
-    "img_2": { "url": "https://cdn.example.com/gallery/img2.jpg", "caption": "Behind the scenes", "order": 2 }
+    "img_1": { "url": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp", "caption": "Handcrafted studio shot", "order": 1 },
+    "img_2": { "url": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp", "caption": "Behind the scenes", "order": 2 }
   },
 
   "testimonials": {
@@ -241,7 +260,7 @@
       "name": "Asha Patel",
       "message": "Beautiful work, excellent craftsmanship. Fast delivery!",
       "rating": 5,
-      "photo": "https://cdn.example.com/testimonials/asha.jpg",
+      "photo": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
       "date": "2025-03-12"
     },
     "t2": {

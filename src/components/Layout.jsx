@@ -1,15 +1,21 @@
 import React from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import TopBanner from "./TopBanner";
 
-export default function Layout({ children }) {
+export default function Layout({ children, className = "", fullWidth = false }) {
+  const location = useLocation();
+  const showFooterOnlyOnHome = location.pathname === '/';
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-neutral-50">
       <TopBanner />
       <Navbar />
-      <div className="flex-1 container mx-auto px-4 py-8">{children}</div>
-      <Footer />
+      <main className={`flex-1 ${fullWidth ? '' : 'container-fluid'} ${className}`}>
+        {children}
+      </main>
+      {showFooterOnlyOnHome && <Footer />}
     </div>
   );
 }

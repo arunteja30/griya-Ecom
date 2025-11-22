@@ -47,16 +47,22 @@ export default function ProductDetailPage() {
 
         <div className="mt-6 flex items-center gap-3">
           <input type="number" value={qty} min={1} onChange={(e)=>setQty(e.target.value)} className="w-24 border p-2" />
-          <button onClick={handleAdd} className="inline-block bg-primary text-white px-4 py-2 rounded">Add to Cart</button>
+          <button onClick={handleAdd} className="btn btn-primary inline-flex items-center px-6 py-3">Add to Cart</button>
         </div>
 
         <div className="mt-8">
           <h3 className="font-semibold mb-2">Related products</h3>
           <div className="grid grid-cols-2 gap-4">
             {related.map((r) => (
-              <Link key={r.id} to={`/product/${r.slug}`} className="block border rounded overflow-hidden bg-white">
-                <img src={normalizeImageUrl(r.images?.[0]) || '/placeholder.jpg'} className="w-full h-32 object-cover" />
-                <div className="p-2 text-sm">{r.name}</div>
+              <Link
+                key={r.id}
+                to={`/product/${r.slug}`}
+                className="card overflow-hidden hover:shadow-lg transition-shadow duration-300"
+              >
+                <div className="w-full h-32 bg-neutral-100 overflow-hidden">
+                  <img src={normalizeImageUrl(r.images?.[0]) || '/placeholder.jpg'} className="w-full h-full object-cover" />
+                </div>
+                <div className="p-4 text-sm text-primary-900">{r.name}</div>
               </Link>
             ))}
           </div>

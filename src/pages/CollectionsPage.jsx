@@ -16,11 +16,17 @@ export default function CollectionsPage() {
       <SectionTitle title="Collections" subtitle="Browse by category" />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {cats.map((c) => (
-          <Link key={c.id} to={`/collections/${c.slug}`} className="block border rounded overflow-hidden bg-white">
-            <img src={c.thumbnail || '/placeholder.jpg'} alt={c.name} className="w-full h-56 object-cover" />
-            <div className="p-4">
-              <div className="font-semibold">{c.name}</div>
-              <div className="text-sm text-gray-600">{c.description}</div>
+          <Link
+            key={c.id}
+            to={`/collections/${c.slug}`}
+            className="card overflow-hidden hover:shadow-lg transition-shadow duration-300"
+          >
+            <div className="w-full h-56 bg-neutral-100 overflow-hidden">
+              <img src={c.thumbnail || '/placeholder.jpg'} alt={c.name} className="w-full h-full object-cover" />
+            </div>
+            <div className="p-6">
+              <div className="font-semibold text-lg text-primary-900">{c.name}</div>
+              {c.description && <div className="text-sm text-neutral-500 mt-2">{c.description}</div>}
             </div>
           </Link>
         ))}

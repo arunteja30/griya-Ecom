@@ -52,38 +52,64 @@ export default function CartPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Your Cart</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Your Cart</h1>
+        <div className="text-sm text-neutral-600">{cartItems.length} item(s)</div>
+      </div>
 
       {cartItems.length === 0 ? (
-        <div>Your cart is empty</div>
+        <div className="card p-8 text-center">
+          <h2 className="text-xl font-semibold mb-2">Your cart is empty</h2>
+          <p className="text-neutral-600 mb-6">Explore our collections and add items you love.</p>
+          <a href="/collections" className="btn btn-secondary">Browse Collections</a>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
             {cartItems.map((item) => (
-              <div key={item.id} className="flex items-center gap-4 border rounded p-3">
-                <img src={normalizeImageUrl(item.product?.images?.[0]) || '/placeholder.jpg'} className="w-24 h-24 object-cover rounded" alt="" />
+              <div key={item.id} className="card flex items-center gap-4 p-4">
+                <img src={normalizeImageUrl(item.product?.images?.[0]) || '/placeholder.jpg'} className="w-28 h-28 object-cover rounded-lg" alt={item.product?.name} />
                 <div className="flex-1">
-                  <div className="font-medium">{item.product?.name}</div>
-                  <div className="text-sm text-gray-600">₹{item.product?.price}</div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <input type="number" min={1} value={item.quantity} onChange={(e)=>updateQuantity(item.id, Number(e.target.value))} className="w-20 border p-1" />
-                    <button onClick={()=>removeFromCart(item.id)} className="text-red-600">Remove</button>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="font-semibold text-lg">{item.product?.name}</div>
+                      <div className="text-sm text-neutral-500">{item.product?.variant || ''}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">₹{item.product?.price}</div>
+                      <div className="text-sm text-neutral-500">Subtotal: ₹{(item.product?.price * item.quantity).toFixed(0)}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <button aria-label="Decrease quantity" onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} className="px-3 py-1 rounded-lg border bg-white">-</button>
+                      <input type="number" min={1} value={item.quantity} onChange={(e)=>updateQuantity(item.id, Math.max(1, Number(e.target.value)))} className="w-20 text-center border rounded-md p-1" />
+                      <button aria-label="Increase quantity" onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-3 py-1 rounded-lg border bg-white">+</button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={()=>removeFromCart(item.id)} className="text-sm text-red-600">Remove</button>
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
 
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <button onClick={confirmClear} className="text-sm text-red-600">Clear cart</button>
               <div className="text-lg font-semibold">Total: ₹{cartTotal}</div>
             </div>
           </div>
 
-          <div className="p-4 border rounded">
-            <div className="mb-4">Order Summary</div>
-            <div className="mb-4">Total: ₹{cartTotal}</div>
-            <button onClick={handleCheckout} className="w-full bg-green-600 text-white py-2 rounded">Checkout via WhatsApp</button>
-          </div>
+          <aside className="card-glass p-6 rounded-lg shadow-md">
+            <div className="sticky top-24">
+              <h3 className="font-semibold text-lg mb-2">Order Summary</h3>
+              <div className="mb-4 text-sm text-neutral-600">Items: {cartItems.length}</div>
+              <div className="mb-6 text-2xl font-bold">₹{cartTotal}</div>
+              <button onClick={handleCheckout} className="btn btn-accent w-full">Checkout via WhatsApp</button>
+              <button onClick={confirmClear} className="mt-3 w-full btn btn-ghost">Clear Cart</button>
+            </div>
+          </aside>
         </div>
       )}
 

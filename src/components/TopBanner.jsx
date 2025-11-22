@@ -4,57 +4,73 @@ import { useFirebaseObject } from '../hooks/useFirebase';
 export default function TopBanner(){
   const { data: siteSettings } = useFirebaseObject('/siteSettings');
   const [visible, setVisible] = useState(true);
+  const [currentOfferIndex, setCurrentOfferIndex] = useState(0);
 
   // offers: prefer siteSettings.offers (array) or siteSettings.bannerText (string)
   const offers = siteSettings?.offers || null;
   const bannerText = siteSettings?.bannerText || siteSettings?.announcement || '';
 
-  useEffect(()=>{
-    // auto-hide after a long time optionally (disabled by default)
-  },[]);
-
-  if(!visible) return null;
-
   const items = offers && Array.isArray(offers) ? offers : (bannerText ? [bannerText] : [
-    'Flat 10% off on selected jewellery — use code GRIYA10',
-    'Free shipping on orders above ₹5,000',
-    'Complimentary jewelry cleaning kit with every purchase over ₹10,000'
+    '✨ Flat 15% off on selected jewellery — use code GRIYA15',
+    '🚚 Free shipping on orders above ₹5,000',
+    '💎 Complimentary jewelry cleaning kit with every purchase over ₹10,000'
   ]);
 
-  // simple marquee: duplicate items to create continuous scroll
-  const marqueeText = items.join('  •  ');
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentOfferIndex((prev) => (prev + 1) % items.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [items.length]);
+
+  if(!visible || !items.length) return null;
 
   return (
-    <div className="w-full bg-gradient-to-r from-yellow-50 to-yellow-100 border-b border-yellow-200 text-sm text-yellow-900">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-2">
-        <div className="flex items-center gap-3">
-          <span className="inline-block bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs font-semibold">Offers</span>
-          <div className="hidden sm:block text-xs text-yellow-900">{items[0]}</div>
-        </div>
+    <div className="w-full bg-gradient-to-r from-accent-600 to-accent-700 text-white text-sm relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
+      <div className="section-container relative">
+        <div className="flex items-center justify-between py-3">
+          {/* Offer Badge */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              <span className="font-semibold text-xs">SPECIAL OFFER</span>
+            </div>
+          </div>
 
-        <div className="flex-1 mx-6 overflow-hidden">
-          <div className="whitespace-nowrap animate-marquee">
-            <span className="pr-8">{marqueeText}</span>
-            <span className="pr-8">{marqueeText}</span>
+          {/* Rotating Offers */}
+          <div className="flex-1 flex justify-center">
+            <div className="relative h-6 overflow-hidden">
+              <div 
+                className="flex flex-col transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateY(-${currentOfferIndex * 24}px)` }}
+              >
+                {items.map((item, index) => (
+                  <div 
+                    key={index} 
+                    className="h-6 flex items-center justify-center font-medium text-center px-4"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Close Button */}
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setVisible(false)} 
+              className="text-white/70 hover:text-white transition-colors duration-200 p-1.5 rounded-full hover:bg-white/10"
+              aria-label="Close banner"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
-
-        <div className="flex items-center gap-3">
-          <button onClick={()=>setVisible(false)} className="text-yellow-900/80 hover:text-yellow-900 px-2">Close</button>
-        </div>
       </div>
-
-      <style jsx>{`
-        @keyframes marquee {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          display: inline-block;
-          will-change: transform;
-          animation: marquee 18s linear infinite;
-        }
-      `}</style>
     </div>
   );
 }

@@ -1,10 +1,23 @@
 import React from "react";
 
-export default function SectionTitle({ title, subtitle }) {
+export default function SectionTitle({ 
+  title, 
+  subtitle, 
+  align = "left", 
+  className = "",
+  showDecorator = true 
+}) {
   return (
-    <div className="mb-6">
-      <h2 className="text-2xl font-semibold">{title}</h2>
-      {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
+    <div className={`mb-12 ${align === "center" ? "text-center" : ""} ${className}`}>
+      {showDecorator && (
+        <div className={`w-20 h-1 bg-accent-600 rounded-full mb-6 ${
+          align === "center" ? "mx-auto" : ""
+        }`}></div>
+      )}
+      <h2 className="section-title">{title}</h2>
+      {subtitle && (
+        <p className="section-subtitle mt-4">{subtitle}</p>
+      )}
     </div>
   );
 }
