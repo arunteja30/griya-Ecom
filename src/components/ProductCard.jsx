@@ -3,17 +3,20 @@ import { Link } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { showToast } from "./Toast";
 import { normalizeImageUrl } from '../utils/imageHelpers';
+import BottomSheet from './BottomSheet';
 
 export default function ProductCard({ product }) {
   const { addToCart } = useContext(CartContext);
   const [isHovered, setIsHovered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isBottomOpen, setIsBottomOpen] = useState(false);
 
   const handleAddToCart = async () => {
     setIsLoading(true);
     try {
-      addToCart(product, 1);
+      await addToCart(product, 1);
       showToast('Added to cart successfully!', 'success');
+      setIsBottomOpen(true);
     } catch (error) {
       showToast('Failed to add to cart', 'error');
     } finally {
@@ -54,9 +57,9 @@ export default function ProductCard({ product }) {
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14v7m0 0l-3-3m3 3l3-3" />
               </svg>
-              Quick View
+              View Details
             </Link>
           </div>
         </div>
@@ -114,13 +117,13 @@ export default function ProductCard({ product }) {
           </div>
         )}
 
-        {/* Price */}
+        {/* Price - reduced size */}
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-primary-900">
+          <span className="text-sm font-semibold text-primary-900">
             {formatPrice(product.price)}
           </span>
           {product.originalPrice && product.originalPrice > product.price && (
-            <span className="text-sm text-neutral-500 line-through">
+            <span className="text-xs text-neutral-500 line-through">
               {formatPrice(product.originalPrice)}
             </span>
           )}
@@ -131,38 +134,24 @@ export default function ProductCard({ product }) {
           <button
             onClick={handleAddToCart}
             disabled={isLoading || !product.inStock}
-            className={`btn btn-primary flex-1 ${
+            className={`btn btn-primary flex-1 flex items-center justify-center gap-2 px-3 py-2 ${
               isLoading ? 'opacity-50 cursor-not-allowed' : ''
             } ${!product.inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {isLoading ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Adding...
-              </>
-            ) : !product.inStock ? (
-              'Out of Stock'
-            ) : (
-              <>
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6" />
-                </svg>
-                Add to Cart
-              </>
-            )}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6" />
+            </svg>
+            
           </button>
           
-          {/* Wishlist Button */}
-          <button className="btn btn-ghost p-3 group">
-            <svg className="w-4 h-4 group-hover:text-error transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          </button>
+      
         </div>
       </div>
+
+     {/* Quick add cart icon overlay */}
+<button onClick={handleAddToCart} className="absolute right-3 bottom-16 md:bottom-20 bg-white p-2 rounded-full shadow hover:shadow-md transition-colors" title="Quick add">
+ 
+</button>
     </div>
   );
 }

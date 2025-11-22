@@ -1,0 +1,217 @@
+SIMPLE SWIGGY INSTAMART CLONE – MINIMAL PROMPT PACK
+===================================================
+
+Goal:
+A SIMPLE web app (not over-engineered) that feels like Instamart:
+- Home -> Categories -> Products
+- Add to Cart
+- Cart & Checkout (mock order placed)
+- Data coming from Firebase Realtime Database (or easily changeable later)
+
+Tech:
+- React + Vite + JavaScript (or TypeScript, your choice)
+- Tailwind CSS
+- Firebase Realtime Database
+- Optional: Firebase Auth (email/password) – simple version
+
+---------------------------------------------------
+PROMPT 1 – Create Basic App Structure
+---------------------------------------------------
+
+You are a senior React developer.
+
+Create a very simple Swiggy Instamart–style app skeleton.
+
+Requirements:
+- Use: React + Vite + JavaScript, Tailwind CSS.
+- Use React Router with these routes:
+  - "/"          → HomePage
+  - "/category/:categoryId" → CategoryPage
+  - "/cart"      → CartPage
+  - "/checkout"  → CheckoutPage
+- Create these components:
+  - Navbar (logo + Cart button with item count)
+  - HomePage (just static text for now)
+  - CategoryPage (placeholder)
+  - CartPage (placeholder)
+  - CheckoutPage (placeholder)
+- Add a simple layout: header at top, content below, responsive on mobile.
+
+Deliverable:
+- Vite setup commands
+- tailwind.config setup
+- `main.jsx`, `App.jsx`, `Navbar.jsx`, and page components with basic layout.
+
+---------------------------------------------------
+PROMPT 2 – Setup Firebase & Simple Data Model
+---------------------------------------------------
+
+I want to use Firebase Realtime Database to store categories and products.
+
+Do this:
+
+1. Explain how to:
+   - Create a Firebase project.
+   - Add a Web app.
+   - Enable Realtime Database (test mode).
+2. Give me a simple data structure:
+   - `/categories/{id}` with fields: id, name, imageUrl.
+   - `/products/{id}` with: id, name, imageUrl, price, mrp, unit, categoryId, inStock.
+3. Write:
+   - `firebaseConfig.js` that initializes Firebase.
+   - A small helper file `firebaseApi.js` with functions:
+     - `getCategories()`
+     - `getProductsByCategory(categoryId)`
+   All functions should return Promises usable in React.
+
+Use plain JavaScript (no TypeScript) to keep it simple.
+
+---------------------------------------------------
+PROMPT 3 – Home Page: Show Categories from Firebase
+---------------------------------------------------
+
+Now connect HomePage to Firebase.
+
+Requirements:
+- In `HomePage.jsx`:
+  - On load, call `getCategories()` from `firebaseApi.js`.
+  - Show a grid of category cards:
+    - category image
+    - category name
+  - On click of a category card, navigate to `/category/:id`.
+
+- Add:
+  - Loading state (e.g., "Loading categories…")
+  - Error state (e.g., "Failed to load categories")
+
+Deliverables:
+- Full `HomePage.jsx` using React hooks.
+- A simple `CategoryCard` component.
+
+---------------------------------------------------
+PROMPT 4 – Category Page: Products + Add to Cart
+---------------------------------------------------
+
+Implement the Category page.
+
+Requirements:
+- Route: `/category/:categoryId`
+- On load:
+  - Read `categoryId` from URL (use `useParams`).
+  - Fetch products by that category using `getProductsByCategory(categoryId)`.
+- Show products as cards:
+  - name, unit, price, image
+  - “ADD” button
+
+Cart logic (simple):
+- Use React Context or a simple `CartContext` to store cart in memory:
+  - Each cart item: { productId, name, price, quantity }
+- `ADD` button:
+  - If item not in cart → add with quantity 1.
+  - If already in cart → show controls: `-  [qty]  +`
+    - `+` increases quantity
+    - `-` decreases quantity (remove if 0).
+
+Deliverables:
+- `CartContext.jsx` with provider & hook: `useCart()`.
+- `CategoryPage.jsx` with product listing and cart integration.
+- `ProductCard.jsx` using cart context.
+
+---------------------------------------------------
+PROMPT 5 – Cart Page
+---------------------------------------------------
+
+Build a simple Cart page.
+
+Route: `/cart`
+
+Requirements:
+- Use `useCart()` to read cart items.
+- Show:
+  - List of items:
+    - name
+    - quantity controls (- / +)
+    - price x qty
+  - Subtotal calculation.
+- If cart is empty, show a friendly message and a button “Go to Home”.
+
+- Add a button “Proceed to Checkout” that navigates to `/checkout`.
+
+Deliverables:
+- `CartPage.jsx` with all cart operations working.
+- Use basic Tailwind styling (simple, clean).
+
+---------------------------------------------------
+PROMPT 6 – Simple Checkout (Mock Order)
+---------------------------------------------------
+
+Implement a basic Checkout page (no auth required to keep it simple).
+
+Route: `/checkout`
+
+Requirements:
+- Use `useCart()` to read items and total.
+- Simple address form:
+  - Name
+  - Phone
+  - Address line
+  - City
+  - Pincode
+- On “Place Order” button:
+  - Validate that cart is not empty and form fields are filled.
+  - Create an object:
+    - { id, items, total, address, createdAt }
+  - For now:
+    - Show a “Order placed successfully” message on the same page.
+    - Clear the cart via `clearCart()`.
+
+Optional (if easy):
+- Save the order in Firebase under `/orders` using a helper function in `firebaseApi.js`.
+
+Deliverables:
+- `CheckoutPage.jsx` with form + order placed flow.
+- Updated `firebaseApi.js` with `createOrder(order)` (optional).
+
+---------------------------------------------------
+PROMPT 7 – Navbar Cart Count & Navigation Polish
+---------------------------------------------------
+
+Make the app feel smooth.
+
+Requirements:
+- In `Navbar.jsx`:
+  - Show brand name text (e.g., "QuickMart").
+  - Show “Cart (X)” where X is total quantity from `useCart()`.
+  - Clicking on “Cart (X)” navigates to `/cart`.
+
+- Improve navigation:
+  - Add a “Back to Home” button on Category, Cart, and Checkout pages.
+  - Make sure app is mobile-friendly with Tailwind (padding, gap, etc.).
+
+Deliverables:
+- Updated `Navbar.jsx`.
+- Small layout tweaks to pages for nicer look.
+
+---------------------------------------------------
+PROMPT 8 – (Optional) Very Simple Auth with Firebase
+---------------------------------------------------
+
+ONLY DO THIS IF I ASK EXPLICITLY.
+
+Add a very basic login/signup using Firebase Auth.
+
+Requirements:
+- Email/password only.
+- Two pages:
+  - `/login`
+  - `/signup`
+- `AuthContext` that stores current user (uid, email).
+- On login:
+  - Redirect to Home.
+- Show “Login” / “Logout” button in Navbar based on auth state.
+
+Keep this minimal; no need for full profile or order history screen now.
+
+---------------------------------------------------
+END OF SIMPLE PROMPT PACK
+===================================================

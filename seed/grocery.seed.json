@@ -1,101 +1,46 @@
 {
-  "siteSettings": {
-    "brandName": "QuickMart",
-    "tagline": "Daily essentials delivered fast",
-    "logoUrl": "/images/quickmart-logo.png",
-    "whatsapp": "+919900112233",
-    "instagram": "https://instagram.com/quickmart",
-    "address": "Local Market Road, Your City, India",
-    "footerText": "© 2025 QuickMart. All rights reserved."
-  },
-
-  "navigation": {
-    "header": [
-      { "id": "home", "title": "Home", "url": "/", "order": 1 },
-      { "id": "groceries", "title": "Groceries", "url": "/groceries", "order": 2 },
-      { "id": "about", "title": "About", "url": "/about", "order": 3 },
-      { "id": "contact", "title": "Contact", "url": "/contact", "order": 4 }
-    ],
-    "footer": [
-      { "id": "privacy", "title": "Privacy Policy", "url": "/privacy", "order": 1 }
-    ]
-  },
-
-  "home": {
-    "hero": {
-      "title": "Fresh groceries, delivered to your door",
-      "subtitle": "Fruits, vegetables, dairy and daily essentials",
-      "buttonText": "Shop Groceries",
-      "buttonUrl": "/groceries",
-      "image": "/images/grocery-hero.jpg"
-    }
-  },
-
-  "about": {
-    "hero": {
-      "title": "About QuickMart",
-      "subtitle": "Reliable local grocery delivery",
-      "image": "/images/grocery-about.jpg"
-    },
-    "content": [
-      "QuickMart provides fresh groceries and essentials with fast delivery.",
-      "We partner with trusted suppliers to bring quality produce to your home."
-    ],
-    "contact": {
-      "phone": "+91 9900112233",
-      "email": "hello@quickmart.example",
-      "address": "Local Market Road, Your City, India"
-    }
-  },
-
   "categories": {
     "cat_fruits": {
       "id": "cat_fruits",
       "name": "Fruits",
       "slug": "fruits",
       "description": "Fresh seasonal fruits",
-      "sortOrder": 1,
-      "image": "/images/categories/fruits.jpg"
+      "sortOrder": 1
     },
     "cat_veggies": {
       "id": "cat_veggies",
       "name": "Vegetables",
       "slug": "vegetables",
       "description": "Daily fresh vegetables",
-      "sortOrder": 2,
-      "image": "/images/categories/vegetables.jpg"
+      "sortOrder": 2
     },
     "cat_dairy": {
       "id": "cat_dairy",
       "name": "Dairy & Eggs",
       "slug": "dairy-eggs",
       "description": "Milk, paneer, yogurt and eggs",
-      "sortOrder": 3,
-      "image": "/images/categories/dairy-eggs.jpg"
+      "sortOrder": 3
     },
     "cat_staples": {
       "id": "cat_staples",
       "name": "Staples",
       "slug": "staples",
       "description": "Rice, flour, pulses and cooking essentials",
-      "sortOrder": 4,
-      "image": "/images/categories/staples.jpg"
+      "sortOrder": 4
     },
     "cat_beverages": {
       "id": "cat_beverages",
       "name": "Beverages",
       "slug": "beverages",
       "description": "Juices, tea, coffee and soft drinks",
-      "sortOrder": 5,
-      "image": "/images/categories/beverages.jpg"
+      "sortOrder": 5
     },
     "cat_snacks": {
       "id": "cat_snacks",
       "name": "Snacks & Biscuits",
       "slug": "snacks",
       "description": "Chips, biscuits and munchies",
-      "sortOrder": 6,
-      "image": "/images/categories/snacks.jpg"
+      "sortOrder": 6
     }
   },
 
@@ -169,22 +114,104 @@
       "sku": "DA-MILK-005",
       "inStock": true,
       "stock": 150
+    },
+    "g_prod_006": {
+      "id": "g_prod_006",
+      "name": "Eggs (12 pcs)",
+      "slug": "eggs-12",
+      "description": "Farm fresh eggs, pack of 12",
+      "price": 90,
+      "unit": "dozen",
+      "images": ["/images/groceries/eggs.jpg"],
+      "categoryId": "cat_dairy",
+      "tags": ["eggs", "dairy"],
+      "sku": "DA-EGG-006",
+      "inStock": true,
+      "stock": 180
+    },
+    "g_prod_007": {
+      "id": "g_prod_007",
+      "name": "Basmati Rice (5 kg)",
+      "slug": "basmati-rice-5kg",
+      "description": "Aromatic long-grain basmati rice",
+      "price": 420,
+      "unit": "5kg",
+      "images": ["/images/groceries/rice.jpg"],
+      "categoryId": "cat_staples",
+      "tags": ["rice", "staples"],
+      "sku": "ST-RICE-007",
+      "inStock": true,
+      "stock": 60
+    },
+    "g_prod_008": {
+      "id": "g_prod_008",
+      "name": "Atta / Wheat Flour (5 kg)",
+      "slug": "atta-5kg",
+      "description": "Whole wheat atta, finely milled",
+      "price": 260,
+      "unit": "5kg",
+      "images": ["/images/groceries/atta.jpg"],
+      "categoryId": "cat_staples",
+      "tags": ["atta", "flour", "staples"],
+      "sku": "ST-ATTA-008",
+      "inStock": true,
+      "stock": 80
+    },
+    "g_prod_009": {
+      "id": "g_prod_009",
+      "name": "Tea - Premium Blend (250 g)",
+      "slug": "tea-premium-250g",
+      "description": "Strong premium tea leaves for daily brewing",
+      "price": 120,
+      "unit": "250g",
+      "images": ["/images/groceries/tea.jpg"],
+      "categoryId": "cat_beverages",
+      "tags": ["tea", "beverage"],
+      "sku": "BV-TEA-009",
+      "inStock": true,
+      "stock": 70
+    },
+    "g_prod_010": {
+      "id": "g_prod_010",
+      "name": "Orange Juice (1 L)",
+      "slug": "orange-juice-1l",
+      "description": "100% real orange juice, no preservatives",
+      "price": 140,
+      "unit": "ltr",
+      "images": ["/images/groceries/oj.jpg"],
+      "categoryId": "cat_beverages",
+      "tags": ["juice", "beverage"],
+      "sku": "BV-OJ-010",
+      "inStock": true,
+      "stock": 90
+    },
+    "g_prod_011": {
+      "id": "g_prod_011",
+      "name": "Potato Chips (Classic, 100 g)",
+      "slug": "potato-chips-100g",
+      "description": "Crispy salted potato chips",
+      "price": 40,
+      "unit": "100g",
+      "images": ["/images/groceries/chips.jpg"],
+      "categoryId": "cat_snacks",
+      "tags": ["chips", "snack"],
+      "sku": "SN-CHP-011",
+      "inStock": true,
+      "stock": 200
+    },
+    "g_prod_012": {
+      "id": "g_prod_012",
+      "name": "Digestive Biscuits (200 g)",
+      "slug": "digestive-biscuits-200g",
+      "description": "Whole wheat digestive biscuits",
+      "price": 55,
+      "unit": "200g",
+      "images": ["/images/groceries/biscuits.jpg"],
+      "categoryId": "cat_snacks",
+      "tags": ["biscuits", "snack"],
+      "sku": "SN-BIS-012",
+      "inStock": true,
+      "stock": 140
     }
-  },
-
-  "gallery": {
-    "img_1": { "url": "/images/groceries/bananas.jpg", "caption": "Fresh produce", "order": 1 },
-    "img_2": { "url": "/images/groceries/veggies.jpg", "caption": "Daily essentials", "order": 2 }
-  },
-
-  "testimonials": {
-    "t1": {
-      "name": "Asha Patel",
-      "message": "Fresh produce and quick delivery!",
-      "rating": 5,
-      "date": "2025-03-12"
-    }
-  },
-
-  "orders": {}
+  }
 }

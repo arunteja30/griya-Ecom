@@ -7,14 +7,13 @@ import { getAuth } from "firebase/auth";
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyCLRgy0ARJBON5IPozXSUFyOw0SfI9MP6M",
-  authDomain: "griya-jewellers.firebaseapp.com",
-  databaseURL: "https://griya-jewellers-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "griya-jewellers",
-  storageBucket: "griya-jewellers.firebasestorage.app",
-  messagingSenderId: "902225299285",
-  appId: "1:902225299285:web:4e32a1a8edcce11c1111dc",
-  measurementId: "G-RCNXEX45K7"
+  apiKey: "AIzaSyDZK8DJd0nDvaoWvKFzJnExZoyRcHpWjv4",
+  authDomain: "hungrimart.firebaseapp.com",
+  databaseURL: "https://hungrimart-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "hungrimart",
+  storageBucket: "hungrimart.firebasestorage.app",
+  messagingSenderId: "863073530050",
+  appId: "1:863073530050:web:5e6ed98bbab3d525934b5b"
 };
 
 // Initialize Firebase app, Realtime Database and Auth

@@ -4,6 +4,7 @@ import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import CollectionsPage from "./pages/CollectionsPage";
 import CategoryProductsPage from "./pages/CategoryProductsPage";
+import CategoryPage from "./pages/CategoryPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import GalleryPage from "./pages/GalleryPage";
 import CartPage from "./pages/CartPage";
@@ -27,8 +28,13 @@ export default function App() {
     <CartProvider>
       <Routes>
         <Route path="/" element={<Layout fullWidth><HomePage /></Layout>} />
-        <Route path="/collections" element={<Layout><CollectionsPage /></Layout>} />
-        <Route path="/collections/:categorySlug" element={<Layout><CategoryProductsPage /></Layout>} />
+        <Route path="/groceries" element={<Layout><CollectionsPage /></Layout>} />
+        <Route path="/groceries/:categorySlug" element={<Layout><CategoryProductsPage /></Layout>} />
+        <Route path="/category/:categoryId" element={<Layout><CategoryPage /></Layout>} />
+
+        {/* Grocery product route */}
+        <Route path="/groceries/:categorySlug/:productSlug" element={<Layout><ProductDetailPage /></Layout>} />
+
         <Route path="/product/:productSlug" element={<Layout><ProductDetailPage /></Layout>} />
         <Route path="/gallery" element={<Layout><GalleryPage /></Layout>} />
         <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
