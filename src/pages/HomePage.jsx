@@ -66,7 +66,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Section hidden */}}
+      {/* Features Section hidden */}
       <section className="py-20 bg-neutral-50">
         <div className="section-container">
           <div className="text-center mb-16">

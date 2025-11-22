@@ -5,6 +5,7 @@ import Loader from "../components/Loader";
 import { CartContext } from "../context/CartContext";
 import { showToast } from "../components/Toast";
 import { normalizeImageUrl } from '../utils/imageHelpers';
+import Modal from "../components/Modal";
 
 export default function ProductDetailPage() {
   const { productSlug } = useParams();
@@ -12,6 +13,8 @@ export default function ProductDetailPage() {
   const { data: allProducts } = useFirebaseList("/products");
   const { addToCart } = useContext(CartContext);
   const [qty, setQty] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   if (loading) return <Loader />;
   if (!product) return <div>Product not found</div>;
@@ -29,14 +32,27 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16">
       <div className="space-y-4">
-        <div className="aspect-[4/3] bg-gray-100 rounded overflow-hidden">
-          <img src={normalizeImageUrl(product.images?.[0]) || '/placeholder.jpg'} alt={product.name} className="w-full h-full object-cover" />
+        <div className="aspect-[4/3] bg-gray-100 rounded overflow-hidden group">
+          <img
+            src={normalizeImageUrl(product.images?.[selectedImage]) || '/placeholder.jpg'}
+            alt={product.name}
+            className="w-full h-full object-cover product-image cursor-zoom-in"
+            onClick={() => setLightboxOpen(true)}
+          />
         </div>
+
         <div className="grid grid-cols-4 gap-2 mt-3">
           {product.images?.map((img, i) => (
-            <img key={i} src={normalizeImageUrl(img)} className="w-full h-20 object-cover rounded" alt={`thumb-${i}`} />
+            <button
+              key={i}
+              onClick={() => setSelectedImage(i)}
+              className={`overflow-hidden rounded focus:outline-none ${i === selectedImage ? 'ring-2 ring-primary-500' : ''}`}
+              aria-label={`View image ${i + 1}`}
+            >
+              <img src={normalizeImageUrl(img)} className="w-full h-20 object-cover rounded" alt={`thumb-${i}`} />
+            </button>
           ))}
         </div>
       </div>
@@ -68,6 +84,13 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Lightbox modal for larger image view */}
+      <Modal isOpen={lightboxOpen} onClose={() => setLightboxOpen(false)} hideActions>
+        <div className="max-w-4xl mx-auto">
+          <img src={normalizeImageUrl(product.images?.[selectedImage]) || '/placeholder.jpg'} alt={product.name} className="w-full h-auto object-contain" />
+        </div>
+      </Modal>
     </div>
   );
 }
