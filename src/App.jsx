@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import CollectionsPage from "./pages/CollectionsPage";
+import AllProductsPage from "./pages/AllProductsPage";
 import CategoryProductsPage from "./pages/CategoryProductsPage";
 import CategoryPage from "./pages/CategoryPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
@@ -28,7 +29,7 @@ export default function App() {
     <CartProvider>
       <Routes>
         <Route path="/" element={<Layout fullWidth><HomePage /></Layout>} />
-        <Route path="/groceries" element={<Layout><CollectionsPage /></Layout>} />
+        <Route path="/groceries" element={<Layout><AllProductsPage /></Layout>} />
         <Route path="/groceries/:categorySlug" element={<Layout><CategoryProductsPage /></Layout>} />
         <Route path="/category/:categoryId" element={<Layout><CategoryPage /></Layout>} />
 

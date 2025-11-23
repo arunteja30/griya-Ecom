@@ -7,7 +7,6 @@ import { showToast } from "../components/Toast";
 import { normalizeImageUrl } from '../utils/imageHelpers';
 import Modal from "../components/Modal";
 import ProductCard from "../components/ProductCard";
-import RecommendationsSection from "../components/RecommendationsSection";
 
 export default function ProductDetailPage() {
   const { productSlug } = useParams();
@@ -181,13 +180,29 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* Recommendations */}
-      <RecommendationsSection 
-        title="You May Also Like"
-        currentProductId={product.id}
-        currentCategoryId={prodCategory}
-        limit={6}
-      />
+      {/* Related Products */}
+      {related.length > 0 && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-800">You May Also Like</h2>
+            <Link 
+              to="/groceries" 
+              className="text-orange-600 hover:text-orange-700 text-sm font-medium flex items-center gap-1"
+            >
+              View More
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {related.map((relatedProduct) => (
+              <ProductCard key={relatedProduct.id} product={relatedProduct} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Lightbox modal for larger image view */}
       <Modal isOpen={lightboxOpen} onClose={() => setLightboxOpen(false)} hideActions>
