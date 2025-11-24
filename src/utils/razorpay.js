@@ -39,11 +39,28 @@ export async function openRazorpayCheckout({ key, amountINR, name, description, 
 }
 
 export async function createOrderOnServer(amountPaise) {
-  const res = await fetch((import.meta.env.VITE_API_BASE || '') + '/api/razorpay/create-order', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount: amountPaise })
-  });
-  if (!res.ok) throw new Error('Failed to create order');
-  return res.json();
+  const base = import.meta.env.VITE_API_BASE || '';
+  // If no API base is configured, return a fallback allowing client-side testing
+  if (!base) {
+    return { key: import.meta.env.VITE_RAZORPAY_KEY || null };
+  }
+
+  try {
+    const res = await fetch(base + '/api/razorpay/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: amountPaise })
+    });
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      console.warn('createOrderOnServer: server responded with non-OK:', res.status, txt);
+      return { key: import.meta.env.VITE_RAZORPAY_KEY || null };
+    }
+
+    return await res.json();
+  } catch (err) {
+    console.warn('createOrderOnServer: request failed, falling back to client key', err);
+    return { key: import.meta.env.VITE_RAZORPAY_KEY || null };
+  }
 }

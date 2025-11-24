@@ -100,15 +100,17 @@ export default function CheckoutPage() {
         onSuccess: async (resp) => {
           // resp contains razorpay_payment_id, razorpay_order_id, razorpay_signature
           const paymentInfo = {
-            razorpayPaymentId: resp?.razorpay_payment_id || resp?.payment_id,
-            razorpayOrderId: resp?.razorpay_order_id || resp?.order_id,
-            razorpaySignature: resp?.razorpay_signature || resp?.signature
+            razorpayPaymentId: resp?.razorpay_payment_id ?? resp?.payment_id ?? null,
+            razorpayOrderId: resp?.razorpay_order_id ?? resp?.order_id ?? null,
+            razorpaySignature: resp?.razorpay_signature ?? resp?.signature ?? null
           };
 
+          // Ensure no undefined values anywhere in the order object (Firebase rejects undefined)
           const finalOrder = { ...order, payment: paymentInfo };
+          const safeOrder = JSON.parse(JSON.stringify(finalOrder, (_key, value) => (value === undefined ? null : value)));
 
           try {
-            await createOrderInDb(finalOrder);
+            await createOrderInDb(safeOrder);
           } catch (dbErr) {
             console.warn('Failed to save order to Firebase:', dbErr);
             showToast('Payment succeeded but saving order failed', 'warning');
