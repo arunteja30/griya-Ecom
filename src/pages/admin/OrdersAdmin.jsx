@@ -10,6 +10,9 @@ export default function OrdersAdmin(){
   const [orders, setOrders] = useState({});
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  // filters
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const { data: siteSettings } = useFirebaseObject('/siteSettings');
 
@@ -74,10 +77,25 @@ export default function OrdersAdmin(){
 
   if(loading) return <Loader />;
 
-  const items = Object.entries(orders).sort((a,b)=>{
+  // prepare, sort and filter orders for display
+  const itemsSorted = Object.entries(orders).sort((a,b)=>{
     const da = new Date(a[1].createdAt || 0).getTime();
     const dbt = new Date(b[1].createdAt || 0).getTime();
     return dbt - da;
+  });
+
+  const items = itemsSorted.filter(([id, o]) => {
+    if(statusFilter && (o.status || '') !== statusFilter) return false;
+    if(search){
+      const q = String(search).trim().toLowerCase();
+      const orderIdMatch = String(o.orderId || id).toLowerCase().includes(q);
+      const customerName = String(o.customer?.name || o.address?.name || '').toLowerCase();
+      const customerPhone = String(o.customer?.phone || o.customer?.contact || o.address?.phone || o.address?.contact || '').toLowerCase();
+      const itemsText = (o.items || []).map(it => (it.name || it.title || it.id || it.productId || '')).join(' ').toLowerCase();
+      if(orderIdMatch || customerName.includes(q) || customerPhone.includes(q) || itemsText.includes(q)) return true;
+      return false;
+    }
+    return true;
   });
 
   const fmt = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n || 0);
@@ -85,6 +103,20 @@ export default function OrdersAdmin(){
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Orders</h2>
+
+      {/* Filters */}
+      <div className="mb-4 flex items-center gap-2">
+        <input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Search order id, customer, phone or item" className="border p-2 rounded w-1/3" />
+        <select value={statusFilter} onChange={(e)=>setStatusFilter(e.target.value)} className="border p-2 rounded">
+          <option value="">All status</option>
+          <option value="pending">pending</option>
+          <option value="paid">paid</option>
+          <option value="shipped">shipped</option>
+          <option value="delivered">delivered</option>
+          <option value="cancelled">cancelled</option>
+        </select>
+        <button onClick={()=>{setSearch(''); setStatusFilter('');}} className="ml-auto text-sm text-neutral-600">Clear</button>
+      </div>
 
       {items.length === 0 ? (
         <div className="card p-6 text-center">No orders found</div>

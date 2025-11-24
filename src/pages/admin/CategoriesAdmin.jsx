@@ -10,6 +10,7 @@ export default function CategoriesAdmin(){
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
   const [name, setName] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [showDelete, setShowDelete] = useState(false);
   const [toDelete, setToDelete] = useState(null);
 
@@ -23,12 +24,16 @@ export default function CategoriesAdmin(){
 
   const handleSave = async ()=>{
     try{
+      const payload = { name, slug: name.toLowerCase().replace(/\s+/g,'-') };
+      if (imageUrl) payload.image = imageUrl;
+
       if(editing){
-        await update(ref(db, `/categories/${editing}`), { name });
+        await update(ref(db, `/categories/${editing}`), payload);
         showToast('Category updated');
       } else {
-        await push(ref(db, '/categories'), { name, slug: name.toLowerCase().replace(/\s+/g,'-') });
+        await push(ref(db, '/categories'), payload);
         setName('');
+        setImageUrl('');
         showToast('Category created');
       }
       setEditing(null);
@@ -61,18 +66,59 @@ export default function CategoriesAdmin(){
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Categories</h2>
-      <div className="mb-4">
-        <input value={name} onChange={(e)=>setName(e.target.value)} className="border p-2" placeholder="Category name" />
-        <button onClick={handleSave} className="ml-2 bg-primary text-white px-3 py-1 rounded">Save</button>
+      <div className="mb-4 grid grid-cols-1 gap-3">
+        <input 
+          value={name} 
+          onChange={(e)=>setName(e.target.value)} 
+          className="border p-2" 
+          placeholder="Category name" 
+          id="category-name-input"
+        />
+        <input value={imageUrl} onChange={(e)=>setImageUrl(e.target.value)} className="border p-2" placeholder="Image URL" />
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleSave} 
+            className="ml-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded"
+          >
+            {editing ? 'Update Category' : 'Create Category'}
+          </button>
+          {editing && (
+            <button 
+              onClick={() => { setEditing(null); setName(''); setImageUrl(''); }} 
+              className="ml-2 text-sm text-gray-600"
+            >
+              Cancel Edit
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">
         {Object.entries(categories).map(([id, cat])=> (
           <div key={id} className="flex items-center justify-between border p-2 rounded">
-            <div>{cat.name}</div>
+            <div className="flex items-center gap-3">
+              {cat.image ? (
+                <img src={cat.image} alt={cat.name} className="w-12 h-12 object-cover rounded" />
+              ) : (
+                <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-sm text-gray-500">No image</div>
+              )}
+              <div>
+                <div className="font-medium">{cat.name}</div>
+                {cat.slug && <div className="text-xs text-gray-500">/{cat.slug}</div>}
+              </div>
+            </div>
             <div className="flex gap-2">
-              <button onClick={()=>{setEditing(id); setName(cat.name)}} className="text-blue-600">Edit</button>
-              <button onClick={()=>confirmDelete(id)} className="text-red-600">Delete</button>
+              {editing === id ? (
+                <>
+                  <button onClick={handleSave} className="text-green-600">Save</button>
+                  <button onClick={() => { setEditing(null); setName(''); setImageUrl(''); }} className="text-gray-600">Cancel</button>
+                </>
+              ) : (
+                <>
+                  <button onClick={()=>{setEditing(id); setName(cat.name); setImageUrl(cat.image||'')}} className="text-blue-600">Edit</button>
+                  <button onClick={()=>confirmDelete(id)} className="text-red-600">Delete</button>
+                </>
+              )}
             </div>
           </div>
         ))}

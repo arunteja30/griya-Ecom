@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Griya Admin — User Manual</title>
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, Arial, sans-serif; line-height:1.6; color:#111827; padding:24px; max-width:960px; margin:0 auto; }
+    h1,h2,h3{ color:#0f172a; }
+    pre, code { background:#f3f4f6; padding:2px 6px; border-radius:4px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; }
+    .section { margin-bottom:28px; }
+    .note { background:#f8fafc; border-left:4px solid #e2e8f0; padding:10px 12px; margin:10px 0; }
+    ul { margin:8px 0 16px 20px; }
+    .example { background:#fff7ed; border-left:4px solid #f59e0b; padding:10px 12px; margin:10px 0; }
+  </style>
+</head>
+<body>
+  <h1>Griya Admin — User Manual</h1>
+  <p>This manual documents each admin screen and field, how to use them, and examples for quick configuration.</p>
+
+  <div class="section">
+    <h2>Access & roles</h2>
+    <ul>
+      <li>Admin pages require Firebase Auth admin credentials.</li>
+      <li>Login via the Admin Login screen; only authenticated users can access admin routes.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Site Settings (<code>/admin/site-settings</code>)</h2>
+    <p><strong>Purpose:</strong> global site configuration (branding, contact, fees, banner).</p>
+
+    <h3>Fields and usage</h3>
+    <ul>
+      <li><code>brandName</code> — site brand shown in header. Example: <code>Griya Jewels</code></li>
+      <li><code>tagline</code> — short tagline. Example: <code>Handcrafted Jewellery</code></li>
+      <li><code>logoUrl</code> — image URL for logo.</li>
+    </ul>
+
+    <h3>Banner settings</h3>
+    <ul>
+      <li><code>bannerOffers</code> (textarea) — one offer per line. These rotate in the TopBanner and take precedence over <code>bannerText</code>.</li>
+      <li><code>bannerText</code> — single-line fallback banner message.</li>
+      <li><code>bannerLink</code> — optional URL opened when banner clicked.</li>
+      <li><code>bannerBgColor</code> — CSS hex (e.g. <code>#df2121</code>) or Tailwind class (e.g. <code>bg-orange-500</code>).</li>
+      <li><code>bannerTextColor</code> — text color class or hex (e.g. <code>text-white</code> or <code>#000000</code>).</li>
+      <li><code>bannerVisible</code> — checkbox to show/hide banner immediately.</li>
+    </ul>
+
+    <div class="note">
+      If a hex is provided for <code>bannerBgColor</code>, the banner applies it as an inline background color. If a Tailwind class is provided, that class is applied instead.
+    </div>
+
+    <h3>Contact & footer</h3>
+    <ul>
+      <li><code>whatsapp</code> — WhatsApp number used for messages.</li>
+      <li><code>instagram</code> — Instagram URL.</li>
+      <li><code>address</code> — store address.</li>
+      <li><code>footerText</code> — footer copy.</li>
+    </ul>
+
+    <h3>Fees</h3>
+    <ul>
+      <li><code>platformFee</code>, <code>surgeFee</code>, <code>otherFee</code> — flat INR amounts added to orders.</li>
+      <li><code>deliveryFee</code> — flat delivery charge in INR.</li>
+      <li><code>freeDeliveryMin</code> — subtotal threshold for free delivery.</li>
+    </ul>
+
+    <div class="note">
+      On save numeric fee fields are coerced to numbers. Checkout computes <code>totalWithFees = subtotal + platformFee + surgeFee + otherFee + effectiveDeliveryFee</code>. Delivery becomes 0 when subtotal ≥ <code>freeDeliveryMin</code>.
+    </div>
+
+    <h3>Save behavior</h3>
+    <ul>
+      <li>Click <strong>Save</strong>; numeric fields are normalized.</li>
+      <li><code>bannerOffers</code> is saved as <code>offers</code> (array) in the database.</li>
+      <li><code>bannerVisible</code> is saved as boolean.</li>
+    </ul>
+
+    <div class="example">
+      <strong>Example: Start a promotional banner</strong>
+      <ul>
+        <li><code>bannerOffers</code> lines: <code>Festive sale - 20% off</code></li>
+        <li><code>bannerLink</code>: <code>https://griya.example.com/offers</code></li>
+        <li><code>bannerBgColor</code>: <code>#df2121</code></li>
+        <li><code>bannerTextColor</code>: <code>text-white</code></li>
+        <li><code>bannerVisible</code>: checked</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Categories Admin (<code>/admin/categories</code>)</h2>
+    <p>Create and manage product categories.</p>
+    <ul>
+      <li><code>name</code> — display name (e.g. <code>Necklaces</code>).</li>
+      <li><code>slug</code> — URL-friendly id (e.g. <code>necklaces</code>).</li>
+      <li><code>imageUrl</code> — category image URL.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Products Admin (<code>/admin/products</code>)</h2>
+    <p>Manage products: create, update, and control inventory.</p>
+    <ul>
+      <li><code>name</code>, <code>slug</code>, <code>price</code>, <code>mrp</code>, <code>category</code>.</li>
+      <li><code>imageUrl</code> or images array; use CDN URLs.</li>
+      <li><code>description</code>, <code>stock</code>, <code>inStock</code>.</li>
+    </ul>
+    <div class="note">When stock is decremented to 0 by the payment webhook, set <code>inStock</code> accordingly.</div>
+  </div>
+
+  <div class="section">
+    <h2>Orders Admin (<code>/admin/orders</code>)</h2>
+    <p>View orders, update status, and search.</p>
+    <ul>
+      <li>Search by order id, customer name, or phone.</li>
+      <li>Update status to <code>shipped</code>, <code>delivered</code>, <code>cancelled</code>, etc.</li>
+    </ul>
+    <div class="note">Cancelling does not auto-restock; restock manually if needed.</div>
+  </div>
+
+  <div class="section">
+    <h2>Gallery / Homepage / Testimonials</h2>
+    <p>Manage images, homepage sections, and testimonials via respective admin pages.</p>
+  </div>
+
+  <div class="section">
+    <h2>Seed / Import tools</h2>
+    <p>Seed imports may overwrite data. Backup before importing.</p>
+  </div>
+
+  <div class="section">
+    <h2>Payments & Webhook notes (server)</h2>
+    <ul>
+      <li>Razorpay client checkout + server webhook that marks orders paid and decrements stock.</li>
+      <li>The server requires Firebase admin credentials and DB URL in environment variables.</li>
+      <li>Implement webhook signature verification for production.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Tips, Validation & Rollback</h2>
+    <ul>
+      <li>Inline validation shows errors under fields in admin screens.</li>
+      <li>Use CDN-hosted images for best performance.</li>
+      <li>Hex vs Tailwind: hex (e.g. <code>#df2121</code>) -> inline color; Tailwind (e.g. <code>bg-orange-500</code>) -> class.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Example Workflows</h2>
+    <h3>Start a short sale banner</h3>
+    <ol>
+      <li>Site Settings → add lines to <code>bannerOffers</code>.</li>
+      <li>Set <code>bannerLink</code> and <code>bannerBgColor</code>.</li>
+      <li>Check <code>Show top banner</code> and Save.</li>
+    </ol>
+
+    <h3>Add new product</h3>
+    <ol>
+      <li>Create category if needed.</li>
+      <li>Products Admin → New product → fill fields and Save.</li>
+    </ol>
+  </div>
+
+  <footer style="margin-top:40px; font-size:13px; color:#6b7280;">Generated admin manual — edit <code>docs/admin-manual.md</code> to update content.</footer>
+</body>
+</html>
