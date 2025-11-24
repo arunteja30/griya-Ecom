@@ -65,7 +65,7 @@ export default function HomePage() {
               {categories.map((col) => (
                 <Link
                   key={col.id}
-                  to={`/groceries/${col.slug || col.id}`}
+                  to={`/category/${col.slug || col.id}`}
                   className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100"
                 >
                   <div className="relative aspect-square bg-gradient-to-br from-orange-50 to-orange-100">

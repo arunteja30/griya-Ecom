@@ -73,11 +73,11 @@ export default function CollectionsPage() {
       />
 
       {/* Categories Grid - Swiggy style cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-4">
         {filteredAndSortedCategories.map((c) => (
           <Link
             key={c.id}
-            to={`/groceries/${c.slug || c.id}`}
+            to={`/category/${c.slug || c.id}`}
             className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100"
           >
             <div className="relative overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100 aspect-square">

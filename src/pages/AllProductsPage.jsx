@@ -210,60 +210,11 @@ export default function AllProductsPage() {
 
   return (
     <div className="w-full px-0 py-0">
-      <div className="grid grid-cols-1 gap-6">
-        {/* Main (sidebar removed) */}
-        <main>
-          <div className="text-center mb-4 sticky top-24 bg-white z-10">
-            <h1 className="text-2xl font-bold text-gray-800">{selectedCategory ? (categories[selectedCategory]?.name || 'Category') : 'All Products'}</h1>
-            <div className="mt-4 md:hidden">
-              <div className="flex justify-center">
-                <div className="w-full max-w-xl px-4">
-                  <input
-                    type="search"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search products..."
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Static filter controls: mobile and desktop */}
-          <div className="mb-4 bg-white z-10">
-            <div className="flex items-center justify-center md:justify-start px-4 mb-2 md:hidden">
-              <label className="sr-only">Category</label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full md:w-auto border border-gray-300 rounded-md px-3 py-2 bg-white"
-              >
-                <option value="">All Categories</option>
-                {Object.entries(categories).map(([cid, c]) => (
-                  <option key={cid} value={cid}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="md:hidden px-4">
-              <MobileFilterButton
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-                priceRange={priceRange}
-                setPriceRange={setPriceRange}
-                filterInStock={filterInStock}
-                setFilterInStock={setFilterInStock}
-                resultCount={filteredAndSortedProducts.length}
-                onClearFilters={() => { setSearchTerm(''); setPriceRange('all'); setFilterInStock(false); setSortBy('name'); }}
-                // pass categories so FilterBar inside MobileFilterButton can render them
-                categories={categories}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-              />
-            </div>
-            <div className="hidden md:block">
+      <div className="w-full">
+        <div className="md:flex md:gap-6">
+          {/* Desktop filters sidebar */}
+          <aside className="hidden md:block md:w-72 shrink-0">
+            <div className="sticky top-28">
               <FilterBar
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
@@ -278,21 +229,111 @@ export default function AllProductsPage() {
                 categories={categories}
                 selectedCategory={selectedCategory}
                 setSelectedCategory={setSelectedCategory}
-                showCategoryFilter={false}
+                vertical={true}
               />
             </div>
-          </div>
+          </aside>
 
-          {/* Scrollable products area - header, filters and sidebar remain static */}
-          <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
-            <div className="md:hidden mb-4 -mx-4 px-4">
-              <div className="pl-0">
-                <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
-                  {filteredAndSortedProducts.map(p => (
-                    <ProductCard key={p.id} product={p} />
-                  ))}
+          {/* Main (filters moved to left on desktop) */}
+          <main className="flex-1">
+            <div className="text-center mb-4 sticky top-24 bg-white z-10">
+              <h1 className="text-2xl font-bold text-gray-800">{selectedCategory ? (categories[selectedCategory]?.name || 'Category') : 'All Products'}</h1>
+              <div className="mt-4 md:hidden">
+                <div className="flex justify-center">
+                  <div className="w-full max-w-xl px-4">
+                    <input
+                      type="search"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search products..."
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+                    />
+                  </div>
                 </div>
+              </div>
+            </div>
 
+            {/* Static filter controls: mobile and desktop */}
+            <div className="mb-4 bg-white z-10">
+              <div className="flex items-center justify-center md:justify-start px-4 mb-2 md:hidden">
+                <label className="sr-only">Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full md:w-auto border border-gray-300 rounded-md px-3 py-2 bg-white"
+                >
+                  <option value="">All Categories</option>
+                  {Object.entries(categories).map(([cid, c]) => (
+                    <option key={cid} value={cid}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="md:hidden px-4">
+                <MobileFilterButton
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  priceRange={priceRange}
+                  setPriceRange={setPriceRange}
+                  filterInStock={filterInStock}
+                  setFilterInStock={setFilterInStock}
+                  resultCount={filteredAndSortedProducts.length}
+                  onClearFilters={() => { setSearchTerm(''); setPriceRange('all'); setFilterInStock(false); setSortBy('name'); }}
+                  // pass categories so FilterBar inside MobileFilterButton can render them
+                  categories={categories}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                />
+              </div>
+            </div>
+
+            {/* Scrollable products area - header, filters and sidebar remain static */}
+            <div className="overflow-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
+              <div className="md:hidden mb-4 -mx-4 px-4">
+                <div className="pl-0">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+                    {filteredAndSortedProducts.map(p => (
+                      <ProductCard key={p.id} product={p} />
+                    ))}
+                  </div>
+
+                  {filteredAndSortedProducts.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="text-gray-400 text-6xl mb-4">🔍</div>
+                      <h3 className="text-lg font-medium text-gray-600 mb-2">No products found</h3>
+                      <p className="text-gray-500">Try adjusting your search or filters</p>
+                    </div>
+                  )}
+
+                  {/* Load more (mobile) */}
+                  {selectedCategory ? (
+                    catHasMore && (
+                      <div className="text-center mt-6">
+                        <button onClick={loadMoreCategory} className="px-4 py-2 bg-black text-white rounded" disabled={catLoadingMore}>
+                          {catLoadingMore ? 'Loading...' : 'Load more'}
+                        </button>
+                      </div>
+                    )
+                  ) : (
+                    hasMore && (
+                      <div className="text-center mt-6">
+                        <button onClick={loadMoreGlobal} className="px-4 py-2 bg-black text-white rounded" disabled={loadingMore}>
+                          {loadingMore ? 'Loading...' : 'Load more'}
+                        </button>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+
+              <div className="hidden md:grid md:grid-cols-6 gap-4">
+                {filteredAndSortedProducts.map(p => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+
+              <div className="hidden md:block">
                 {filteredAndSortedProducts.length === 0 && (
                   <div className="text-center py-12">
                     <div className="text-gray-400 text-6xl mb-4">🔍</div>
@@ -301,7 +342,7 @@ export default function AllProductsPage() {
                   </div>
                 )}
 
-                {/* Load more (mobile) */}
+                {/* Load more (desktop) */}
                 {selectedCategory ? (
                   catHasMore && (
                     <div className="text-center mt-6">
@@ -321,43 +362,8 @@ export default function AllProductsPage() {
                 )}
               </div>
             </div>
-
-            <div className="hidden md:grid md:grid-cols-3 gap-2">
-              {filteredAndSortedProducts.map(p => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-
-            <div className="hidden md:block">
-              {filteredAndSortedProducts.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="text-gray-400 text-6xl mb-4">🔍</div>
-                  <h3 className="text-lg font-medium text-gray-600 mb-2">No products found</h3>
-                  <p className="text-gray-500">Try adjusting your search or filters</p>
-                </div>
-              )}
-
-              {/* Load more (desktop) */}
-              {selectedCategory ? (
-                catHasMore && (
-                  <div className="text-center mt-6">
-                    <button onClick={loadMoreCategory} className="px-4 py-2 bg-black text-white rounded" disabled={catLoadingMore}>
-                      {catLoadingMore ? 'Loading...' : 'Load more'}
-                    </button>
-                  </div>
-                )
-              ) : (
-                hasMore && (
-                  <div className="text-center mt-6">
-                    <button onClick={loadMoreGlobal} className="px-4 py-2 bg-black text-white rounded" disabled={loadingMore}>
-                      {loadingMore ? 'Loading...' : 'Load more'}
-                    </button>
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
     </div>
   );

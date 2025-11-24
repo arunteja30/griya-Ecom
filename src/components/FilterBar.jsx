@@ -18,7 +18,8 @@ export default function FilterBar({
   showCategoryFilter = true,
   showPriceFilter = true,
   showStockFilter = true,
-  searchPlaceholder = "Search..."
+  searchPlaceholder = "Search...",
+  vertical = false,
 }) {
   const sortOptions = [
     { value: 'name', label: 'Name' },
@@ -37,9 +38,11 @@ export default function FilterBar({
   ];
 
   // compute grid class depending on which filters are shown
-  const gridClass = showCategoryFilter
-    ? (showPriceFilter && showStockFilter ? 'grid gap-4 grid-cols-1 md:grid-cols-4' : 'grid gap-4 grid-cols-1 md:grid-cols-3')
-    : (showPriceFilter && showStockFilter ? 'grid gap-4 grid-cols-1 md:grid-cols-3' : 'grid gap-4 grid-cols-1 md:grid-cols-2');
+  const gridClass = vertical
+    ? 'grid gap-3 grid-cols-1'
+    : (showCategoryFilter
+      ? (showPriceFilter && showStockFilter ? 'grid gap-4 grid-cols-1 md:grid-cols-4' : 'grid gap-4 grid-cols-1 md:grid-cols-3')
+      : (showPriceFilter && showStockFilter ? 'grid gap-4 grid-cols-1 md:grid-cols-3' : 'grid gap-4 grid-cols-1 md:grid-cols-2'));
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-4 space-y-4">
@@ -72,11 +75,11 @@ export default function FilterBar({
         {/* Category */}
         {showCategoryFilter && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <label className={`block text-sm font-medium text-gray-700 ${vertical ? 'mb-1' : 'mb-2'}`}>Category</label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className={`w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${vertical ? 'py-2' : ''}`}
             >
               <option value="">All Categories</option>
               {Object.entries(categories).map(([cid, c]) => (
@@ -88,7 +91,7 @@ export default function FilterBar({
 
         {/* Sort By */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+          <label className={`block text-sm font-medium text-gray-700 ${vertical ? 'mb-1' : 'mb-2'}`}>Sort By</label>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -103,7 +106,7 @@ export default function FilterBar({
         {/* Price Range */}
         {showPriceFilter && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
+            <label className={`block text-sm font-medium text-gray-700 ${vertical ? 'mb-1' : 'mb-2'}`}>Price Range</label>
             <select
               value={priceRange}
               onChange={(e) => setPriceRange(e.target.value)}
@@ -119,7 +122,7 @@ export default function FilterBar({
         {/* Stock Filter */}
         {showStockFilter && (
           <div className="flex items-center">
-            <label className="flex items-center gap-2 text-sm text-gray-700 mt-6">
+            <label className={`flex items-center gap-2 text-sm text-gray-700 ${vertical ? 'mt-2' : 'mt-6'}`}>
               <input
                 type="checkbox"
                 checked={filterInStock}
