@@ -65,6 +65,20 @@
       "sortOrder": 2
     }
   },
+  "categoryProducts": {
+    "cat_dairy": {
+      "g_prod_005": true
+    },
+    "cat_fruits": {
+      "-OepeEMa2LDVs2EuH2Ft": true,
+      "g_prod_001": true,
+      "g_prod_002": true
+    },
+    "cat_veggies": {
+      "g_prod_003": true,
+      "g_prod_004": true
+    }
+  },
   "gallery": {
     "img_1": {
       "caption": "Fresh produce",
@@ -84,6 +98,74 @@
       "image": "/images/grocery-hero.jpg",
       "subtitle": "Fruits, vegetables, dairy and daily essentials",
       "title": "Fresh groceries, delivered to your door"
+    }
+  },
+  "banners": {
+    "b1": {
+      "id": "b1",
+      "image": "https://images.unsplash.com/photo-1542831371-d531d36971e6?w=1200&q=80",
+      "title": "Big Weekend Sale",
+      "subtitle": "Up to 50% off on selected essentials",
+      "ctaLink": "/collections/sale",
+      "startDate": "2025-11-25",
+      "endDate": "2025-11-30"
+    },
+    "b2": {
+      "id": "b2",
+      "image": "https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1200&q=80",
+      "title": "Fresh Today",
+      "subtitle": "Handpicked fruits and vegetables",
+      "ctaLink": "/category/vegetables",
+      "startDate": "2025-01-01"
+    },
+     "b3": {
+      "id": "b1",
+      "image": "https://images.unsplash.com/photo-1542831371-d531d36971e6?w=1200&q=80",
+      "title": "Big Weekend Sale",
+      "subtitle": "Up to 50% off on selected essentials",
+      "ctaLink": "/collections/sale",
+      "startDate": "2025-11-25",
+      "endDate": "2025-11-30"
+    },
+    "b4": {
+      "id": "b2",
+      "image": "https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1200&q=80",
+      "title": "Fresh Today",
+      "subtitle": "Handpicked fruits and vegetables",
+      "ctaLink": "/category/vegetables",
+      "startDate": "2025-01-01"
+    }, "b5": {
+      "id": "b1",
+      "image": "https://images.unsplash.com/photo-1542831371-d531d36971e6?w=1200&q=80",
+      "title": "Big Weekend Sale",
+      "subtitle": "Up to 50% off on selected essentials",
+      "ctaLink": "/collections/sale",
+      "startDate": "2025-11-25",
+      "endDate": "2025-11-30"
+    },
+    "b6": {
+      "id": "b2",
+      "image": "https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1200&q=80",
+      "title": "Fresh Today",
+      "subtitle": "Handpicked fruits and vegetables",
+      "ctaLink": "/category/vegetables",
+      "startDate": "2025-01-01"
+    }, "b7": {
+      "id": "b1",
+      "image": "https://images.unsplash.com/photo-1542831371-d531d36971e6?w=1200&q=80",
+      "title": "Big Weekend Sale",
+      "subtitle": "Up to 50% off on selected essentials",
+      "ctaLink": "/collections/sale",
+      "startDate": "2025-11-25",
+      "endDate": "2025-11-30"
+    },
+    "b8": {
+      "id": "b2",
+      "image": "https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1200&q=80",
+      "title": "Fresh Today",
+      "subtitle": "Handpicked fruits and vegetables",
+      "ctaLink": "/category/vegetables",
+      "startDate": "2025-01-01"
     }
   },
   "navigation": {
@@ -169,42 +251,198 @@
       },
       "status": "delivered",
       "total": 350
+    },
+    "-OeqqzjX9kauoNn4d-GK": {
+      "address": {
+        "city": "hyd",
+        "line1": "G1",
+        "name": "Arunteja",
+        "phone": "98989898",
+        "pincode": "500045"
+      },
+      "createdAt": "2025-11-24T17:14:21.521Z",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764004461520",
+      "items": [
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "subtotal": 360,
+      "total": 410
+    },
+    "-Oequ7HZPPRji3H0Gn1B": {
+      "address": {
+        "city": "Hyd",
+        "line1": "G1",
+        "name": "griya",
+        "phone": "9898989898",
+        "pincode": "500045"
+      },
+      "createdAt": "2025-11-24T17:25:21.607Z",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764005121607",
+      "items": [
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "payment": {
+        "razorpayPaymentId": "pay_RjexCN3uAUPEuz"
+      },
+      "subtotal": 360,
+      "total": 410
+    },
+    "-Oeqy7aAsUuLK-8Vko15": {
+      "address": {
+        "city": "hyd",
+        "line1": "g1",
+        "name": "ram",
+        "phone": "8989898989",
+        "pincode": "500045"
+      },
+      "createdAt": "2025-11-24T17:45:01.803Z",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764006301803",
+      "items": [
+        {
+          "id": "-OepeEMa2LDVs2EuH2Ft-v-1763984258876",
+          "name": "test fruit",
+          "price": 15,
+          "quantity": 1
+        },
+        {
+          "id": "-OepeEMa2LDVs2EuH2Ft-v-1763984267880",
+          "name": "test fruit",
+          "price": 30,
+          "quantity": 1
+        },
+        {
+          "id": "g_prod_002-undefined",
+          "name": "Red Apples",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "payment": {
+        "razorpayPaymentId": "pay_RjfFj6c6mUKtzn"
+      },
+      "subtotal": 405,
+      "total": 455
+    },
+    "-OerAr7y6hKqbMMvOM0X": {
+      "address": {
+        "city": "test",
+        "line1": "test",
+        "name": "test",
+        "phone": "999999999",
+        "pincode": "500545"
+      },
+      "createdAt": "2025-11-24T18:45:03.117Z",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764009903116",
+      "items": [
+        {
+          "id": "g_prod_001",
+          "name": "Bananas (per dozen)",
+          "price": 60,
+          "quantity": 1
+        },
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples (1 kg)",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "payment": {
+        "razorpayPaymentId": "pay_RjgH5LVm2vIldU"
+      },
+      "subtotal": 420,
+      "total": 470
     }
   },
   "products": {
-    "-OeoOZSHnC0eRgIwYvkT": {
+    "-OepeEMa2LDVs2EuH2Ft": {
       "categoryId": "cat_fruits",
+      "description": "tasty fruit",
+      "discount": 40,
       "images": [
-        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/5bec1f84-4aa5-49ae-9c3d-9a0dcb9fe2ad_d990b4fc-4629-4cc6-bc7a-ace787fb378a"
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/NI_CATALOG/IMAGES/ciw/2025/10/6/4e30fbf3-3361-4eed-9c72-61918d894b43_NPI-041393_1_20251006_060227.png"
       ],
       "inStock": true,
-      "name": "test fruite",
-      "price": 12000,
-      "originalPrice": 12500,
-      "discount": 4,
-      "rating": 3.8,
       "isBestseller": false,
-      "slug": "test-fruite-1kg",
-      "unit": "kg",
-      "variants": [
-        { "label": "1 kg", "price": 12000 },
-        { "label": "500 g", "price": 6000 }
-      ]
+      "name": "test fruit",
+      "originalPrice": 25,
+      "price": 15,
+      "rating": 5,
+      "slug": "test fruite 200gm",
+      "stock": 1,
+      "unit": "g",
+      "unitValue": "200",
+      "variants": {
+        "v-1763984258876": {
+          "id": "v-1763984258876",
+          "label": "200",
+          "price": 15,
+          "unit": "gms"
+        },
+        "v-1763984267880": {
+          "id": "v-1763984267880",
+          "label": "500",
+          "price": 30,
+          "unit": "gms"
+        }
+      }
     },
     "g_prod_001": {
       "categoryId": "cat_fruits",
       "description": "Ripe Cavendish bananas, approx. 12 pcs",
+      "discount": 14,
       "id": "g_prod_001",
       "images": [
         "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/959f3368e153e4cf3475e41318b33f8b"
       ],
-      "inStock": true,
-      "name": "Bananas (per dozen)",
-      "price": 60,
-      "originalPrice": 70,
-      "discount": 14,
-      "rating": 4.5,
+      "inStock": false,
       "isBestseller": true,
+      "name": "Bananas (per dozen)",
+      "originalPrice": 70,
+      "price": 60,
+      "rating": 4.5,
       "sku": "FR-BAN-001",
       "slug": "bananas-dozen",
       "stock": 120,
@@ -213,25 +451,35 @@
         "fruit"
       ],
       "unit": "dozen",
-      "variants": [
-        { "label": "Per dozen", "price": 60 },
-        { "label": "Per kg", "price": 50 }
-      ]
+      "variants": {
+        "per-dozen": {
+          "id": "per-dozen",
+          "label": "Per dozen",
+          "price": 60,
+          "unit": "Perdozen"
+        },
+        "per-kg": {
+          "id": "per-kg",
+          "label": "Per kg",
+          "price": 50,
+          "unit": "Perkg"
+        }
+      }
     },
     "g_prod_002": {
       "categoryId": "cat_fruits",
-      "description": "Fresh red apples, approx. 1 kg",
+      "description": "Fresh red apples",
+      "discount": "10",
       "id": "g_prod_002",
       "images": [
         "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_600/53abc4b79446572e9c7a0eb090890cb6"
       ],
       "inStock": true,
-      "name": "Red Apples (1 kg)",
-      "price": 180,
-      "originalPrice": 200,
-      "discount": 10,
-      "rating": 4.6,
       "isBestseller": true,
+      "name": "Red Apples",
+      "originalPrice": 200,
+      "price": 180,
+      "rating": 4.6,
       "sku": "FR-APP-002",
       "slug": "red-apples-1kg",
       "stock": 40,
@@ -239,26 +487,33 @@
         "apple",
         "fruit"
       ],
-      "unit": "kg",
+      "unit": "g",
+      "unitValue": "500",
       "variants": [
-        { "label": "1 kg", "price": 180 },
-        { "label": "500 g", "price": 95 }
+        {
+          "label": "1 kg",
+          "price": 180
+        },
+        {
+          "label": "500 g",
+          "price": 95
+        }
       ]
     },
     "g_prod_003": {
       "categoryId": "cat_veggies",
       "description": "Fresh tomatoes, ideal for everyday cooking",
+      "discount": 10,
       "id": "g_prod_003",
       "images": [
         "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/054e83b5ebe789cf4b7b146319df4cfc"
       ],
       "inStock": true,
-      "name": "Tomatoes (1 kg)",
-      "price": 45,
-      "originalPrice": 50,
-      "discount": 10,
-      "rating": 4.1,
       "isBestseller": false,
+      "name": "Tomatoes (1 kg)",
+      "originalPrice": 50,
+      "price": 45,
+      "rating": 4.1,
       "sku": "VG-TOM-003",
       "slug": "tomatoes-1kg",
       "stock": 80,
@@ -271,17 +526,17 @@
     "g_prod_004": {
       "categoryId": "cat_veggies",
       "description": "Cleaned potatoes, good for all recipes",
+      "discount": 12,
       "id": "g_prod_004",
       "images": [
         "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/NI_CATALOG/IMAGES/CIW/2025/1/15/d81d80c8-9153-4e88-9cb1-4eb5f01b412e_1108.png"
       ],
       "inStock": true,
+      "isBestseller": true,
       "name": "Potatoes (1 kg)",
-      "price": 35,
       "originalPrice": 40,
-      "discount": 12,
-      "rating": 4.0,
-      "isBestseller": false,
+      "price": 35,
+      "rating": 4,
       "sku": "VG-POT-004",
       "slug": "potatoes-1kg",
       "stock": 200,
@@ -294,17 +549,17 @@
     "g_prod_005": {
       "categoryId": "cat_dairy",
       "description": "Full cream fresh milk, pasteurised",
+      "discount": 14,
       "id": "g_prod_005",
       "images": [
         "https://paal.co/wp-content/uploads/2025/03/Packet-Milk.png"
       ],
       "inStock": true,
-      "name": "Fresh Milk (1 L)",
-      "price": 60,
-      "originalPrice": 70,
-      "discount": 14,
-      "rating": 4.3,
       "isBestseller": true,
+      "name": "Fresh Milk (1 L)",
+      "originalPrice": 70,
+      "price": 60,
+      "rating": 4.3,
       "sku": "DA-MILK-005",
       "slug": "fresh-milk-1l",
       "stock": 150,
@@ -315,33 +570,19 @@
       "unit": "ltr"
     }
   },
-  "unitOptions": ["kg","g","ltr","ml","dozen","pcs","pack"],
-  "categoryProducts": {
-    "cat_fruits": {
-      "-OeoOZSHnC0eRgIwYvkT": true,
-      "g_prod_001": true,
-      "g_prod_002": true
-    },
-    "cat_veggies": {
-      "g_prod_003": true,
-      "g_prod_004": true
-    },
-    "cat_dairy": {
-      "g_prod_005": true
-    }
-  },
   "siteSettings": {
     "address": "Local Market Road, Your City, India",
     "bannerBgColor": "#df2121",
     "bannerLink": "",
+    "bannerOffers": "Test message",
     "bannerText": "Test message",
     "bannerTextColor": "",
     "bannerVisible": false,
-    "brandName": "QuickMart",
+    "brandName": "GriyaMart",
     "deliveryFee": 30,
-    "footerText": "© 2025 QuickMart. All rights reserved.",
+    "footerText": "© 2025 GriyaMart. All rights reserved.",
     "freeDeliveryMin": 500,
-    "instagram": "https://instagram.com/quickmart",
+    "instagram": "https://instagram.com/GriyaMart",
     "logoUrl": "https://us.123rf.com/450wm/vectorgalaxy/vectorgalaxy1805/vectorgalaxy180500944/101157287-mart-logo-isolated-on-white-background-for-your-web-and-mobile-app-design-colorful-vector-icon.jpg",
     "offers": [
       "Test message"

@@ -119,16 +119,16 @@ export default function ProductCard({ product }) {
               // No variants — fallback to existing handler
               handleAddToCart();
             }
-          }}
-          disabled={isLoading || !product.inStock}
-          className={`absolute top-0 right-0 w-8 h-8 bg-white border-2 border-blue-500 rounded-full flex items-center justify-center text-blue-500 font-bold text-lg transition-all duration-200 ${
+            }}
+            disabled={isLoading || !product.inStock}
+            className={`absolute top-0 right-0 w-8 h-8 bg-white border-2 border-blue-500 rounded-full flex items-center justify-center text-blue-500 font-bold text-lg transition-all duration-200 ${
             isLoading || !product.inStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-500 hover:text-white active:scale-95'
-          }`}
-        >
-          {isLoading ? '•••' : '+'}
-        </button>
+            }`}
+          >
+            {isLoading ? '•••' : '+'}
+          </button>
 
-        {/* Out of Stock Overlay */}
+          {/* Out of Stock Overlay */}
         {!product.inStock && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <span className="w-full bg-red-600 text-white rounded text-sm font-small flex items-center justify-center">

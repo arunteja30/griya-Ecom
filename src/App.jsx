@@ -25,6 +25,8 @@ import { CartProvider } from "./context/CartContext";
 import ToastContainer from "./components/Toast";
 import CheckoutPage from "./pages/CheckoutPage";
 import SeedSyncAdmin from "./pages/admin/SeedSyncAdmin";
+import BannersAdmin from "./pages/admin/BannersAdmin";
+import HomeConfigAdmin from "./pages/admin/HomeConfigAdmin";
 
 export default function App() {
   return (
@@ -52,6 +54,8 @@ export default function App() {
         <Route path="/admin/products" element={<AdminRoute><AdminLayout><ProductsAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/home" element={<AdminRoute><AdminLayout><HomepageAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/gallery" element={<AdminRoute><AdminLayout><GalleryAdmin /></AdminLayout></AdminRoute>} />
+        <Route path="/admin/banners" element={<AdminRoute><AdminLayout><BannersAdmin /></AdminLayout></AdminRoute>} />
+        <Route path="/admin/home-config" element={<AdminRoute><AdminLayout><HomeConfigAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/testimonials" element={<AdminRoute><AdminLayout><TestimonialsAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/orders" element={<AdminRoute><AdminLayout><OrdersAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/seed" element={<AdminRoute><AdminLayout><SeedSyncAdmin /></AdminLayout></AdminRoute>} />

@@ -12,7 +12,11 @@ export default function AdminLayout({ children }) {
           <Link to="/admin" className="text-sm">Site Settings</Link>
           <Link to="/admin/categories" className="text-sm">Categories</Link>
           <Link to="/admin/products" className="text-sm">Products</Link>
-          <Link to="/admin/home" className="text-sm">Homepage Sections</Link>
+          <div className="flex flex-col">
+            <Link to="/admin/home" className="text-sm">Homepage Sections</Link>
+            <Link to="/admin/home-config" className="text-sm ml-3 text-gray-600">Homepage Config</Link>
+          </div>
+          <Link to="/admin/banners" className="text-sm">Banners</Link>
           <Link to="/admin/gallery" className="text-sm">Gallery</Link>
           <Link to="/admin/testimonials" className="text-sm">Testimonials</Link>
           <Link to="/admin/orders" className="text-sm">Orders</Link>
