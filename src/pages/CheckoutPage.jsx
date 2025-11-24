@@ -100,9 +100,9 @@ export default function CheckoutPage() {
         onSuccess: async (resp) => {
           // resp contains razorpay_payment_id, razorpay_order_id, razorpay_signature
           const paymentInfo = {
-            razorpayPaymentId: resp?.razorpay_payment_id || resp?.payment_id,
-            razorpayOrderId: resp?.razorpay_order_id || resp?.order_id,
-            razorpaySignature: resp?.razorpay_signature || resp?.signature
+            razorpayPaymentId: resp?.razorpay_payment_id ?? resp?.payment_id ?? null,
+            razorpayOrderId: resp?.razorpay_order_id ?? resp?.order_id ?? null,
+            razorpaySignature: resp?.razorpay_signature ?? resp?.signature ?? null
           };
 
           const finalOrder = { ...order, payment: paymentInfo };
