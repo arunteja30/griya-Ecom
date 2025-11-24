@@ -11,6 +11,11 @@ export default function FilterBar({
   setFilterInStock,
   resultCount,
   onClearFilters,
+  // category filter props
+  categories = {},
+  selectedCategory = '',
+  setSelectedCategory = () => {},
+  showCategoryFilter = true,
   showPriceFilter = true,
   showStockFilter = true,
   searchPlaceholder = "Search..."
@@ -31,20 +36,25 @@ export default function FilterBar({
     { value: 'above200', label: 'Above ₹200' }
   ];
 
+  // compute grid class depending on which filters are shown
+  const gridClass = showCategoryFilter
+    ? (showPriceFilter && showStockFilter ? 'grid gap-4 grid-cols-1 md:grid-cols-4' : 'grid gap-4 grid-cols-1 md:grid-cols-3')
+    : (showPriceFilter && showStockFilter ? 'grid gap-4 grid-cols-1 md:grid-cols-3' : 'grid gap-4 grid-cols-1 md:grid-cols-2');
+
   return (
     <div className="bg-white rounded-lg shadow-sm border p-4 space-y-4">
       {/* Search Bar */}
       <div className="relative">
-        <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
         <input
           type="text"
-          placeholder={searchPlaceholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          placeholder={searchPlaceholder}
+          className="w-full p-2 pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
         />
+        <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M16.65 11A4.65 4.65 0 1111 6.65 4.65 4.65 0 0116.65 11z" />
+        </svg>
         {searchTerm && (
           <button
             onClick={() => setSearchTerm('')}
@@ -58,7 +68,24 @@ export default function FilterBar({
       </div>
 
       {/* Filter Options */}
-      <div className={`grid gap-4 ${showPriceFilter && showStockFilter ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
+      <div className={gridClass}>
+        {/* Category */}
+        {showCategoryFilter && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="">All Categories</option>
+              {Object.entries(categories).map(([cid, c]) => (
+                <option key={cid} value={cid}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Sort By */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>

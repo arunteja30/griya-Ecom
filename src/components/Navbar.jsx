@@ -58,7 +58,7 @@ export default function Navbar() {
               </div>
               <div>
                 <div className="font-bold text-lg text-primary-900 font-serif">
-                  {settings?.brandName || "Griya Jewellery"}
+                  {settings?.brandName || " "}
                 </div>
                 {settings?.tagline && (
                   <div className="text-xs text-neutral-500 font-medium">

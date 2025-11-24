@@ -18,7 +18,8 @@
     },
     "products": {
       ".read": true,
-      ".write": "auth != null && auth.token.isAdmin === true"
+      ".write": "auth != null && auth.token.isAdmin === true",
+      ".indexOn": ["categoryId"]
     },
     "gallery": {
       ".read": true,
@@ -32,6 +33,11 @@
     "orders": {
       ".read": "auth != null && (auth.token.isAdmin === true || data.child('customerId').val() === auth.uid)",
       ".write": "auth != null"
+    },
+
+    "categoryProducts": {
+      ".read": true,
+      ".write": "auth != null && auth.token.isAdmin === true"
     },
 
     ".read": false,

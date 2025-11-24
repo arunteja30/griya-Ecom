@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { showToast } from "./Toast";
@@ -11,12 +11,43 @@ export default function ProductCard({ product }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isBottomOpen, setIsBottomOpen] = useState(false);
 
+  // normalize variants to an array so frontend works with both shapes
+  const variants = Array.isArray(product.variants)
+    ? product.variants
+    : (product.variants ? Object.values(product.variants) : []);
+
+  const [selectedVariant, setSelectedVariant] = useState(null);
+
+  useEffect(() => {
+    if (variants && variants.length) {
+      // keep previous selection if possible, otherwise pick first
+      setSelectedVariant(prev => {
+        if (prev) {
+          const found = variants.find(v => v.id === prev.id);
+          if (found) return found;
+        }
+        return variants[0];
+      });
+    } else {
+      setSelectedVariant(null);
+    }
+  }, [product.variants]);
+
   const handleAddToCart = async () => {
     setIsLoading(true);
     try {
-      await addToCart(product, 1);
+      // construct a variant-aware product object for the cart
+      const baseId = product.id || product.slug || product.name;
+      const itemForCart = {
+        ...product,
+        id: selectedVariant ? `${baseId}-${selectedVariant.id}` : baseId,
+        variantId: selectedVariant?.id,
+        variantLabel: selectedVariant?.label,
+        price: selectedVariant ? Number(selectedVariant.price) : Number(product.price),
+        originalPrice: selectedVariant && selectedVariant.price && product.originalPrice ? Number(product.originalPrice) : product.originalPrice,
+      };
+      await addToCart(itemForCart, 1);
       showToast('Added to cart successfully!', 'success');
-      setIsBottomOpen(true);
     } catch (error) {
       showToast('Failed to add to cart', 'error');
     } finally {
@@ -34,97 +65,185 @@ export default function ProductCard({ product }) {
 
   return (
     <div 
-      className="relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-gray-100"
+      className="relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 group border border-gray-200"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Product Image Container - Swiggy style */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 aspect-square">
+      {/* Product Image Container - Exact Swiggy Instamart Style */}
+      <div className="relative overflow-hidden bg-gray-50 aspect-square">
         <img 
           src={normalizeImageUrl(product.images?.[0] || '/placeholder.jpg')} 
           alt={product.name} 
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover"
         />
         
-        {/* Gradient overlay at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
-        
-        {/* Stock status badge */}
-        {!product.inStock && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-              Out of Stock
-            </span>
-          </div>
-        )}
-
-        {/* Discount badge - Swiggy style */}
-        {product.discount && (
-          <div className="absolute top-2 left-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+        {/* Discount Badge - Top Left Corner with rounded corners */}
+        {product.discount && product.discount > 0 && product.inStock && (
+          <div className="absolute top-2 left-0 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-md">
             {product.discount}% OFF
           </div>
         )}
-        
-        {/* Bestseller badge */}
-        {product.isBestseller && (
-          <div className="absolute top-2 right-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
-            ⭐ BESTSELLER
-          </div>
-        )}
 
-        {/* Quick add button - Swiggy style */}
+        {/* Add Button - Top Right Corner - Blue circle with plus */}
         <button
-          onClick={handleAddToCart}
+          onClick={async (e) => {
+            e.stopPropagation();
+            if (isLoading || !product.inStock) return;
+
+            // If product has variants, prefer the selectedVariant (or fallback to first)
+            if (variants && variants.length) {
+              setIsLoading(true);
+              try {
+                const v = selectedVariant || variants[0];
+                const baseId = product.id || product.slug || product.name;
+                const itemForCart = {
+                  ...product,
+                  id: v ? `${baseId}-${v.id}` : baseId,
+                  variantId: v?.id,
+                  variantLabel: v?.label,
+                  price: v ? Number(v.price) : Number(product.price),
+                  originalPrice:
+                    v && v.price && product.originalPrice
+                      ? Number(product.originalPrice)
+                      : product.originalPrice,
+                };
+                await addToCart(itemForCart, 1);
+                showToast('Added to cart successfully!', 'success');
+                setIsBottomOpen(false);
+              } catch (error) {
+                showToast('Failed to add to cart', 'error');
+              } finally {
+                setIsLoading(false);
+              }
+            } else {
+              // No variants — fallback to existing handler
+              handleAddToCart();
+            }
+          }}
           disabled={isLoading || !product.inStock}
-          className={`absolute bottom-2 right-2 bg-white text-orange-500 border-2 border-orange-500 rounded-lg px-3 py-1 text-sm font-bold transition-all duration-200 hover:bg-orange-500 hover:text-white shadow-md ${
-            isLoading || !product.inStock ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+          className={`absolute top-0 right-0 w-8 h-8 bg-white border-2 border-blue-500 rounded-full flex items-center justify-center text-blue-500 font-bold text-lg transition-all duration-200 ${
+            isLoading || !product.inStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-500 hover:text-white active:scale-95'
           }`}
         >
-          {isLoading ? '...' : 'ADD'}
+          {isLoading ? '•••' : '+'}
         </button>
+
+        {/* Out of Stock Overlay */}
+        {!product.inStock && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <span className="w-full bg-red-600 text-white rounded text-sm font-small flex items-center justify-center">
+               Out of Stock
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Product Details - Swiggy style */}
-      <div className="p-3 space-y-2">
-        {/* Product Name */}
+      {/* Delivery Time - Below Image */}
+      <div className="px-3 pt-2">
+       {/* Product Name */}
         <Link to={`/product/${product.slug}`} className="block">
-          <h3 className="font-semibold text-gray-800 text-sm leading-tight line-clamp-2 hover:text-orange-600 transition-colors duration-200">
+          <h3 className="text-sm font-semibold text-gray-900 leading-tight line-clamp-2 mb-1 hover:text-blue-600 transition-colors">
             {product.name}
           </h3>
         </Link>
-
-        {/* Rating and time - Swiggy style */}
-        <div className="flex items-center justify-between text-xs text-gray-600">
-          {product.rating && (
-            <div className="flex items-center gap-1 bg-green-600 text-white px-1 py-0.5 rounded text-xs">
-              <span className="text-white">★</span>
-              <span>{product.rating}</span>
-            </div>
-          )}
-          {product.deliveryTime && (
-            <span className="text-gray-500">{product.deliveryTime} mins</span>
-          )}
-        </div>
-
-        {/* Price - Swiggy style */}
-        <div className="flex items-baseline gap-2">
-          <span className="text-lg font-bold text-gray-800">
-            ₹{product.price}
-          </span>
-          {product.originalPrice && product.originalPrice > product.price && (
-            <span className="text-sm text-gray-400 line-through">
-              ₹{product.originalPrice}
-            </span>
-          )}
-        </div>
-
-        {/* Description/category */}
-        {(product.description || product.category) && (
-          <p className="text-xs text-gray-500 line-clamp-1">
-            {product.description || product.category}
-          </p>
-        )}
       </div>
+
+      <div className="px-3 pt-0.5">
+        <span className="text-xs text-gray-500 line-clamp-2 top-0 left-0 font-medium">
+          {product.description ? `${product.description} ` : ' '}
+        </span>
+      </div>
+
+      {/* Product Details */}
+        <div className="px-3 pb-3 pt-1 text-left">
+
+          {/* Unit/Size - opens bottom sheet when variants exist */}
+
+           {variants && variants.length ? (
+          <div className="flex items-center mb-2">
+            <button onClick={() => setIsBottomOpen(true)} className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded flex items-center justify-start">
+          <span className="truncate">{selectedVariant ? `${selectedVariant.label} ${selectedVariant.unit || ''}` : (product.unit || '1 kg')}</span>
+          <svg className="w-3 h-3 ml-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+            </button>
+          </div>
+           ) : product.unit ? (
+            <div className="flex items-center mb-2">
+          <span className="text-xs text-gray-600">{product.unit}</span>
+            </div>
+          ) : null}
+
+          {/* Price Section */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-baseline gap-2">
+            <span className="text-base font-bold text-gray-900">
+              {selectedVariant ? formatPrice(selectedVariant.price) : `₹${product.price}`}
+            </span>
+            {product.originalPrice && product.originalPrice > (selectedVariant ? selectedVariant.price : product.price) && (
+              <span className="text-sm text-gray-400 line-through">
+                ₹{product.originalPrice}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <BottomSheet isOpen={isBottomOpen} onClose={() => setIsBottomOpen(false)} title={product.name}>
+        <div className="space-y-2 shadow-md">
+          {variants && variants.length ? variants.map(v => (
+            <div key={v.id} className="flex items-center justify-between p-2 border rounded">
+              <div>
+                <div className="font-medium">{v.label} {v.unit || ''}</div>
+             
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="font-semibold">{formatPrice(v.price)}</div>
+                {/* <button onClick={() => { setSelectedVariant(v); setIsBottomOpen(false); }}  */}
+
+                 <button onClick={async (e) => {
+                   setSelectedVariant(v);
+                   setIsBottomOpen(false);
+                   e.stopPropagation();
+                   if (isLoading || !product.inStock) return;
+                   console.log('Selected variant:', v?.price);
+
+            // If product has variants, prefer the selectedVariant (or fallback to first)
+            if (variants && variants.length) {
+              setIsLoading(true);
+              try {
+                const baseId = product.id || product.slug || product.name;
+                const itemForCart = {
+                  ...product,
+                  id: v ? `${baseId}-${v.id}` : baseId,
+                  variantId: v?.id,
+                  variantLabel: v?.label,
+                  price: v ? Number(v.price) : Number(product.price),
+                  unit: v?.label + v?.unit || product.unit
+                };
+              
+                await addToCart(itemForCart, 1);
+                showToast('Added to cart successfully!', 'success');
+                setIsBottomOpen(false);
+              } catch (error) {
+                showToast('Failed to add to cart', 'error');
+              } finally {
+                setIsLoading(false);
+              }
+            } else {
+              // No variants — fallback to existing handler
+              console.log('No variants available, falling back to default handler');
+              handleAddToCart();
+            }
+          }}
+                className="px-3 py-1 bg-blue-600 text-white rounded">Select</button>
+              </div>
+            </div>
+          )) : (
+            <div className="text-sm text-gray-500">No variants available</div>
+          )}
+        </div>
+      </BottomSheet>
     </div>
   );
 }

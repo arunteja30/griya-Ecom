@@ -1,190 +1,363 @@
 {
-  "siteSettings": {
-    "brandName": "QuickMart",
-    "tagline": "Daily essentials delivered fast",
-    "logoUrl": "/images/quickmart-logo.png",
-    "whatsapp": "+919900112233",
-    "instagram": "https://instagram.com/quickmart",
-    "address": "Local Market Road, Your City, India",
-    "footerText": "© 2025 QuickMart. All rights reserved."
-  },
-
-  "navigation": {
-    "header": [
-      { "id": "home", "title": "Home", "url": "/", "order": 1 },
-      { "id": "groceries", "title": "Groceries", "url": "/groceries", "order": 2 },
-      { "id": "about", "title": "About", "url": "/about", "order": 3 },
-      { "id": "contact", "title": "Contact", "url": "/contact", "order": 4 }
-    ],
-    "footer": [
-      { "id": "privacy", "title": "Privacy Policy", "url": "/privacy", "order": 1 }
-    ]
-  },
-
-  "home": {
-    "hero": {
-      "title": "Fresh groceries, delivered to your door",
-      "subtitle": "Fruits, vegetables, dairy and daily essentials",
-      "buttonText": "Shop Groceries",
-      "buttonUrl": "/groceries",
-      "image": "/images/grocery-hero.jpg"
-    }
-  },
-
   "about": {
-    "hero": {
-      "title": "About QuickMart",
-      "subtitle": "Reliable local grocery delivery",
-      "image": "/images/grocery-about.jpg"
+    "contact": {
+      "address": "Local Market Road, Your City, India",
+      "email": "hello@quickmart.example",
+      "phone": "+91 9900112233"
     },
     "content": [
       "QuickMart provides fresh groceries and essentials with fast delivery.",
       "We partner with trusted suppliers to bring quality produce to your home."
     ],
-    "contact": {
-      "phone": "+91 9900112233",
-      "email": "hello@quickmart.example",
-      "address": "Local Market Road, Your City, India"
+    "hero": {
+      "image": "/images/grocery-about.jpg",
+      "subtitle": "Reliable local grocery delivery",
+      "title": "About QuickMart"
     }
   },
-
   "categories": {
-    "cat_fruits": {
-      "id": "cat_fruits",
-      "name": "Fruits",
-      "slug": "fruits",
-      "description": "Fresh seasonal fruits",
-      "sortOrder": 1,
-      "image": "/images/categories/fruits.jpg"
-    },
-    "cat_veggies": {
-      "id": "cat_veggies",
-      "name": "Vegetables",
-      "slug": "vegetables",
-      "description": "Daily fresh vegetables",
-      "sortOrder": 2,
-      "image": "/images/categories/vegetables.jpg"
-    },
-    "cat_dairy": {
-      "id": "cat_dairy",
-      "name": "Dairy & Eggs",
-      "slug": "dairy-eggs",
-      "description": "Milk, paneer, yogurt and eggs",
-      "sortOrder": 3,
-      "image": "/images/categories/dairy-eggs.jpg"
-    },
-    "cat_staples": {
-      "id": "cat_staples",
-      "name": "Staples",
-      "slug": "staples",
-      "description": "Rice, flour, pulses and cooking essentials",
-      "sortOrder": 4,
-      "image": "/images/categories/staples.jpg"
-    },
     "cat_beverages": {
+      "description": "Juices, tea, coffee and soft drinks",
       "id": "cat_beverages",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/5bec1f84-4aa5-49ae-9c3d-9a0dcb9fe2ad_d990b4fc-4629-4cc6-bc7a-ace787fb378a",
       "name": "Beverages",
       "slug": "beverages",
-      "description": "Juices, tea, coffee and soft drinks",
-      "sortOrder": 5,
-      "image": "/images/categories/beverages.jpg"
+      "sortOrder": 5
+    },
+    "cat_dairy": {
+      "description": "Milk, paneer, yogurt and eggs",
+      "id": "cat_dairy",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/11/10/d667fa79-d093-4ba3-8983-57fa61a12ecf_6ab193a3-5d79-4549-a0e2-4fc75c4cb4fe",
+      "name": "Dairy & Eggs",
+      "slug": "dairy-eggs",
+      "sortOrder": 3
+    },
+    "cat_fruits": {
+      "description": "Fresh seasonal fruits",
+      "id": "cat_fruits",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/7155c5af-2f9d-41a3-92d6-2a0d7ecacd4f_361de9d0-8257-4479-8511-76f4f1cd2009",
+      "name": "Fruits",
+      "slug": "fruits",
+      "sortOrder": 1
     },
     "cat_snacks": {
+      "description": "Chips, biscuits and munchies",
       "id": "cat_snacks",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/23d6ea5b-a94e-455d-977d-03d09b0f27a3_ebb1a660-b475-4d22-82d5-d58689ff64e1",
       "name": "Snacks & Biscuits",
       "slug": "snacks",
-      "description": "Chips, biscuits and munchies",
-      "sortOrder": 6,
-      "image": "/images/categories/snacks.jpg"
+      "sortOrder": 6
+    },
+    "cat_staples": {
+      "description": "Rice, flour, pulses and cooking essentials",
+      "id": "cat_staples",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/11/17/c65894e4-5b70-4b9d-9d87-baba38e0ef6e_0cdf10e3-6c7c-4deb-9dbc-dcf24cd11fca",
+      "name": "Staples",
+      "slug": "staples",
+      "sortOrder": 4
+    },
+    "cat_veggies": {
+      "description": "Daily fresh vegetables",
+      "id": "cat_veggies",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/323b2564-9fa9-43dd-9755-b5df299797d7_a7f60fc5-47fa-429d-9fd1-5f0644c0d4e3",
+      "name": "Vegetables",
+      "slug": "vegetables",
+      "sortOrder": 2
     }
   },
-
+  "gallery": {
+    "img_1": {
+      "caption": "Fresh produce",
+      "order": 1,
+      "url": "/images/groceries/bananas.jpg"
+    },
+    "img_2": {
+      "caption": "Daily essentials",
+      "order": 2,
+      "url": "/images/groceries/veggies.jpg"
+    }
+  },
+  "home": {
+    "hero": {
+      "buttonText": "Shop Groceries",
+      "buttonUrl": "/groceries",
+      "image": "/images/grocery-hero.jpg",
+      "subtitle": "Fruits, vegetables, dairy and daily essentials",
+      "title": "Fresh groceries, delivered to your door"
+    }
+  },
+  "navigation": {
+    "footer": [
+      {
+        "id": "privacy",
+        "order": 1,
+        "title": "Privacy Policy",
+        "url": "/privacy"
+      }
+    ],
+    "header": [
+      {
+        "id": "home",
+        "order": 1,
+        "title": "Home",
+        "url": "/"
+      },
+      {
+        "id": "groceries",
+        "order": 2,
+        "title": "Groceries",
+        "url": "/groceries"
+      },
+      {
+        "id": "about",
+        "order": 3,
+        "title": "About",
+        "url": "/about"
+      },
+      {
+        "id": "contact",
+        "order": 4,
+        "title": "Contact",
+        "url": "/contact"
+      }
+    ]
+  },
+  "orders": {
+    "-OehZ3XOrYaq0JKLPRHL": {
+      "address": {
+        "city": "hyd",
+        "line1": "g1",
+        "name": "aruteja",
+        "phone": "9799956775",
+        "pincode": "500468"
+      },
+      "createdAt": "2025-11-22T21:55:05.489Z",
+      "id": "order_1763848505489",
+      "items": [
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples (1 kg)",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "status": "cancelled",
+      "total": 360
+    },
+    "-OehZnyerolsywCqdStc": {
+      "address": {
+        "city": "hyd",
+        "line1": "g1",
+        "name": "arunteh",
+        "phone": "989897876",
+        "pincode": "50056"
+      },
+      "createdAt": "2025-11-22T21:57:45.975Z",
+      "id": "order_1763848665975",
+      "items": [
+        {
+          "id": "g_prod_004",
+          "name": "Potatoes (1 kg)",
+          "price": 35,
+          "quantity": 10
+        }
+      ],
+      "payment": {
+        "razorpayOrderId": "order_RiwU8gPsvbcDob",
+        "razorpayPaymentId": "pay_RiwUUbEp9LwbAI",
+        "razorpaySignature": "3e73f49b8216bee93fbc9b74de634f7e102e7425a0ea5e6dff29aed2393fd516"
+      },
+      "status": "delivered",
+      "total": 350
+    }
+  },
   "products": {
-    "g_prod_001": {
-      "id": "g_prod_001",
-      "name": "Bananas (per dozen)",
-      "slug": "bananas-dozen",
-      "description": "Ripe Cavendish bananas, approx. 12 pcs",
-      "price": 60,
-      "unit": "dozen",
-      "images": ["/images/groceries/bananas.jpg"],
+    "-OeoOZSHnC0eRgIwYvkT": {
       "categoryId": "cat_fruits",
-      "tags": ["banana", "fruit"],
-      "sku": "FR-BAN-001",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/5bec1f84-4aa5-49ae-9c3d-9a0dcb9fe2ad_d990b4fc-4629-4cc6-bc7a-ace787fb378a"
+      ],
       "inStock": true,
-      "stock": 120
+      "name": "test fruite",
+      "price": 12000,
+      "originalPrice": 12500,
+      "discount": 4,
+      "rating": 3.8,
+      "isBestseller": false,
+      "slug": "test-fruite-1kg",
+      "unit": "kg",
+      "variants": [
+        { "label": "1 kg", "price": 12000 },
+        { "label": "500 g", "price": 6000 }
+      ]
+    },
+    "g_prod_001": {
+      "categoryId": "cat_fruits",
+      "description": "Ripe Cavendish bananas, approx. 12 pcs",
+      "id": "g_prod_001",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/959f3368e153e4cf3475e41318b33f8b"
+      ],
+      "inStock": true,
+      "name": "Bananas (per dozen)",
+      "price": 60,
+      "originalPrice": 70,
+      "discount": 14,
+      "rating": 4.5,
+      "isBestseller": true,
+      "sku": "FR-BAN-001",
+      "slug": "bananas-dozen",
+      "stock": 120,
+      "tags": [
+        "banana",
+        "fruit"
+      ],
+      "unit": "dozen",
+      "variants": [
+        { "label": "Per dozen", "price": 60 },
+        { "label": "Per kg", "price": 50 }
+      ]
     },
     "g_prod_002": {
-      "id": "g_prod_002",
-      "name": "Red Apples (1 kg)",
-      "slug": "red-apples-1kg",
-      "description": "Fresh red apples, approx. 1 kg",
-      "price": 180,
-      "unit": "kg",
-      "images": ["/images/groceries/apples.jpg"],
       "categoryId": "cat_fruits",
-      "tags": ["apple", "fruit"],
-      "sku": "FR-APP-002",
+      "description": "Fresh red apples, approx. 1 kg",
+      "id": "g_prod_002",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_600/53abc4b79446572e9c7a0eb090890cb6"
+      ],
       "inStock": true,
-      "stock": 40
+      "name": "Red Apples (1 kg)",
+      "price": 180,
+      "originalPrice": 200,
+      "discount": 10,
+      "rating": 4.6,
+      "isBestseller": true,
+      "sku": "FR-APP-002",
+      "slug": "red-apples-1kg",
+      "stock": 40,
+      "tags": [
+        "apple",
+        "fruit"
+      ],
+      "unit": "kg",
+      "variants": [
+        { "label": "1 kg", "price": 180 },
+        { "label": "500 g", "price": 95 }
+      ]
     },
     "g_prod_003": {
-      "id": "g_prod_003",
-      "name": "Tomatoes (1 kg)",
-      "slug": "tomatoes-1kg",
-      "description": "Fresh tomatoes, ideal for everyday cooking",
-      "price": 45,
-      "unit": "kg",
-      "images": ["/images/groceries/tomatoes.jpg"],
       "categoryId": "cat_veggies",
-      "tags": ["tomato", "vegetable"],
-      "sku": "VG-TOM-003",
+      "description": "Fresh tomatoes, ideal for everyday cooking",
+      "id": "g_prod_003",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/054e83b5ebe789cf4b7b146319df4cfc"
+      ],
       "inStock": true,
-      "stock": 80
+      "name": "Tomatoes (1 kg)",
+      "price": 45,
+      "originalPrice": 50,
+      "discount": 10,
+      "rating": 4.1,
+      "isBestseller": false,
+      "sku": "VG-TOM-003",
+      "slug": "tomatoes-1kg",
+      "stock": 80,
+      "tags": [
+        "tomato",
+        "vegetable"
+      ],
+      "unit": "kg"
     },
     "g_prod_004": {
-      "id": "g_prod_004",
-      "name": "Potatoes (1 kg)",
-      "slug": "potatoes-1kg",
-      "description": "Cleaned potatoes, good for all recipes",
-      "price": 35,
-      "unit": "kg",
-      "images": ["/images/groceries/potatoes.jpg"],
       "categoryId": "cat_veggies",
-      "tags": ["potato", "vegetable"],
-      "sku": "VG-POT-004",
+      "description": "Cleaned potatoes, good for all recipes",
+      "id": "g_prod_004",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/NI_CATALOG/IMAGES/CIW/2025/1/15/d81d80c8-9153-4e88-9cb1-4eb5f01b412e_1108.png"
+      ],
       "inStock": true,
-      "stock": 200
+      "name": "Potatoes (1 kg)",
+      "price": 35,
+      "originalPrice": 40,
+      "discount": 12,
+      "rating": 4.0,
+      "isBestseller": false,
+      "sku": "VG-POT-004",
+      "slug": "potatoes-1kg",
+      "stock": 200,
+      "tags": [
+        "potato",
+        "vegetable"
+      ],
+      "unit": "kg"
     },
     "g_prod_005": {
-      "id": "g_prod_005",
-      "name": "Fresh Milk (1 L)",
-      "slug": "fresh-milk-1l",
-      "description": "Full cream fresh milk, pasteurised",
-      "price": 60,
-      "unit": "ltr",
-      "images": ["/images/groceries/milk.jpg"],
       "categoryId": "cat_dairy",
-      "tags": ["milk", "dairy"],
-      "sku": "DA-MILK-005",
+      "description": "Full cream fresh milk, pasteurised",
+      "id": "g_prod_005",
+      "images": [
+        "https://paal.co/wp-content/uploads/2025/03/Packet-Milk.png"
+      ],
       "inStock": true,
-      "stock": 150
+      "name": "Fresh Milk (1 L)",
+      "price": 60,
+      "originalPrice": 70,
+      "discount": 14,
+      "rating": 4.3,
+      "isBestseller": true,
+      "sku": "DA-MILK-005",
+      "slug": "fresh-milk-1l",
+      "stock": 150,
+      "tags": [
+        "milk",
+        "dairy"
+      ],
+      "unit": "ltr"
     }
   },
-
-  "gallery": {
-    "img_1": { "url": "/images/groceries/bananas.jpg", "caption": "Fresh produce", "order": 1 },
-    "img_2": { "url": "/images/groceries/veggies.jpg", "caption": "Daily essentials", "order": 2 }
+  "unitOptions": ["kg","g","ltr","ml","dozen","pcs","pack"],
+  "categoryProducts": {
+    "cat_fruits": {
+      "-OeoOZSHnC0eRgIwYvkT": true,
+      "g_prod_001": true,
+      "g_prod_002": true
+    },
+    "cat_veggies": {
+      "g_prod_003": true,
+      "g_prod_004": true
+    },
+    "cat_dairy": {
+      "g_prod_005": true
+    }
   },
-
+  "siteSettings": {
+    "address": "Local Market Road, Your City, India",
+    "bannerBgColor": "#df2121",
+    "bannerLink": "",
+    "bannerText": "Test message",
+    "bannerTextColor": "",
+    "bannerVisible": false,
+    "brandName": "QuickMart",
+    "deliveryFee": 30,
+    "footerText": "© 2025 QuickMart. All rights reserved.",
+    "freeDeliveryMin": 500,
+    "instagram": "https://instagram.com/quickmart",
+    "logoUrl": "https://us.123rf.com/450wm/vectorgalaxy/vectorgalaxy1805/vectorgalaxy180500944/101157287-mart-logo-isolated-on-white-background-for-your-web-and-mobile-app-design-colorful-vector-icon.jpg",
+    "offers": [
+      "Test message"
+    ],
+    "otherFee": 0,
+    "platformFee": 10,
+    "surgeFee": 10,
+    "tagline": "Daily essentials delivered fast",
+    "whatsapp": "+918341223637"
+  },
   "testimonials": {
     "t1": {
-      "name": "Asha Patel",
+      "date": "2025-03-12",
       "message": "Fresh produce and quick delivery!",
-      "rating": 5,
-      "date": "2025-03-12"
+      "name": "Asha Patel",
+      "rating": 5
     }
-  },
-
-  "orders": {}
+  }
 }
