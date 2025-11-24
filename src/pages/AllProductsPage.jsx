@@ -3,6 +3,7 @@ import { useFirebaseList } from "../hooks/useFirebase";
 import ProductCard from "../components/ProductCard";
 import Loader from "../components/Loader";
 import FilterBar from "../components/FilterBar";
+import MobileFilterButton from "../components/MobileFilterButton";
 
 export default function AllProductsPage() {
   const { data: productsData, loading } = useFirebaseList("/products");
@@ -63,7 +64,22 @@ export default function AllProductsPage() {
         <p className="text-gray-600">Browse everything we offer</p>
       </div>
 
-      <FilterBar
+      <div className="hidden md:block">
+        <FilterBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          priceRange={priceRange}
+          setPriceRange={setPriceRange}
+          filterInStock={filterInStock}
+          setFilterInStock={setFilterInStock}
+          resultCount={filteredAndSortedProducts.length}
+          onClearFilters={() => { setSearchTerm(''); setPriceRange('all'); setFilterInStock(false); setSortBy('name'); }}
+        />
+      </div>
+
+      <MobileFilterButton
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         sortBy={sortBy}

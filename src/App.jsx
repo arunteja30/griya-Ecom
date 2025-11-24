@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
+import About from "./pages/About";
 import CollectionsPage from "./pages/CollectionsPage";
 import AllProductsPage from "./pages/AllProductsPage";
 import CategoryProductsPage from "./pages/CategoryProductsPage";
@@ -29,6 +30,7 @@ export default function App() {
     <CartProvider>
       <Routes>
         <Route path="/" element={<Layout fullWidth><HomePage /></Layout>} />
+        <Route path="/about" element={<Layout><About /></Layout>} />
         <Route path="/groceries" element={<Layout><AllProductsPage /></Layout>} />
         <Route path="/groceries/:categorySlug" element={<Layout><CategoryProductsPage /></Layout>} />
         <Route path="/category/:categoryId" element={<Layout><CategoryPage /></Layout>} />

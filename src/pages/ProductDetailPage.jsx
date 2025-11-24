@@ -135,8 +135,8 @@ export default function ProductDetailPage() {
 
           {/* Add to Cart Section */}
           <div className="bg-gray-50 rounded-xl p-6 space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center bg-white rounded-lg border border-gray-200">
+            <div className="flex flex-col sm:flex-row items-center sm:items-stretch gap-4">
+              <div className="flex items-center bg-white rounded-full border border-gray-200 px-1">
                 <button 
                   onClick={() => setQty(Math.max(1, qty - 1))}
                   className="p-3 text-gray-600 hover:text-gray-800 transition-colors"

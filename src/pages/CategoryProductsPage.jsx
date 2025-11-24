@@ -5,6 +5,7 @@ import ProductCard from "../components/ProductCard";
 import Loader from "../components/Loader";
 import SectionTitle from "../components/SectionTitle";
 import FilterBar from "../components/FilterBar";
+import MobileFilterButton from "../components/MobileFilterButton";
 
 export default function CategoryProductsPage() {
   const { categorySlug } = useParams();
@@ -86,7 +87,29 @@ export default function CategoryProductsPage() {
       </div>
 
       {/* Search and Filters - Swiggy style */}
-      <FilterBar
+      <div className="hidden md:block">
+        <FilterBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          priceRange={priceRange}
+          setPriceRange={setPriceRange}
+          filterInStock={filterInStock}
+          setFilterInStock={setFilterInStock}
+          resultCount={filteredAndSortedProducts.length}
+          searchPlaceholder="Search products..."
+          onClearFilters={() => {
+            setSearchTerm('');
+            setPriceRange('all');
+            setFilterInStock(false);
+            setSortBy('name');
+          }}
+        />
+      </div>
+
+      {/* Mobile filter button */}
+      <MobileFilterButton
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         sortBy={sortBy}
