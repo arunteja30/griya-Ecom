@@ -1,15 +1,9 @@
-Griya Jewellery - Vite + React + Tailwind + Firebase Realtime DB
+delivery-p
 
-This scaffold reads all dynamic content from Firebase Realtime Database. Replace the placeholders in `src/firebase.js` with your project's config and populate the Realtime Database paths:
+Scaffolded Vite + React demo app inside the workspace. Run:
 
-- /siteContent
-- /banners
-- /categories
-- /products
+1. cd delivery-p
+2. npm install
+3. npm run dev
 
-Run locally:
-
-1. npm install
-2. npm run dev
-
-Firebase hosting or Vercel: configure your project and deploy the built site.
+This app is intentionally minimal — edit `src/App.jsx` to begin.

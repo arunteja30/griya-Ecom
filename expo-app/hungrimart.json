@@ -1,0 +1,654 @@
+{
+  "about": {
+    "contact": {
+      "address": "Local Market Road, Your City, India",
+      "email": "hello@quickmart.example",
+      "phone": "+91 9900112233"
+    },
+    "content": [
+      "QuickMart provides fresh groceries and essentials with fast delivery.",
+      "We partner with trusted suppliers to bring quality produce to your home."
+    ],
+    "hero": {
+      "image": "/images/grocery-about.jpg",
+      "subtitle": "Reliable local grocery delivery",
+      "title": "About QuickMart"
+    }
+  },
+  "categories": {
+    "cat_beverages": {
+      "description": "Juices, tea, coffee and soft drinks",
+      "id": "cat_beverages",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/5bec1f84-4aa5-49ae-9c3d-9a0dcb9fe2ad_d990b4fc-4629-4cc6-bc7a-ace787fb378a",
+      "name": "Beverages",
+      "slug": "beverages",
+      "sortOrder": 5
+    },
+    "cat_dairy": {
+      "description": "Milk, paneer, yogurt and eggs",
+      "id": "cat_dairy",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/11/10/d667fa79-d093-4ba3-8983-57fa61a12ecf_6ab193a3-5d79-4549-a0e2-4fc75c4cb4fe",
+      "name": "Dairy & Eggs",
+      "slug": "dairy-eggs",
+      "sortOrder": 3
+    },
+    "cat_fruits": {
+      "description": "Fresh seasonal fruits",
+      "id": "cat_fruits",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/7155c5af-2f9d-41a3-92d6-2a0d7ecacd4f_361de9d0-8257-4479-8511-76f4f1cd2009",
+      "name": "Fruits",
+      "slug": "fruits",
+      "sortOrder": 1
+    },
+    "cat_snacks": {
+      "description": "Chips, biscuits and munchies",
+      "id": "cat_snacks",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/23d6ea5b-a94e-455d-977d-03d09b0f27a3_ebb1a660-b475-4d22-82d5-d58689ff64e1",
+      "name": "Snacks & Biscuits",
+      "slug": "snacks",
+      "sortOrder": 6
+    },
+    "cat_staples": {
+      "description": "Rice, flour, pulses and cooking essentials",
+      "id": "cat_staples",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/11/17/c65894e4-5b70-4b9d-9d87-baba38e0ef6e_0cdf10e3-6c7c-4deb-9dbc-dcf24cd11fca",
+      "name": "Staples",
+      "slug": "staples",
+      "sortOrder": 4
+    },
+    "cat_veggies": {
+      "description": "Daily fresh vegetables",
+      "id": "cat_veggies",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/323b2564-9fa9-43dd-9755-b5df299797d7_a7f60fc5-47fa-429d-9fd1-5f0644c0d4e3",
+      "name": "Vegetables",
+      "slug": "vegetables",
+      "sortOrder": 2
+    }
+  },
+  "categoryProducts": {
+    "cat_dairy": {
+      "g_prod_005": true
+    },
+    "cat_fruits": {
+      "-OepeEMa2LDVs2EuH2Ft": true,
+      "g_prod_001": true,
+      "g_prod_002": true
+    },
+    "cat_veggies": {
+      "g_prod_003": true,
+      "g_prod_004": true
+    }
+  },
+  "gallery": {
+    "img_1": {
+      "caption": "Fresh produce",
+      "order": 1,
+      "url": "/images/groceries/bananas.jpg"
+    },
+    "img_2": {
+      "caption": "Daily essentials",
+      "order": 2,
+      "url": "/images/groceries/veggies.jpg"
+    }
+  },
+  "home": {
+    "hero": {
+      "buttonText": "Shop Groceries",
+      "buttonUrl": "/groceries",
+      "image": "/images/grocery-hero.jpg",
+      "subtitle": "Fruits, vegetables, dairy and daily essentials",
+      "title": "Fresh groceries, delivered to your door"
+    }
+  },
+  "navigation": {
+    "footer": [
+      {
+        "id": "privacy",
+        "order": 1,
+        "title": "Privacy Policy",
+        "url": "/privacy"
+      }
+    ],
+    "header": [
+      {
+        "id": "home",
+        "order": 1,
+        "title": "Home",
+        "url": "/"
+      },
+      {
+        "id": "groceries",
+        "order": 2,
+        "title": "Groceries",
+        "url": "/groceries"
+      },
+      {
+        "id": "about",
+        "order": 3,
+        "title": "About",
+        "url": "/about"
+      },
+      {
+        "id": "contact",
+        "order": 4,
+        "title": "Contact",
+        "url": "/contact"
+      }
+    ]
+  },
+
+  "riders": {
+    "tDQqs8OSe4QeeZDh9mGvZRQDb9p2": {
+      "uid": "rider_001",
+      "name": "Arun Teja",
+      "phone": "+91 9876543210",
+      "vehicleNumber": "KA01AB1234",
+      "isOnline": true,
+      "photoUrl": "",
+      "lastSeenAt": 1764007000000
+    },
+    "rider_002": {
+      "uid": "rider_002",
+      "name": "Sita Devi",
+      "phone": "+91 9988776655",
+      "vehicleNumber": "KA02CD5678",
+      "isOnline": false,
+      "photoUrl": "",
+      "lastSeenAt": 1763990000000
+    }
+  },
+
+  "riderLocations": {
+    "tDQqs8OSe4QeeZDh9mGvZRQDb9p2": {
+      "lat": 17.4401,
+      "lng": 78.3489,
+      "ts": 1764007000000
+    },
+    "rider_002": {
+      "lat": 17.4350,
+      "lng": 78.3420,
+      "ts": 1763990000000
+    }
+  },
+
+  "orders": {
+    "-OehZ3XOrYaq0JKLPRHL": {
+      "address": {
+        "city": "hyd",
+        "line1": "g1",
+        "name": "aruteja",
+        "phone": "9799956775",
+        "pincode": "500468"
+      },
+      "createdAt": "2025-11-22T21:55:05.489Z",
+      "id": "order_1763848505489",
+      "items": [
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples (1 kg)",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "status": "CANCELLED",
+      "total": 360,
+      "pickupAddress": "g1, hyd",
+      "dropAddress": "g1, hyd",
+      "customerName": "aruteja",
+      "customerPhone": "9799956775",
+      "orderItems": [
+        { "name": "Red Apples (1 kg)", "qty": 2 }
+      ],
+      "paymentType": "COD",
+      "amount": 360,
+      "pickupLocation": null,
+      "dropLocation": null,
+      "orderStatusHistory": [{ "status": "CANCELLED", "ts": 1763848505489 }]
+    },
+    "-OehZnyerolsywCqdStc": {
+      "address": {
+        "city": "hyd",
+        "line1": "g1",
+        "name": "arunteh",
+        "phone": "989897876",
+        "pincode": "50056"
+      },
+      "createdAt": "2025-11-22T21:57:45.975Z",
+      "id": "order_1763848665975",
+      "items": [
+        {
+          "id": "g_prod_004",
+          "name": "Potatoes (1 kg)",
+          "price": 35,
+          "quantity": 10
+        }
+      ],
+      "payment": {
+        "razorpayOrderId": "order_RiwU8gPsvbcDob",
+        "razorpayPaymentId": "pay_RiwUUbEp9LwbAI",
+        "razorpaySignature": "3e73f49b8216bee93fbc9b74de634f7e102e7425a0ea5e6dff29aed2393fd516"
+      },
+      "status": "DELIVERED",
+      "total": 350,
+      "pickupAddress": "g1, hyd",
+      "dropAddress": "g1, hyd",
+      "customerName": "arunteh",
+      "customerPhone": "989897876",
+      "orderItems": [ { "name": "Potatoes (1 kg)", "qty": 10 } ],
+      "paymentType": "PREPAID",
+      "amount": 350,
+      "pickupLocation": null,
+      "dropLocation": null,
+      "orderStatusHistory": [{ "status": "DELIVERED", "ts": 1763848665975 }]
+    },
+    "-OeqqzjX9kauoNn4d-GK": {
+      "address": {
+        "city": "hyd",
+        "line1": "G1",
+        "name": "Arunteja",
+        "phone": "98989898",
+        "pincode": "500045"
+      },
+      "createdAt": "2025-11-24T17:14:21.521Z",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764004461520",
+      "items": [
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "subtotal": 360,
+      "total": 410,
+      "status": "ASSIGNED",
+      "riderId": "tDQqs8OSe4QeeZDh9mGvZRQDb9p2",
+      "currentRiderLocation": {
+        "lat": 17.4402,
+        "lng": 78.3490,
+        "ts": 1764007060000
+      },
+      "pickupAddress": "G1, hyd",
+      "dropAddress": "G1, hyd",
+      "customerName": "Arunteja",
+      "customerPhone": "98989898",
+      "orderItems": [{ "name": "Red Apples", "qty": 2 }],
+      "paymentType": "COD",
+      "amount": 410,
+      "pickupLocation": { "lat": 17.4400, "lng": 78.3495 },
+      "dropLocation": { "lat": 17.4415, "lng": 78.3500 },
+      "orderStatusHistory": [{ "status": "ASSIGNED", "ts": 1764004461520 }]
+    },
+    "-Oequ7HZPPRji3H0Gn1B": {
+      "address": {
+        "city": "Hyd",
+        "line1": "G1",
+        "name": "griya",
+        "phone": "9898989898",
+        "pincode": "500045"
+      },
+      "createdAt": "2025-11-24T17:25:21.607Z",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764005121607",
+      "items": [
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "payment": {
+        "razorpayPaymentId": "pay_RjexCN3uAUPEuz"
+      },
+      "subtotal": 360,
+      "total": 410,
+      "status": "DELIVERED",
+      "pickupAddress": "G1, Hyd",
+      "dropAddress": "G1, Hyd",
+      "customerName": "griya",
+      "customerPhone": "9898989898",
+      "orderItems": [{ "name": "Red Apples", "qty": 2 }],
+      "paymentType": "PREPAID",
+      "amount": 410,
+      "pickupLocation": null,
+      "dropLocation": null,
+      "orderStatusHistory": [{ "status": "DELIVERED", "ts": 1764005121607 }]
+    },
+    "-Oeqy7aAsUuLK-8Vko15": {
+      "address": {
+        "city": "hyd",
+        "line1": "g1",
+        "name": "ram",
+        "phone": "8989898989",
+        "pincode": "500045"
+      },
+      "createdAt": "2025-11-24T17:45:01.803Z",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764006301803",
+      "items": [
+        {
+          "id": "-OepeEMa2LDVs2EuH2Ft-v-1763984258876",
+          "name": "test fruit",
+          "price": 15,
+          "quantity": 1
+        },
+        {
+          "id": "-OepeEMa2LDVs2EuH2Ft-v-1763984267880",
+          "name": "test fruit",
+          "price": 30,
+          "quantity": 1
+        },
+        {
+          "id": "g_prod_002-undefined",
+          "name": "Red Apples",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "payment": {
+        "razorpayPaymentId": "pay_RjfFj6c6mUKtzn"
+      },
+      "subtotal": 405,
+      "total": 455,
+      "status": "ON_THE_WAY",
+      "riderId": "tDQqs8OSe4QeeZDh9mGvZRQDb9p2",
+      "currentRiderLocation": {
+        "lat": 17.4410,
+        "lng": 78.3505,
+        "ts": 1764007200000
+      },
+      "pickupAddress": "g1, hyd",
+      "dropAddress": "g1, hyd",
+      "customerName": "ram",
+      "customerPhone": "8989898989",
+      "orderItems": [
+        { "name": "test fruit", "qty": 1 },
+        { "name": "test fruit", "qty": 1 },
+        { "name": "Red Apples", "qty": 2 }
+      ],
+      "paymentType": "PREPAID",
+      "amount": 455,
+      "pickupLocation": null,
+      "dropLocation": null,
+      "orderStatusHistory": [{ "status": "ON_THE_WAY", "ts": 1764006301803 }]
+    },
+    "-OerAr7y6hKqbMMvOM0X": {
+      "address": {
+        "city": "test",
+        "line1": "test",
+        "name": "test",
+        "phone": "999999999",
+        "pincode": "500545"
+      },
+      "createdAt": "2025-11-24T18:45:03.117Z",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764009903116",
+      "items": [
+        {
+          "id": "g_prod_001",
+          "name": "Bananas (per dozen)",
+          "price": 60,
+          "quantity": 1
+        },
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples (1 kg)",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "payment": {
+        "razorpayPaymentId": "pay_RjgH5LVm2vIldU"
+      },
+      "subtotal": 420,
+      "total": 470,
+      "status": "ASSIGNED",
+      "riderId": null,
+      "pickupAddress": "test, test",
+      "dropAddress": "test, test",
+      "customerName": "test",
+      "customerPhone": "999999999",
+      "orderItems": [ { "name": "Bananas (per dozen)", "qty": 1 }, { "name": "Red Apples (1 kg)", "qty": 2 } ],
+      "paymentType": "PREPAID",
+      "amount": 470,
+      "pickupLocation": null,
+      "dropLocation": null,
+      "orderStatusHistory": [{ "status": "ASSIGNED", "ts": 1764009903116 }]
+    }
+  },
+  "products": {
+    "-OepeEMa2LDVs2EuH2Ft": {
+      "categoryId": "cat_fruits",
+      "description": "tasty fruit",
+      "discount": 40,
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/NI_CATALOG/IMAGES/ciw/2025/10/6/4e30fbf3-3361-4eed-9c72-61918d894b43_NPI-041393_1_20251006_060227.png"
+      ],
+      "inStock": true,
+      "isBestseller": false,
+      "name": "test fruit",
+      "originalPrice": 25,
+      "price": 15,
+      "rating": 5,
+      "slug": "test fruite 200gm",
+      "stock": 1,
+      "unit": "g",
+      "unitValue": "200",
+      "variants": {
+        "v-1763984258876": {
+          "id": "v-1763984258876",
+          "label": "200",
+          "price": 15,
+          "unit": "gms"
+        },
+        "v-1763984267880": {
+          "id": "v-1763984267880",
+          "label": "500",
+          "price": 30,
+          "unit": "gms"
+        }
+      }
+    },
+    "g_prod_001": {
+      "categoryId": "cat_fruits",
+      "description": "Ripe Cavendish bananas, approx. 12 pcs",
+      "discount": 14,
+      "id": "g_prod_001",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/959f3368e153e4cf3475e41318b33f8b"
+      ],
+      "inStock": false,
+      "isBestseller": true,
+      "name": "Bananas (per dozen)",
+      "originalPrice": 70,
+      "price": 60,
+      "rating": 4.5,
+      "sku": "FR-BAN-001",
+      "slug": "bananas-dozen",
+      "stock": 120,
+      "tags": [
+        "banana",
+        "fruit"
+      ],
+      "unit": "dozen",
+      "variants": {
+        "per-dozen": {
+          "id": "per-dozen",
+          "label": "Per dozen",
+          "price": 60,
+          "unit": "Perdozen"
+        },
+        "per-kg": {
+          "id": "per-kg",
+          "label": "Per kg",
+          "price": 50,
+          "unit": "Perkg"
+        }
+      }
+    },
+    "g_prod_002": {
+      "categoryId": "cat_fruits",
+      "description": "Fresh red apples",
+      "discount": "10",
+      "id": "g_prod_002",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_600/53abc4b79446572e9c7a0eb090890cb6"
+      ],
+      "inStock": true,
+      "isBestseller": true,
+      "name": "Red Apples",
+      "originalPrice": 200,
+      "price": 180,
+      "rating": 4.6,
+      "sku": "FR-APP-002",
+      "slug": "red-apples-1kg",
+      "stock": 40,
+      "tags": [
+        "apple",
+        "fruit"
+      ],
+      "unit": "g",
+      "unitValue": "500",
+      "variants": [
+        {
+          "label": "1 kg",
+          "price": 180
+        },
+        {
+          "label": "500 g",
+          "price": 95
+        }
+      ]
+    },
+    "g_prod_003": {
+      "categoryId": "cat_veggies",
+      "description": "Fresh tomatoes, ideal for everyday cooking",
+      "discount": 10,
+      "id": "g_prod_003",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/054e83b5ebe789cf4b7b146319df4cfc"
+      ],
+      "inStock": true,
+      "isBestseller": false,
+      "name": "Tomatoes (1 kg)",
+      "originalPrice": 50,
+      "price": 45,
+      "rating": 4.1,
+      "sku": "VG-TOM-003",
+      "slug": "tomatoes-1kg",
+      "stock": 80,
+      "tags": [
+        "tomato",
+        "vegetable"
+      ],
+      "unit": "kg"
+    },
+    "g_prod_004": {
+      "categoryId": "cat_veggies",
+      "description": "Cleaned potatoes, good for all recipes",
+      "discount": 12,
+      "id": "g_prod_004",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/NI_CATALOG/IMAGES/CIW/2025/1/15/d81d80c8-9153-4e88-9cb1-4eb5f01b412e_1108.png"
+      ],
+      "inStock": true,
+      "isBestseller": true,
+      "name": "Potatoes (1 kg)",
+      "originalPrice": 40,
+      "price": 35,
+      "rating": 4,
+      "sku": "VG-POT-004",
+      "slug": "potatoes-1kg",
+      "stock": 200,
+      "tags": [
+        "potato",
+        "vegetable"
+      ],
+      "unit": "kg"
+    },
+    "g_prod_005": {
+      "categoryId": "cat_dairy",
+      "description": "Full cream fresh milk, pasteurised",
+      "discount": 14,
+      "id": "g_prod_005",
+      "images": [
+        "https://paal.co/wp-content/uploads/2025/03/Packet-Milk.png"
+      ],
+      "inStock": true,
+      "isBestseller": true,
+      "name": "Fresh Milk (1 L)",
+      "originalPrice": 70,
+      "price": 60,
+      "rating": 4.3,
+      "sku": "DA-MILK-005",
+      "slug": "fresh-milk-1l",
+      "stock": 150,
+      "tags": [
+        "milk",
+        "dairy"
+      ],
+      "unit": "ltr"
+    }
+  },
+  "siteSettings": {
+    "address": "Local Market Road, Your City, India",
+    "bannerBgColor": "#df2121",
+    "bannerLink": "",
+    "bannerOffers": "Test message",
+    "bannerText": "Test message",
+    "bannerTextColor": "",
+    "bannerVisible": false,
+    "brandName": "GriyaMart",
+    "deliveryFee": 30,
+    "footerText": "© 2025 GriyaMart. All rights reserved.",
+    "freeDeliveryMin": 500,
+    "instagram": "https://instagram.com/GriyaMart",
+    "logoUrl": "https://us.123rf.com/450wm/vectorgalaxy/vectorgalaxy1805/vectorgalaxy180500944/101157287-mart-logo-isolated-on-white-background-for-your-web-and-mobile-app-design-colorful-vector-icon.jpg",
+    "offers": [
+      "Test message"
+    ],
+    "otherFee": 0,
+    "platformFee": 10,
+    "surgeFee": 10,
+    "tagline": "Daily essentials delivered fast",
+    "whatsapp": "+918341223637"
+  },
+  "testimonials": {
+    "t1": {
+      "date": "2025-03-12",
+      "message": "Fresh produce and quick delivery!",
+      "name": "Asha Patel",
+      "rating": 5
+    }
+  }
+}

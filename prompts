@@ -1,0 +1,393 @@
+DELIVERY PARTNER APP – FULL PROMPT PACK
+=======================================
+
+Goal:
+A simple Delivery Partner app (like Swiggy/Zomato rider app) built with:
+- React Native (Expo)
+- Firebase (Auth + Firestore or Realtime Database)
+- Riders login with credentials given by admin (NO self-signup)
+
+Key features:
+- Login (only, no registration)
+- Go Online / Offline
+- View assigned orders
+- Accept / Reject new orders (optional)
+- View order details (pickup, drop, items, payment type)
+- Update order status (Reached store → Picked up → On the way → Delivered)
+- View earnings & completed orders
+- Basic profile & logout
+
+===================================================
+PROMPT 1 – Architecture, Screens & Data Model
+===================================================
+
+You are a senior mobile engineer.
+
+Help me design a **Delivery Partner app** for iOS and Android.
+
+Tech stack:
+- React Native with Expo
+- JavaScript (no TypeScript, to keep it simple)
+- Firebase (you choose Firestore or Realtime Database and justify briefly)
+
+Requirements:
+- Riders **cannot register** in the app.
+  - Admin will create their account in Firebase Auth and/or Firestore.
+  - App should only have **Login** (no Signup screen).
+- App features:
+  - Login with email/password (credentials created by admin).
+  - Toggle button: Go Online / Go Offline.
+  - Show current assigned order (if any).
+  - Orders list (Assigned / Ongoing / Completed).
+  - Order Details:
+    - Pickup location
+    - Drop location
+    - Items summary
+    - Payment type (Prepaid / COD)
+    - Customer name & phone (read-only).
+  - Status update buttons:
+    - Reached Store
+    - Picked Up
+    - On the Way
+    - Delivered
+  - Earnings screen:
+    - Today’s earnings
+    - This week
+    - Completed orders list.
+  - Profile screen:
+    - Name, phone, vehicle number, online status.
+    - Logout.
+
+I need from you:
+1. List of all screens (name + short description).
+2. Suggested navigation structure using React Navigation:
+   - Which stacks / tabs?
+   - Which screen is initial?
+3. Simple data model for:
+   - Rider (delivery partner)
+   - Order
+   - OrderStatusHistory / timeline
+4. Proposed folder structure for React Native app:
+   - e.g. `screens/`, `components/`, `navigation/`, `services/`, `contexts/`, etc.
+
+Keep it practical and not over-engineered.
+
+===================================================
+PROMPT 2 – Project Setup (Expo, Navigation, Firebase)
+===================================================
+
+Now that we have architecture and screens, generate the basic app setup.
+
+Requirements:
+- Use **Expo** (managed workflow) and JavaScript.
+- Show me commands to:
+  - Create a new Expo app.
+  - Install React Navigation (stack + bottom tabs if needed).
+  - Install Firebase SDK.
+- Create base files:
+  - `App.js`
+  - `navigation/AppNavigator.js`
+- Setup navigation with:
+  - Auth stack:
+    - LoginScreen
+  - App stack:
+    - Main tabs or stack as you proposed in Prompt 1
+- Initialize Firebase:
+  - Create `firebaseConfig.js` with:
+    - Firebase config object (placeholders)
+    - `initializeApp`
+    - `getAuth`, `getFirestore` or `getDatabase` (depending on your choice)
+- Ensure:
+  - Login screen is shown if user is not logged in.
+  - App screens are shown if user is logged in.
+
+Deliverables:
+- Exact npm/yarn commands.
+- The full code for `App.js`, `AppNavigator.js`, and `firebaseConfig.js` with placeholders for keys.
+
+===================================================
+PROMPT 3 – Auth Logic (Login Only, No Signup)
+===================================================
+
+Implement authentication flow.
+
+Important:
+- No registration/signup UI.
+- Only allow login with **email/password**.
+- Admin will create user accounts in Firebase.
+
+Requirements:
+- Create:
+  - `contexts/AuthContext.js` to manage:
+    - `user`
+    - `loading`
+    - `login(email, password)`
+    - `logout()`
+  - Use Firebase Auth under the hood.
+- Create `screens/LoginScreen.js`:
+  - Email and Password inputs.
+  - “Login” button.
+  - Show error message on invalid credentials.
+  - Simple loading indicator on login.
+- On successful login:
+  - Navigate to main app stack.
+- On logout:
+  - Clear auth state and navigate back to Login screen.
+
+Deliverables:
+- Full code for `AuthContext.js` using `onAuthStateChanged`.
+- Full code for `LoginScreen.js`.
+- Any small changes needed in `App.js` / navigation to consume `AuthContext`.
+
+===================================================
+PROMPT 4 – Rider Profile & Online/Offline Toggle
+===================================================
+
+Now build the **Home screen** and **Profile screen** for the rider.
+
+Requirements:
+- Data:
+  - In Firestore/Realtime DB, each rider has a document under e.g. `riders/{uid}` with:
+    - name
+    - phone
+    - vehicleNumber
+    - isOnline (boolean)
+    - photoUrl (optional)
+- Create a service file `services/riderService.js` with:
+  - `getRiderProfile(uid)`
+  - `updateRiderStatus(uid, { isOnline })`
+- Create `screens/HomeScreen.js`:
+  - Show greeting: “Hi, {name}”
+  - Show Online/Offline toggle:
+    - When toggled:
+      - Update rider `isOnline` in Firebase.
+      - UI should reflect status.
+  - Simple text:
+    - If Online: “You are Online and available for orders”
+    - If Offline: “You are Offline. Turn Online to receive orders.”
+  - Space where we’ll later show current/next order.
+
+- Create `screens/ProfileScreen.js`:
+  - Show rider details (name, phone, vehicleNumber, email from Auth).
+  - Show Online/Offline status (read-only or same toggle here).
+  - Logout button.
+
+Deliverables:
+- `riderService.js` with Firebase logic.
+- `HomeScreen.js` and `ProfileScreen.js` UI & logic.
+
+===================================================
+PROMPT 5 – Order Data Model & Service Functions
+===================================================
+
+Define and implement the **Order** data model and service layer.
+
+Assume Firestore or Realtime DB (as per your earlier choice). Use one collection/path for orders, e.g. `orders`.
+
+Requirements:
+- An `Order` should contain:
+  - id
+  - riderId
+  - status (e.g. "ASSIGNED", "ACCEPTED", "REACHED_STORE", "PICKED_UP", "ON_THE_WAY", "DELIVERED", "CANCELLED")
+  - pickupAddress
+  - pickupLocation (lat, lng)
+  - dropAddress
+  - dropLocation (lat, lng)
+  - customerName
+  - customerPhone
+  - paymentType ("PREPAID" or "COD")
+  - amount
+  - assignedAt, deliveredAt (timestamps)
+- Possibly an `orderStatusHistory` array with objects `{ status, timestamp }`.
+
+Create `services/orderService.js` with functions:
+- `listenToActiveOrdersForRider(riderId, callback)`
+  - real-time listener for current/ongoing order(s).
+- `listenToCompletedOrdersForRider(riderId, callback)`
+- `updateOrderStatus(orderId, newStatus)`
+- (Optional) `acceptOrder(orderId, riderId)` and `rejectOrder(orderId, riderId)` if we support acceptance.
+
+Deliverables:
+- Data model explanation.
+- Full code for `orderService.js` using real-time listeners.
+
+===================================================
+PROMPT 6 – Active Order UI (Home Screen Integration)
+===================================================
+
+Now show current/active order on **HomeScreen**.
+
+Requirements:
+- In `HomeScreen.js`:
+  - Use `riderId` from `AuthContext`.
+  - Use `listenToActiveOrdersForRider(riderId, callback)` to subscribe to active order.
+  - If there is an active order, show a **card** with:
+    - Order ID
+    - Pickup and drop short addresses
+    - Payment type & amount
+    - Current status
+    - Button “View Details” → navigates to `OrderDetailsScreen`.
+  - If there is no active order:
+    - Show message like “No active orders. Please wait…”
+
+- Create `components/OrderCard.js`:
+  - Used to display an order in a compact card view.
+
+Deliverables:
+- Updated `HomeScreen.js` with subscription logic.
+- New `OrderCard.js` component.
+
+===================================================
+PROMPT 7 – Order List Screen (Assigned & Completed)
+===================================================
+
+Create a screen to show order lists.
+
+Requirements:
+- Create `screens/OrdersScreen.js` with two tabs or segmented controls:
+  - “Ongoing” (assigned/active orders)
+  - “Completed” (delivered orders)
+- Use `orderService`:
+  - For ongoing: subscribe to rider orders not in “DELIVERED”/“CANCELLED”.
+  - For completed: subscribe to delivered orders.
+- Display using `FlatList` and `OrderCard`.
+- On clicking an order:
+  - Navigate to `OrderDetailsScreen` with `orderId`.
+
+Deliverables:
+- `OrdersScreen.js`
+- Any required navigation additions (stack screen for OrderDetails).
+
+===================================================
+PROMPT 8 – Order Details & Status Updates
+===================================================
+
+Build `OrderDetailsScreen` where rider can see full order info and update status.
+
+Requirements:
+- Route: `OrderDetailsScreen` receives `orderId` as parameter.
+- Use `orderService` to get real-time updates for this order.
+- UI sections:
+  - Order ID & current status.
+  - Pickup:
+    - Address
+    - Button: “Open in Maps” (using `Linking.openURL` with Google Maps/Apple Maps URL).
+  - Drop:
+    - Address
+    - Button: “Open in Maps”.
+  - Customer info:
+    - Name & Phone
+    - Button “Call Customer” (using tel: link).
+  - Items summary (can be simple text or list).
+  - Payment info: type + amount.
+
+- Status update buttons:
+  - Based on current status, show next actions:
+    - If ASSIGNED → Show “Accept” / “Reject”.
+    - If ACCEPTED → Show “Reached Store”.
+    - If REACHED_STORE → Show “Picked Up”.
+    - If PICKED_UP → Show “On The Way”.
+    - If ON_THE_WAY → Show “Delivered”.
+  - Each button should call `updateOrderStatus(orderId, nextStatus)` from `orderService`.
+
+Deliverables:
+- Full `OrderDetailsScreen.js` code.
+- Any updates in `orderService.js` (e.g., functions for accept/reject logic).
+
+===================================================
+PROMPT 9 – Location Updates to Backend (Basic Tracking)
+===================================================
+
+Add location tracking for active order.
+
+Requirements:
+- Use Expo Location.
+- Ask for foreground location permission.
+- While rider is **Online** and has an active order:
+  - Periodically (e.g. every 15–30 seconds) send:
+    - Current latitude and longitude
+    - Timestamp
+  - Store under:
+    - `riderLocations/{riderId}` OR inside the order document (e.g. `currentRiderLocation`).
+- Create `services/locationService.js`:
+  - `startLocationTracking(riderId, orderId, onError?)`
+  - `stopLocationTracking()`
+- Integrate with `HomeScreen` or a higher-level component:
+  - When rider goes Online & gets an active order → start tracking.
+  - When rider goes Offline or order is Delivered → stop tracking.
+
+Deliverables:
+- `locationService.js` implementation.
+- Integration snippet showing where to start/stop tracking.
+
+===================================================
+PROMPT 10 – Earnings Screen
+===================================================
+
+Create an Earnings screen where rider sees simple stats.
+
+Requirements:
+- Create `screens/EarningsScreen.js`.
+- Compute earnings from orders data:
+  - For each delivered order:
+    - earnings = deliveryFee (add this field in the Order model)
+  - Show:
+    - Today’s earnings
+    - This week’s earnings
+    - Total completed orders count
+- Use `orderService` to fetch delivered orders for the rider and then aggregate in JS.
+
+Deliverables:
+- `EarningsScreen.js` with working calculations.
+- Any needed change to `Order` model (e.g., `deliveryFee`).
+
+===================================================
+PROMPT 11 – UI Polish (Theme, Reusable Components)
+===================================================
+
+Now improve UI and reuse components.
+
+Requirements:
+- Create a simple design system:
+  - `components/Button.js`
+  - `components/LabelValueRow.js`
+  - `components/StatusBadge.js` (e.g. colored pill based on status)
+- Use basic styling with React Native StyleSheet (no Tailwind, keep it simple).
+- Apply consistent spacing, font sizes, and colors across:
+  - HomeScreen
+  - OrdersScreen
+  - OrderDetailsScreen
+  - EarningsScreen
+  - ProfileScreen
+
+Deliverables:
+- Code for the reusable components.
+- Example of refactor for one screen (e.g., OrderDetails) using these components, so I can follow same pattern.
+
+===================================================
+PROMPT 12 – Build & Release (Android + iOS)
+===================================================
+
+Help me build and release the app.
+
+Requirements:
+- Using Expo, give me clear steps to:
+  - Run locally on device/emulator.
+  - Build Android APK/AAB.
+  - Build iOS app (via EAS, including Apple account requirements).
+- Explain:
+  - Which environment variables / config I should keep secret (Firebase keys, etc.).
+  - How to create different environments:
+    - `dev`, `staging`, `prod` Firebase projects.
+  - How to point the app to a different Firebase project for staging/production.
+- Provide:
+  - Example of `.env` usage with Expo (e.g. `EXPO_PUBLIC_...`).
+  - Basic checklist before publishing to Play Store / App Store.
+
+Deliverables:
+- Step-by-step commands and instructions for building and publishing.
+- Any changes needed in project files for env handling.
+
+===================================================
+END OF PROMPT PACK
+===================================================
