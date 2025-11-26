@@ -18,9 +18,13 @@ import HomepageAdmin from "./pages/admin/HomepageAdmin";
 import GalleryAdmin from "./pages/admin/GalleryAdmin";
 import TestimonialsAdmin from "./pages/admin/TestimonialsAdmin";
 import OrdersAdmin from "./pages/admin/OrdersAdmin";
+import PromoAdmin from "./pages/admin/PromoAdmin";
+import SeedAdmin from "./pages/admin/SeedAdmin";
 import { CartProvider } from "./context/CartContext";
 import ToastContainer from "./components/Toast";
 import CheckoutPage from "./pages/CheckoutPage";
+import SearchPage from "./pages/SearchPage";
+import TrackOrderPage from "./pages/TrackOrderPage";
 
 export default function App() {
   return (
@@ -32,8 +36,10 @@ export default function App() {
         <Route path="/product/:productSlug" element={<Layout><ProductDetailPage /></Layout>} />
         <Route path="/gallery" element={<Layout><GalleryPage /></Layout>} />
         <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
+        <Route path="/search" element={<Layout><SearchPage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
         <Route path="/cart" element={<Layout><CartPage /></Layout>} />
+        <Route path="/track-order" element={<Layout><TrackOrderPage /></Layout>} />
 
         {/* Admin routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
@@ -44,6 +50,8 @@ export default function App() {
         <Route path="/admin/gallery" element={<AdminRoute><AdminLayout><GalleryAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/testimonials" element={<AdminRoute><AdminLayout><TestimonialsAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/orders" element={<AdminRoute><AdminLayout><OrdersAdmin /></AdminLayout></AdminRoute>} />
+        <Route path="/admin/promo" element={<AdminRoute><AdminLayout><PromoAdmin /></AdminLayout></AdminRoute>} />
+        <Route path="/admin/seed" element={<AdminRoute><AdminLayout><SeedAdmin /></AdminLayout></AdminRoute>} />
       </Routes>
       <ToastContainer />
     </CartProvider>

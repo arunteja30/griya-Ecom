@@ -23,7 +23,9 @@ export default function TopBanner(){
     return () => clearInterval(interval);
   }, [items.length]);
 
-  if(!visible || !items.length) return null;
+  // If admin disabled banner via site settings, hide
+  const bannerVisible = siteSettings?.bannerVisible !== false;
+  if(!visible || !items.length || !bannerVisible) return null;
 
   return (
     <div className="w-full bg-gradient-to-r from-accent-600 to-accent-700 text-white text-sm relative overflow-hidden">
@@ -38,21 +40,13 @@ export default function TopBanner(){
             </div>
           </div>
 
-          {/* Rotating Offers */}
-          <div className="flex-1 flex justify-center">
-            <div className="relative h-6 overflow-hidden">
-              <div 
-                className="flex flex-col transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateY(-${currentOfferIndex * 24}px)` }}
-              >
-                {items.map((item, index) => (
-                  <div 
-                    key={index} 
-                    className="h-6 flex items-center justify-center font-medium text-center px-4"
-                  >
-                    {item}
-                  </div>
-                ))}
+          {/* Rotating Offers (single item, fade) */}
+          <div className="flex-1 flex justify-center px-2">
+            <div className="relative w-full max-w-3xl">
+              <div key={currentOfferIndex} className="transition-opacity duration-500 opacity-100">
+                <div className="py-2 font-medium text-center text-sm leading-snug whitespace-normal">
+                  {items[currentOfferIndex]}
+                </div>
               </div>
             </div>
           </div>

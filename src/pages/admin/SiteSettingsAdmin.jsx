@@ -15,7 +15,13 @@ export default function SiteSettingsAdmin() {
   const onSave = async () => {
     setStatus('saving');
     try {
-      await set(ref(db, '/siteSettings'), form);
+      // If admin entered offers as multiline text, convert to array before saving
+      const payload = { ...form };
+      if (payload.offersRaw && typeof payload.offersRaw === 'string') {
+        payload.offers = payload.offersRaw.split('\n').map(s => s.trim()).filter(Boolean);
+        delete payload.offersRaw;
+      }
+      await set(ref(db, '/siteSettings'), payload);
       setStatus('saved');
     } catch (err) {
       setStatus('error');
@@ -26,13 +32,44 @@ export default function SiteSettingsAdmin() {
     <div className="max-w-3xl bg-white p-6 rounded shadow">
       <h2 className="text-lg font-semibold mb-4">Site Settings</h2>
       <div className="grid grid-cols-1 gap-3">
-        <input value={form.brandName||''} onChange={(e)=>setForm({...form, brandName: e.target.value})} className="border p-2" placeholder="Brand Name" />
-        <input value={form.tagline||''} onChange={(e)=>setForm({...form, tagline: e.target.value})} className="border p-2" placeholder="Tagline" />
-        <input value={form.logoUrl||''} onChange={(e)=>setForm({...form, logoUrl: e.target.value})} className="border p-2" placeholder="Logo URL" />
-        <input value={form.whatsapp||''} onChange={(e)=>setForm({...form, whatsapp: e.target.value})} className="border p-2" placeholder="WhatsApp number" />
-        <input value={form.instagram||''} onChange={(e)=>setForm({...form, instagram: e.target.value})} className="border p-2" placeholder="Instagram URL" />
-        <input value={form.address||''} onChange={(e)=>setForm({...form, address: e.target.value})} className="border p-2" placeholder="Address" />
-        <input value={form.footerText||''} onChange={(e)=>setForm({...form, footerText: e.target.value})} className="border p-2" placeholder="Footer text" />
+        <div>
+          <label className="block text-sm font-medium mb-1">Brand Name</label>
+          <input value={form.brandName||''} onChange={(e)=>setForm({...form, brandName: e.target.value})} className="border p-2 w-full" placeholder="Brand Name" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Tagline</label>
+          <input value={form.tagline||''} onChange={(e)=>setForm({...form, tagline: e.target.value})} className="border p-2 w-full" placeholder="Tagline" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Logo URL</label>
+          <input value={form.logoUrl||''} onChange={(e)=>setForm({...form, logoUrl: e.target.value})} className="border p-2 w-full" placeholder="Logo URL" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">WhatsApp number</label>
+          <input value={form.whatsapp||''} onChange={(e)=>setForm({...form, whatsapp: e.target.value})} className="border p-2 w-full" placeholder="WhatsApp number" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Instagram URL</label>
+          <input value={form.instagram||''} onChange={(e)=>setForm({...form, instagram: e.target.value})} className="border p-2 w-full" placeholder="Instagram URL" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Address</label>
+          <input value={form.address||''} onChange={(e)=>setForm({...form, address: e.target.value})} className="border p-2 w-full" placeholder="Address" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Footer text</label>
+          <input value={form.footerText||''} onChange={(e)=>setForm({...form, footerText: e.target.value})} className="border p-2 w-full" placeholder="Footer text" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Top banner text</label>
+          <textarea value={form.bannerText||''} onChange={(e)=>setForm({...form, bannerText: e.target.value})} className="border p-2 w-full" placeholder="Top banner text (single message)"></textarea>
+        </div>
+
+        {/* banner visibility and checkout toggles */}
+        <label className="flex items-center gap-2"><input type="checkbox" checked={form.bannerVisible !== false} onChange={(e)=>setForm({...form, bannerVisible: e.target.checked})} /> Show top banner</label>
+        <label className="flex items-center gap-2"><input type="checkbox" checked={form.enableWhatsAppCheckout !== false} onChange={(e)=>setForm({...form, enableWhatsAppCheckout: e.target.checked})} /> Enable WhatsApp checkout</label>
+        <label className="flex items-center gap-2"><input type="checkbox" checked={form.enableRazorpayCheckout !== false} onChange={(e)=>setForm({...form, enableRazorpayCheckout: e.target.checked})} /> Enable Razorpay checkout</label>
+        <textarea value={form.offersRaw || (form.offers ? form.offers.join('\n') : '')} onChange={(e)=>setForm({...form, offersRaw: e.target.value})} className="border p-2" placeholder="Offers (one per line)" />
       </div>
       <div className="mt-4">
         <button onClick={onSave} className="bg-black text-white px-4 py-2 rounded">Save</button>

@@ -163,6 +163,17 @@
   .section-subtitle {
     @apply text-lg text-neutral-600 mb-8 max-w-2xl;
   }
+
+  /* Header search input - larger, rounded, subtle shadow */
+  .header-search {
+    @apply bg-white rounded-md border border-neutral-200 shadow-sm px-4 py-3 text-sm;
+    box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+  }
+
+  /* Category pills */
+  .category-pill {
+    @apply px-3 py-1 rounded text-sm bg-transparent hover:bg-primary-50 hover:text-primary-600 transition-colors;
+  }
 }
 
 @layer utilities {
@@ -218,6 +229,18 @@
       rgba(15, 23, 42, 0.3) 50%,
       rgba(217, 119, 6, 0.2) 100%
     );
+    background-size: cover;
+    background-position: center;
+    /* Reduce default hero height to be less imposing */
+    --hero-overlay-height: 40vh;
+    min-height: var(--hero-overlay-height);
+    border-bottom-left-radius: 0.75rem;
+    border-bottom-right-radius: 0.75rem;
+  }
+
+  /* Smaller variant for compact heroes */
+  .hero-overlay--sm {
+    --hero-overlay-height: 28vh;
   }
 
   /* Scroll animations */
@@ -242,4 +265,79 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@media (max-width: 640px) {
+  /* Tighter buttons and text for small screens */
+  .btn {
+    @apply px-3 py-2 text-sm rounded-md;
+  }
+  .btn-primary, .btn-accent, .btn-secondary {
+    @apply text-sm;
+  }
+
+  /* Compact form inputs and header search */
+  .form-input, .header-search {
+    @apply px-3 py-2 text-sm rounded-md;
+  }
+
+  /* Slightly smaller section titles and subtitles */
+  .section-title {
+    @apply text-2xl;
+  }
+  .section-subtitle {
+    @apply text-sm;
+  }
+
+  /* Navigation link padding reduced to avoid wrapping */
+  .nav-link {
+    @apply px-2 py-1 text-sm;
+  }
+
+  /* Product card: avoid large hover scales on touch devices */
+  .product-card:hover {
+    transform: none;
+  }
+  .product-card .product-image {
+    transition: transform 200ms ease-out;
+  }
+
+  /* Scale SVG icons inside buttons and nav to be a bit smaller */
+  .btn svg, .nav svg, .product-card svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+  }
+
+  /* Reduce header search button size */
+  .header-search + button, .header-search + .btn {
+    @apply px-3;
+  }
+
+  /* Compact footer */
+  footer .section-container {
+    padding-left: 1rem; padding-right: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Slightly smaller base font to fit more content */
+  html { font-size: 14px; }
+
+  /* Tighter buttons globally */
+  .btn { @apply px-3 py-2 text-sm; }
+
+  /* Slightly smaller icons inside controls */
+  .btn svg, .nav svg, .product-card svg, .section-container svg { width: 1rem !important; height: 1rem !important; }
+
+  /* Reduce input paddings for compact forms */
+  .form-input, .header-search { @apply px-3 py-2 text-sm; }
+
+  /* Reduce header spacing */
+  header .section-container > div { padding-top: 0.35rem; padding-bottom: 0.35rem; }
+
+  /* Reduce card paddings */
+  .card { padding: 0.5rem; }
+
+  /* Compact footer spacing */
+  footer .section-container { padding-top: 0.5rem; padding-bottom: 0.5rem; }
 }

@@ -22,6 +22,8 @@
   },
 
   "home": {
+    "layout": ["hero","carouselPromo","newArrivals","bestSellers","trending"],
+    "activeFestivals": ["diwali"],
     "hero": {
       "title": "Discover Handcrafted Elegance",
       "subtitle": "Ethically sourced gemstones, masterfully crafted",
@@ -30,26 +32,55 @@
       "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
     },
     "sections": {
+      "carouselPromo": {
+        "id": "carouselPromo",
+        "title": "Festive Collection",
+        "type": "carousel",
+        "images": [
+          {
+            "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
+            "title": "Celebrate Diwali with Timeless Pieces",
+            "subtitle": "Handcrafted jewellery inspired by tradition and modern elegance.",
+            "buttonText": "Shop Diwali",
+            "buttonUrl": "/collections/diwali"
+          },
+          {
+            "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
+            "title": "Gifts That Last Generations",
+            "subtitle": "Discover curated collections perfect for gifting this festive season.",
+            "buttonText": "View Gifts",
+            "buttonUrl": "/collections/gifts"
+          }
+        ],
+        "order": 0,
+        "visibility": { "type": "festival", "festivals": ["diwali"] }
+      },
+
       "newArrivals": {
         "id": "newArrivals",
         "title": "New Arrivals",
         "type": "productList",
         "productIds": ["prod_001", "prod_005", "prod_010"],
-        "order": 1
+        "order": 1,
+        "visibility": { "type": "time", "start": "2025-11-01T00:00:00.000Z", "end": "2025-12-31T23:59:59.000Z" }
       },
+
       "bestSellers": {
         "id": "bestSellers",
         "title": "Best Sellers",
         "type": "productList",
         "productIds": ["prod_002", "prod_003", "prod_007"],
-        "order": 2
+        "order": 2,
+        "visibility": { "type": "always" }
       },
+
       "trending": {
         "id": "trending",
         "title": "Trending Collections",
         "type": "collectionList",
         "collectionIds": ["cat_gold", "cat_pearls"],
-        "order": 3
+        "order": 3,
+        "visibility": { "type": "always" }
       }
     }
   },
@@ -119,8 +150,14 @@
       "name": "Rose Gold Cocktail Ring",
       "slug": "rose-gold-cocktail-ring",
       "description": "18K rose gold ring set with a lab-grown ruby.",
+      "longDescription": "A statement cocktail ring crafted in 18K rose gold and set with a brilliant lab-grown ruby. Hand-polished finish and subtle filigree on the shoulders create a vintage-inspired silhouette suitable for special occasions.",
+      "materials": "18K Rose Gold, Lab-grown Ruby",
+      "weight": "6.5 g",
+      "dimensions": "Ring face 14mm x 12mm",
+      "manufacturer": "Griya Jewellery Studio",
       "price": 45000,
       "mrp": 50000,
+      "originalPrice": 50000,
       "discount": 10,
       "images": [
         "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
@@ -130,17 +167,33 @@
       "tags": ["ring", "rose-gold", "ruby"],
       "isFeatured": true,
       "isNewArrival": true,
+      "isNew": true,
+      "bestseller": false,
+      "freeShipping": true,
       "sku": "RG-001",
       "inStock": true,
-      "stock": 12
+      "stock": 12,
+      "reviewCount": 2,
+      "avgRating": 4.5,
+      "reviews": [
+        { "name": "Asha P.", "rating": 5, "comment": "Absolutely stunning piece — excellent finish and fits beautifully.", "date": "2025-05-03" },
+        { "name": "Sunita K.", "rating": 4, "comment": "Lovely ring, shipped quickly.", "date": "2025-06-12" }
+      ]
     },
+
     "prod_002": {
       "id": "prod_002",
       "name": "Classic Pearl Necklace",
       "slug": "classic-pearl-necklace",
       "description": "Hand strung cultured pearls with sterling clasp.",
+      "longDescription": "An elegant strand of hand-strung cultured pearls finished with a sterling silver clasp. Perfect for both formal occasions and everyday refinement.",
+      "materials": "Cultured Pearls, Sterling Silver Clasp",
+      "weight": "45 g",
+      "dimensions": "Length 18 inches",
+      "manufacturer": "Griya Jewellery Studio",
       "price": 32000,
       "mrp": 35000,
+      "originalPrice": 35000,
       "discount": 8,
       "images": [
         "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
@@ -149,17 +202,32 @@
       "tags": ["necklace", "pearls"],
       "isFeatured": true,
       "isNewArrival": false,
+      "isNew": false,
+      "bestseller": true,
+      "freeShipping": true,
       "sku": "PN-002",
       "inStock": true,
-      "stock": 6
+      "stock": 6,
+      "reviewCount": 1,
+      "avgRating": 5,
+      "reviews": [
+        { "name": "Rohan M.", "rating": 5, "comment": "Beautiful pearls, very happy with the quality.", "date": "2025-04-22" }
+      ]
     },
+
     "prod_003": {
       "id": "prod_003",
       "name": "Filigree Gold Earrings",
       "slug": "filigree-gold-earrings",
       "description": "Intricate filigree work in 22K gold.",
+      "longDescription": "Delicate filigree earrings hand-finished in 22K gold. Lightweight and comfortable for extended wear while retaining classic goldsmithing detail.",
+      "materials": "22K Gold",
+      "weight": "4.2 g (pair)",
+      "dimensions": "Drop 28mm",
+      "manufacturer": "Griya Jewellery Studio",
       "price": 22000,
       "mrp": 24000,
+      "originalPrice": 24000,
       "discount": 8,
       "images": [
         "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
@@ -168,17 +236,32 @@
       "tags": ["earrings", "gold"],
       "isFeatured": true,
       "isNewArrival": false,
+      "isNew": false,
+      "bestseller": true,
+      "freeShipping": true,
       "sku": "GE-003",
       "inStock": true,
-      "stock": 8
+      "stock": 8,
+      "reviewCount": 1,
+      "avgRating": 5,
+      "reviews": [
+        { "name": "Meera S.", "rating": 5, "comment": "Exquisite craftsmanship — received many compliments.", "date": "2025-02-10" }
+      ]
     },
+
     "prod_004": {
       "id": "prod_004",
       "name": "Gold Tennis Bracelet",
       "slug": "gold-tennis-bracelet",
       "description": "Sleek 18K gold bracelet with polished finish.",
+      "longDescription": "A modern take on the classic tennis bracelet, crafted in 18K gold with a smooth polished finish. Ideal as a gift or a personal treat.",
+      "materials": "18K Gold",
+      "weight": "10 g",
+      "dimensions": "Length 7 inches",
+      "manufacturer": "Griya Jewellery Studio",
       "price": 38000,
       "mrp": 40000,
+      "originalPrice": 40000,
       "discount": 5,
       "images": [
         "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
@@ -187,17 +270,30 @@
       "tags": ["bracelet", "gold"],
       "isFeatured": false,
       "isNewArrival": false,
+      "isNew": false,
+      "bestseller": false,
+      "freeShipping": false,
       "sku": "GB-004",
       "inStock": true,
-      "stock": 5
+      "stock": 5,
+      "reviewCount": 0,
+      "avgRating": 0,
+      "reviews": []
     },
+
     "prod_005": {
       "id": "prod_005",
       "name": "Delicate Gold Pendant",
       "slug": "delicate-gold-pendant",
       "description": "Minimalist gold pendant perfect for everyday wear.",
+      "longDescription": "A subtle and elegant gold pendant designed for everyday versatility. Pairs beautifully with chains of varying lengths.",
+      "materials": "18K Gold",
+      "weight": "2.8 g",
+      "dimensions": "Pendant 10mm",
+      "manufacturer": "Griya Jewellery Studio",
       "price": 12000,
       "mrp": 13000,
+      "originalPrice": 13000,
       "discount": 7,
       "images": [
         "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
@@ -206,17 +302,32 @@
       "tags": ["pendant", "gold"],
       "isFeatured": true,
       "isNewArrival": true,
+      "isNew": true,
+      "bestseller": false,
+      "freeShipping": false,
       "sku": "GP-005",
       "inStock": true,
-      "stock": 20
+      "stock": 20,
+      "reviewCount": 1,
+      "avgRating": 5,
+      "reviews": [
+        { "name": "Priya R.", "rating": 5, "comment": "Lovely pendant for daily wear — delicate and well-made.", "date": "2025-07-01" }
+      ]
     },
+
     "prod_007": {
       "id": "prod_007",
       "name": "Pearl Stud Earrings",
       "slug": "pearl-stud-earrings",
       "description": "Classic pearl studs set in gold.",
+      "longDescription": "Timeless pearl studs set in a gold cup — an essential wardrobe staple that complements both casual and formal looks.",
+      "materials": "Cultured Pearls, 14K Gold",
+      "weight": "1.8 g (pair)",
+      "dimensions": "Diameter 7mm",
+      "manufacturer": "Griya Jewellery Studio",
       "price": 8000,
       "mrp": 9000,
+      "originalPrice": 9000,
       "discount": 11,
       "images": [
         "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
@@ -225,17 +336,32 @@
       "tags": ["earrings", "pearls"],
       "isFeatured": false,
       "isNewArrival": false,
+      "isNew": false,
+      "bestseller": true,
+      "freeShipping": false,
       "sku": "PS-007",
       "inStock": true,
-      "stock": 15
+      "stock": 15,
+      "reviewCount": 1,
+      "avgRating": 5,
+      "reviews": [
+        { "name": "Nikhil S.", "rating": 5, "comment": "Perfect size and good luster.", "date": "2025-09-02" }
+      ]
     },
+
     "prod_010": {
       "id": "prod_010",
       "name": "Sapphire Cocktail Ring",
       "slug": "sapphire-cocktail-ring",
       "description": "Deep blue sapphire set in 18K white gold.",
+      "longDescription": "A striking cocktail ring featuring a deep blue sapphire set into 18K white gold. Ideal for evening events and celebrations.",
+      "materials": "18K White Gold, Sapphire",
+      "weight": "7.2 g",
+      "dimensions": "Ring face 15mm x 13mm",
+      "manufacturer": "Griya Jewellery Studio",
       "price": 55000,
       "mrp": 60000,
+      "originalPrice": 60000,
       "discount": 8,
       "images": [
         "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
@@ -244,9 +370,17 @@
       "tags": ["ring", "sapphire"],
       "isFeatured": false,
       "isNewArrival": true,
+      "isNew": true,
+      "bestseller": false,
+      "freeShipping": true,
       "sku": "SR-010",
       "inStock": true,
-      "stock": 4
+      "stock": 4,
+      "reviewCount": 1,
+      "avgRating": 5,
+      "reviews": [
+        { "name": "Anil P.", "rating": 5, "comment": "Stunning color and weight — looks expensive.", "date": "2025-08-15" }
+      ]
     }
   },
 
@@ -274,7 +408,7 @@
   "orders": {
       "order_id_123": {
         "orderId": "order_xyz",
-        "paymentId": "pay_abc", 
+        "paymentId": "pay_abc",
         "signature": "signature_hash",
         "amount": 25000,
         "currency": "INR",
@@ -282,7 +416,7 @@
         "createdAt": "2025-11-23T10:30:00.000Z",
         "customer": {
           "name": "John Doe",
-          "email": "john@example.com", 
+          "email": "john@example.com",
           "phone": "9876543210"
         },
         "shipping": {
@@ -294,14 +428,54 @@
         "items": [
           {
             "id": "prod_001",
-            "name": "Gold Ring",
-            "price": 25000,
+            "name": "Rose Gold Cocktail Ring",
+            "price": 45000,
             "quantity": 1,
-            "image": "product_image_url"
+            "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+          }
+        ]
+      },
+      "order_demo_001": {
+        "orderId": "ORDER_ABC123",
+        "paymentId": null,
+        "signature": null,
+        "amount": 57000,
+        "currency": "INR",
+        "status": "shipped",
+        "createdAt": "2025-11-26T09:00:00.000Z",
+        "customer": {
+          "name": "Test Customer",
+          "email": "test.customer@example.com",
+          "phone": "9123456780"
+        },
+        "shipping": {
+          "line1": "45, Jewelry Street",
+          "city": "Mumbai",
+          "state": "Maharashtra",
+          "pincode": "400002"
+        },
+        "tracking": {
+          "carrier": "DemoCourier",
+          "trackingNumber": "DC123456789IN"
+        },
+        "items": [
+          {
+            "id": "prod_001",
+            "name": "Rose Gold Cocktail Ring",
+            "price": 45000,
+            "quantity": 1,
+            "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+          },
+          {
+            "id": "prod_005",
+            "name": "Delicate Gold Pendant",
+            "price": 12000,
+            "quantity": 1,
+            "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
           }
         ]
       }
   }
   
-
+  
 }

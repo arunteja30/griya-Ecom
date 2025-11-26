@@ -61,9 +61,15 @@ export default function CategoriesAdmin(){
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Categories</h2>
-      <div className="mb-4">
-        <input value={name} onChange={(e)=>setName(e.target.value)} className="border p-2" placeholder="Category name" />
-        <button onClick={handleSave} className="ml-2 bg-primary text-white px-3 py-1 rounded">Save</button>
+      <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div>
+          <label className="block text-sm font-medium mb-1">Category name</label>
+          <input value={name} onChange={(e)=>setName(e.target.value)} className="border p-2 w-full" placeholder="Category name" />
+        </div>
+        <div className="flex gap-2 items-end">
+          <button onClick={handleSave} className="bg-black text-white px-3 py-2 rounded">Save</button>
+          {editing && <button onClick={()=>{setEditing(null); setName('');}} className="px-3 py-2">Cancel</button>}
+        </div>
       </div>
 
       <div className="space-y-2">

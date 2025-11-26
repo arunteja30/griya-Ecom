@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../../firebase';
-import { ref, onValue, update } from 'firebase/database';
+import { ref, onValue, update, set } from 'firebase/database';
 import Loader from '../../components/Loader';
 import Modal from '../../components/Modal';
 import { showToast } from '../../components/Toast';
@@ -28,6 +28,40 @@ export default function OrdersAdmin(){
     }
   };
 
+  const addDemoOrder = async () => {
+    const demo = {
+      orderId: 'ORDER_DEMO_ADMIN_001',
+      paymentId: null,
+      signature: null,
+      amount: 57000,
+      currency: 'INR',
+      status: 'processing',
+      createdAt: new Date().toISOString(),
+      customer: {
+        name: 'Admin Demo',
+        email: 'admin.demo@example.com',
+        phone: '9000000000'
+      },
+      shipping: {
+        line1: 'Demo Address 1',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        pincode: '400099'
+      },
+      items: [
+        { id: 'prod_001', name: 'Rose Gold Cocktail Ring', price: 45000, quantity: 1, image: '/placeholder.jpg' },
+        { id: 'prod_005', name: 'Delicate Gold Pendant', price: 12000, quantity: 1, image: '/placeholder.jpg' }
+      ]
+    };
+    try{
+      await set(ref(db, '/orders/order_demo_admin_001'), demo);
+      showToast('Demo order inserted');
+    }catch(e){
+      console.error(e);
+      showToast('Failed to insert demo order', 'error');
+    }
+  };
+
   if(loading) return <Loader />;
 
   const items = Object.entries(orders).sort((a,b)=>{
@@ -38,7 +72,12 @@ export default function OrdersAdmin(){
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Orders</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold">Orders</h2>
+        <div>
+          <button onClick={addDemoOrder} className="px-3 py-2 bg-primary-600 text-white rounded text-sm">Insert demo order</button>
+        </div>
+      </div>
 
       {items.length === 0 ? (
         <div className="card p-6 text-center">No orders found</div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
 import { CartContext } from '../context/CartContext';
 import { showToast } from '../components/Toast';
+import { useFirebaseList, useFirebaseObject } from '../hooks/useFirebase';
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useContext(CartContext);
@@ -17,10 +18,17 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState({ name: '', email: '', phone: '', line1: '', city: '', state: '', pincode: '' });
   const [loading, setLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromoKey, setAppliedPromoKey] = useState(null);
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [promoError, setPromoError] = useState(null);
 
   const indianStates = [
     'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'
   ];
+
+  const { data: promoData } = useFirebaseList('/promoCodes');
+  const { data: siteSettings } = useFirebaseObject('/siteSettings');
 
   const isValid = () => {
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address.email || '');
@@ -37,7 +45,46 @@ export default function CheckoutPage() {
 
   const proceedToPay = async () => {
     if (!isValid()) return showToast('Please complete address details', 'error');
+    if (siteSettings?.enableRazorpayCheckout === false) return showToast('Online payments are disabled', 'error');
     setConfirmOpen(true);
+  };
+  
+  const computeDiscount = (total, promo) => {
+    if (!promo) return 0;
+    const amount = Number(promo.amount) || 0;
+    if (promo.type === 'percent') return Math.round((total * amount) / 100);
+    return Math.round(amount);
+  };
+  
+  const discountedAmount = computeDiscount(cartTotal, appliedPromo);
+  const discountedTotal = Math.max(0, cartTotal - discountedAmount);
+  
+  const applyPromo = () => {
+    setPromoError(null);
+    const code = (promoInput || '').trim().toUpperCase();
+    if (!code) return setPromoError('Enter a promo code');
+    if (!promoData) return setPromoError('Promo codes not available');
+
+    // promoData may be object map or array
+    let foundKey = null;
+    let found = null;
+    if (Array.isArray(promoData)) {
+      promoData.forEach((p, idx) => { if (p?.code?.toUpperCase?.() === code) { found = p; foundKey = idx; } });
+    } else {
+      for (const [k, v] of Object.entries(promoData)) {
+        if (String(v.code || '').toUpperCase() === code) { found = v; foundKey = k; break; }
+      }
+    }
+
+    if (!found) return setPromoError('Invalid promo code');
+    if (found.active === false) return setPromoError('Promo code is inactive');
+    const used = Number(found.used || 0);
+    const max = Number(found.maxUses || 0);
+    if (max > 0 && used >= max) return setPromoError('Promo code has no remaining uses');
+
+    setAppliedPromoKey(foundKey);
+    setAppliedPromo(found);
+    showToast('Promo applied', 'success');
   };
 
   const startPayment = async () => {
@@ -126,11 +173,22 @@ export default function CheckoutPage() {
 
                 const safeOrderData = replaceUndefined(orderData);
                 await push(ref(db, 'orders'), safeOrderData);
-                setLoading(false);
-                showToast('Payment successful and order saved', 'success');
-                clearCart();
-                navigate('/');
-              } catch (firebaseError) {
+                // If a promo was applied, increment its `used` counter
+                try {
+                  if (appliedPromoKey) {
+                    const promoRef = ref(db, `promoCodes/${appliedPromoKey}`);
+                    const { update } = await import('firebase/database');
+                    const newUsed = (Number(appliedPromo?.used) || 0) + 1;
+                    await update(promoRef, { used: newUsed });
+                  }
+                } catch (promoErr) {
+                  console.warn('Failed to update promo usage', promoErr);
+                }
+                 setLoading(false);
+                 showToast('Payment successful and order saved', 'success');
+                 clearCart();
+                 navigate('/');
+               } catch (firebaseError) {
                 console.error('Failed to save order to Firebase:', firebaseError);
                 setLoading(false);
                 showToast('Payment successful but failed to save order details', 'warning');
@@ -214,17 +272,31 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-between">
-          <div className="text-lg">Total: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(cartTotal)}</div>
-          <div className="flex items-center gap-3">
-            <button onClick={()=>navigate('/cart')} className="btn btn-ghost">Back to Cart</button>
-            <button onClick={proceedToPay} disabled={!isValid() || loading || !(cartTotal > 0)} className="btn btn-accent">Proceed to Pay</button>
+        <div className="mt-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+            <input className="form-input md:col-span-2" placeholder="Promo code" value={promoInput} onChange={(e)=>setPromoInput(e.target.value)} />
+            <div className="flex gap-2">
+              <button onClick={applyPromo} className="btn btn-outline">Apply</button>
+              <button onClick={()=>{ setPromoInput(''); setAppliedPromo(null); setAppliedPromoKey(null); setPromoError(null); }} className="btn btn-ghost">Clear</button>
+            </div>
+          </div>
+          {promoError && <div className="text-sm text-red-600">{promoError}</div>}
+          <div className="flex items-center justify-between">
+            <div className="text-sm">Subtotal: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(cartTotal)}</div>
+            <div className="text-sm">Discount: -{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(discountedAmount)}</div>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="text-lg font-semibold">Total: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(discountedTotal)}</div>
+            <div className="flex items-center gap-3">
+              <button onClick={()=>navigate('/cart')} className="btn btn-ghost">Back to Cart</button>
+              <button onClick={proceedToPay} disabled={!isValid() || loading || !(cartTotal > 0) || siteSettings?.enableRazorpayCheckout === false} className="btn btn-accent">Proceed to Pay</button>
+            </div>
           </div>
         </div>
       </div>
 
     <Modal isOpen={confirmOpen} hideActions onClose={()=>setConfirmOpen(false)} title="Confirm & Pay">
-        <p>Proceed to pay {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(cartTotal)}? Your address will be used for shipping.</p>
+        <p>Proceed to pay {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(discountedTotal)}? Your address will be used for shipping.</p>
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={()=>setConfirmOpen(false)} className="px-4 py-2">Cancel</button>
           <button onClick={startPayment} className="px-4 py-2 btn btn-primary">Yes, Pay</button>
