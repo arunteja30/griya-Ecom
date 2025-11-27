@@ -58,7 +58,7 @@ export async function openRazorpayCheckout({ key, amountINR, name, description, 
   rzp.open();
 }
 
-export async function createOrderOnServer(amountInput) {
+export async function createOrderOnServer(amountInput, notes = {}) {
   // Determine API base (support both VITE_API_BASE and VITE_RAZORPAY_SERVER_URL)
   const apiBase = (import.meta.env.VITE_API_BASE || import.meta.env.VITE_RAZORPAY_SERVER_URL || 'http://localhost:4000').replace(/\/$/, '');
 
@@ -98,10 +98,11 @@ export async function createOrderOnServer(amountInput) {
 
   console.log('[razorpay] createOrderOnServer: amountInput=', amountInput, 'normalized paise=', amountPaise);
 
+  const payload = { amount: amountPaise, notes };
   const res = await fetch(`${apiBase}/api/razorpay/create-order`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount: amountPaise })
+    body: JSON.stringify(payload)
   });
 
   if (!res.ok) {

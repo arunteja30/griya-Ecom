@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../../firebase';
-import { ref, onValue, update } from 'firebase/database';
+import { ref, onValue, update, set } from 'firebase/database';
 import Loader from '../../components/Loader';
 import { showToast } from '../../components/Toast';
 
@@ -13,6 +13,13 @@ export default function HomepageAdmin(){
   const [activeFestivalsText, setActiveFestivalsText] = useState('');
   const [editingCarousel, setEditingCarousel] = useState(null);
   const [carouselFormSlides, setCarouselFormSlides] = useState([]);
+  // New: create homepage section UI (carousel etc.)
+  const [newSectionId, setNewSectionId] = useState('');
+  const [newSectionTitle, setNewSectionTitle] = useState('');
+  const [newSectionType, setNewSectionType] = useState('carousel');
+  const [newVisibilityType, setNewVisibilityType] = useState('always');
+  const [newVisibilityStart, setNewVisibilityStart] = useState('');
+  const [newVisibilityEnd, setNewVisibilityEnd] = useState('');
 
   useEffect(()=>{
     const r = ref(db, '/home');
@@ -107,6 +114,30 @@ export default function HomepageAdmin(){
     }catch(e){ console.error(e); showToast('Failed to save visibility'); }
   };
 
+  const createSection = async () => {
+    const idRaw = (newSectionId || '').trim();
+    const title = (newSectionTitle || '').trim();
+    if(!title){ showToast('Provide a section title'); return; }
+    const id = idRaw || title.toLowerCase().replace(/\s+/g,'-');
+    if(home?.sections && home.sections[id]){ showToast('Section id already exists'); return; }
+    try{
+      const payload = { title, type: newSectionType, images: [], items: {} };
+      if(newVisibilityType && newVisibilityType !== 'always'){
+        if(newVisibilityType === 'time'){
+          payload.visibility = { type: 'time' };
+          if(newVisibilityStart) payload.visibility.start = newVisibilityStart;
+          if(newVisibilityEnd) payload.visibility.end = newVisibilityEnd;
+        } else if(newVisibilityType === 'festival'){
+          payload.visibility = { type: 'festival', festivals: [] };
+        }
+      }
+      await set(ref(db, `/home/sections/${id}`), payload);
+      showToast('Section created');
+      // reset
+      setNewSectionId(''); setNewSectionTitle(''); setNewSectionType('carousel'); setNewVisibilityType('always'); setNewVisibilityStart(''); setNewVisibilityEnd('');
+    }catch(e){ console.error('Failed to create section', e); showToast('Failed to create section'); }
+  };
+
   if(loading) return <Loader />;
   if(error) return <div className="text-red-600">Error loading homepage admin. Check console for details.</div>;
 
@@ -139,6 +170,53 @@ export default function HomepageAdmin(){
           <div className="flex gap-2">
             <button onClick={saveActiveFestivals} className="px-3 py-2 bg-primary-600 text-white rounded text-sm">Save festivals</button>
             <button onClick={()=>setActiveFestivalsText('')} className="px-3 py-2 border rounded text-sm">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      {/* New: create homepage section (carousel etc.) */}
+      <div className="mb-4 p-4 border rounded bg-white">
+        <h3 className="font-medium mb-2">Create new homepage section</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div>
+            <label className="block text-sm font-medium mb-1">Section ID (optional)</label>
+            <input value={newSectionId} onChange={(e)=>setNewSectionId(e.target.value)} className="border p-2 w-full" placeholder="section-id (auto from title)" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Title</label>
+            <input value={newSectionTitle} onChange={(e)=>setNewSectionTitle(e.target.value)} className="border p-2 w-full" placeholder="Section title" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Type</label>
+            <select value={newSectionType} onChange={(e)=>setNewSectionType(e.target.value)} className="border p-2 w-full">
+              <option value="carousel">Carousel</option>
+              <option value="grid">Grid</option>
+              <option value="hero">Hero</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Visibility</label>
+            <select value={newVisibilityType} onChange={(e)=>setNewVisibilityType(e.target.value)} className="border p-2 w-full">
+              <option value="always">Always</option>
+              <option value="time">Time window</option>
+              <option value="festival">Festival</option>
+            </select>
+          </div>
+          {newVisibilityType === 'time' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium mb-1">Start (local)</label>
+                <input type="datetime-local" value={newVisibilityStart} onChange={(e)=>setNewVisibilityStart(e.target.value)} className="border p-2 w-full" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">End (local)</label>
+                <input type="datetime-local" value={newVisibilityEnd} onChange={(e)=>setNewVisibilityEnd(e.target.value)} className="border p-2 w-full" />
+              </div>
+            </>
+          )}
+          <div className="md:col-span-3 flex gap-2">
+            <button onClick={createSection} className="px-3 py-2 bg-primary-600 text-white rounded">Create section</button>
+            <button onClick={()=>{ setNewSectionId(''); setNewSectionTitle(''); setNewSectionType('carousel'); setNewVisibilityType('always'); setNewVisibilityStart(''); setNewVisibilityEnd(''); }} className="px-3 py-2 border rounded">Clear</button>
           </div>
         </div>
       </div>

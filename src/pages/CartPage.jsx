@@ -80,7 +80,7 @@ export default function CartPage() {
     if (!found) return setPromoError('Invalid promo code');
     if (found.active === false) return setPromoError('Promo is inactive');
     const used = Number(found.used || 0); const max = Number(found.maxUses || 0);
-    if (max > 0 && used >= max) return setPromoError('No remaining uses');
+    if (max > 0 && used >= max) return setPromoError('PROMOCODE EXPIRED or INVALID');
     applyPromo(foundKey, found);
   };
 
@@ -100,7 +100,7 @@ export default function CartPage() {
     if (!found) { setPromoError('Invalid promo code'); showToast('Invalid promo code', 'error'); return; }
     if (found.active === false) { setPromoError('Promo is inactive'); showToast('Promo is inactive', 'error'); return; }
     const used = Number(found.used || 0); const max = Number(found.maxUses || 0);
-    if (max > 0 && used >= max) { setPromoError('No remaining uses'); showToast('Promo has no remaining uses', 'error'); return; }
+    if (max > 0 && used >= max) { setPromoError('PROMOCODE EXPIRED or INVALID'); showToast('PROMOCODE EXPIRED or INVALID', 'error'); return; }
 
     applyPromo(foundKey, found);
     showToast('Promo applied', 'success');
@@ -178,7 +178,7 @@ export default function CartPage() {
                 </div>
                 {promoError && <div className="text-sm text-red-600">{promoError}</div>}
                 {appliedPromo && (
-                  <div className="text-sm text-green-700 mt-2">Applied: {appliedPromo.code} — Discount: {appliedPromo.type==='percent'?`${appliedPromo.amount}%`:`₹${appliedPromo.amount}`} | Used: {appliedPromo.used||0} / {appliedPromo.maxUses||'∞'}</div>
+                  <div className="text-sm text-green-700 mt-2">Applied: {appliedPromo.code} — Discount: {appliedPromo.type==='percent'?`${appliedPromo.amount}%`:`₹${appliedPromo.amount}`}</div>
                 )}
               </div>
               <div className="mb-4 font-semibold">Total: ₹{discountedTotal}</div>

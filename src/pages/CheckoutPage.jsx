@@ -6,7 +6,7 @@ import { showToast } from '../components/Toast';
 import { useFirebaseList, useFirebaseObject } from '../hooks/useFirebase';
 
 export default function CheckoutPage() {
-  const { cartItems, cartTotal, clearCart } = useContext(CartContext);
+  const { cartItems, cartTotal, clearCart, appliedPromo: cartAppliedPromo, appliedPromoKey: cartAppliedPromoKey } = useContext(CartContext);
   const navigate = useNavigate();
   // placedOrder must be declared before effects that reference it
   const [placedOrder, setPlacedOrder] = useState(null);
@@ -133,16 +133,48 @@ export default function CheckoutPage() {
         return showToast('Razorpay key not configured', 'error');
       }
 
-      // Create order on server (amount in rupees) - pass cartTotal so server normalizes to paise
-      // Pass explicit unit to avoid ambiguity (treat cartTotal as INR/rupees)
-      const order = await createOrderOnServer({ amount: cartTotal, unit: 'INR' });
+      // Determine the amount to charge (respect local promo applied on this checkout page)
+      const amountToCharge = Number(discountedTotal || 0);
+      // Create order on server (amount in rupees) - pass discounted amount so server normalizes to paise
+      // Prepare notes/metadata to send to payment server (useful for admin and reconciliation)
+      const promoNotes = appliedPromo ? { promoCode: appliedPromo.code || '', promoKey: appliedPromoKey || '', discount: discountedAmount || 0 } : {};
+      const order = await createOrderOnServer({ amount: amountToCharge, unit: 'INR' }, promoNotes);
       if (!order || !order.id) throw new Error('Order creation failed');
 
       const shippingText = `${address.name}, ${address.line1}, ${address.city}, ${address.state} - ${address.pincode}`;
 
+      // Helper: decrement stock for ordered items using Firebase transactions
+      const decrementProductStocks = async (items) => {
+        if (!Array.isArray(items) || items.length === 0) return;
+        try {
+          const { ref, runTransaction } = await import('firebase/database');
+          const { db } = await import('../firebase');
+          for (const it of items) {
+            const pid = it?.id || it?.product?.id || null;
+            const qty = Number(it?.quantity || it?.qty || 1);
+            if (!pid || qty <= 0) continue;
+            const prodRef = ref(db, `/products/${pid}`);
+            try {
+              await runTransaction(prodRef, (prod) => {
+                if (!prod) return prod; // nothing to do
+                const currentStock = Number(prod.stock || prod.quantity || 0);
+                const newStock = Math.max(0, currentStock - qty);
+                prod.stock = newStock;
+                prod.inStock = newStock > 0;
+                return prod;
+              });
+            } catch (txErr) {
+              console.warn('Failed to decrement stock for', pid, txErr);
+            }
+          }
+        } catch (e) {
+          console.warn('decrementProductStocks failed', e);
+        }
+      };
+
       openRazorpayCheckout({
         key,
-        amountINR: cartTotal,
+        amountINR: amountToCharge,
         orderId: order.id,
         name: 'Griya Jewellery',
         description: `Order Payment. Ship to: ${shippingText}`,
@@ -164,10 +196,11 @@ export default function CheckoutPage() {
                   orderId: resp.razorpay_order_id,
                   paymentId: resp.razorpay_payment_id,
                   signature: resp.razorpay_signature,
-                  amount: cartTotal,
+                  amount: amountToCharge,
                   currency: 'INR',
                   status: 'paid',
                   createdAt: new Date().toISOString(),
+                  promo: appliedPromo ? { key: appliedPromoKey, code: appliedPromo.code, discount: discountedAmount } : null,
                   customer: {
                     name: address.name,
                     email: address.email,
@@ -199,14 +232,18 @@ export default function CheckoutPage() {
                 // If a promo was applied, increment its `used` counter
                 try {
                   if (appliedPromoKey) {
-                    const promoRef = (await import('firebase/database')).ref((await import('../firebase')).db, `promoCodes/${appliedPromoKey}`);
-                    const { update } = await import('firebase/database');
+                    const { ref, update } = await import('firebase/database');
+                    const { db } = await import('../firebase');
+                    const promoRef = ref(db, `promoCodes/${appliedPromoKey}`);
                     const newUsed = (Number(appliedPromo?.used) || 0) + 1;
                     await update(promoRef, { used: newUsed });
                   }
                 } catch (promoErr) {
                   console.warn('Failed to update promo usage', promoErr);
                 }
+
+                // Decrement product stocks for ordered items (best-effort)
+                try { await decrementProductStocks(savedOrder.items || safeOrderData.items || []); } catch (e) { console.warn('Stock decrement error', e); }
 
                 // Show confirmation using Firebase push key, then clear cart
                 setPlacedOrder(savedOrder);
@@ -216,7 +253,9 @@ export default function CheckoutPage() {
                } catch (firebaseError) {
                 console.error('Failed to save order to Firebase:', firebaseError);
                 // Still show minimal confirmation, ensure placedOrder set before clearing cart
-                const minimal = { _id: null, orderId: resp.razorpay_order_id || null, amount: cartTotal, currency: 'INR', status: 'paid', createdAt: new Date().toISOString(), customer: { name: address.name, phone: address.phone }, shipping: { line1: address.line1, city: address.city, pincode: address.pincode }, items: normalizeCartItems(cartItems) };
+                const minimal = { _id: null, orderId: resp.razorpay_order_id || null, amount: amountToCharge, currency: 'INR', status: 'paid', createdAt: new Date().toISOString(), promo: appliedPromo ? { key: appliedPromoKey, code: appliedPromo.code, discount: discountedAmount } : null, customer: { name: address.name, phone: address.phone }, shipping: { line1: address.line1, city: address.city, pincode: address.pincode }, items: normalizeCartItems(cartItems) };
+                // attempt stock decrement even if saving fails (payment was successful)
+                try { await decrementProductStocks(minimal.items || []); } catch (e) { console.warn('Stock decrement error', e); }
                 setPlacedOrder(minimal);
                 clearCart();
                 setLoading(false);
@@ -229,15 +268,17 @@ export default function CheckoutPage() {
                    orderId: resp.razorpay_order_id || null,
                    paymentId: resp.razorpay_payment_id || null,
                    signature: resp.razorpay_signature || null,
-                   amount: cartTotal,
+                   amount: amountToCharge,
                    currency: 'INR',
                    status: 'verification_failed',
                    createdAt: new Date().toISOString(),
+                   promo: appliedPromo ? { key: appliedPromoKey, code: appliedPromo.code, discount: discountedAmount } : null,
                    customer: { name: address.name, email: address.email, phone: address.phone },
                    shipping: { line1: address.line1, city: address.city, state: address.state, pincode: address.pincode },
                    items: normalizeCartItems(cartItems)
                  };
                  const savedOrder = await saveOrderToDb(orderData);
+                 // NOTE: Do NOT decrement product stocks here — only decrement on confirmed paid transactions
                  // Show verification-failed confirmation, set placedOrder first
                  setPlacedOrder(savedOrder);
                  clearCart();
@@ -262,9 +303,10 @@ export default function CheckoutPage() {
             const orderData = {
               orderId: failureResp?.metadata?.order_id || failureResp?.error?.metadata?.order_id || null,
               paymentId: failureResp?.error?.payment_id || failureResp?.payment_id || null,
-              amount: cartTotal,
+              amount: amountToCharge,
               currency: 'INR',
               status: 'failed',
+              promo: appliedPromo ? { key: appliedPromoKey, code: appliedPromo.code, discount: discountedAmount } : null,
               failure: failureResp || null,
               createdAt: new Date().toISOString(),
               customer: { name: address.name, email: address.email, phone: address.phone },
@@ -273,6 +315,7 @@ export default function CheckoutPage() {
             };
             try {
               const saved = await saveOrderToDb(orderData);
+              // NOTE: Do NOT decrement product stocks for failed payments
               // show failed summary before clearing cart
               setPlacedOrder(saved);
               clearCart();
@@ -291,6 +334,19 @@ export default function CheckoutPage() {
       showToast('Payment could not be started: ' + err.message, 'error');
     }
   };
+
+  // If the cart already had a promo applied, carry it into the checkout page state
+  useEffect(() => {
+    try {
+      if (cartAppliedPromo) {
+        setAppliedPromo(cartAppliedPromo);
+        setAppliedPromoKey(cartAppliedPromoKey ?? null);
+        setPromoInput(cartAppliedPromo?.code || '');
+      }
+    } catch (e) {
+      // non-fatal
+    }
+  }, [cartAppliedPromo, cartAppliedPromoKey]);
 
   return (
     // If an order was just placed, show confirmation summary
@@ -475,7 +531,7 @@ export default function CheckoutPage() {
             <div className="text-sm">Subtotal: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(cartTotal)}</div>
             <div className="text-sm">Discount: -{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(discountedAmount)}</div>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-2">
             <div className="text-lg font-semibold">Total: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(discountedTotal)}</div>
             <div className="flex items-center gap-3">
               <button onClick={()=>navigate('/cart')} className="btn btn-ghost">Back to Cart</button>
@@ -485,7 +541,7 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-    <Modal isOpen={confirmOpen} hideActions onClose={()=>setConfirmOpen(false)} title="Confirm & Pay">
+      <Modal isOpen={confirmOpen} hideActions onClose={()=>setConfirmOpen(false)} title="Confirm & Pay">
         <p>Proceed to pay {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(discountedTotal)}? Your address will be used for shipping.</p>
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={()=>setConfirmOpen(false)} className="px-4 py-2">Cancel</button>

@@ -33,7 +33,7 @@ function DealsCarousel({ products }) {
       <div className="section-container">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-semibold">Top Deals</h3>
-          <Link to="/deals" className="text-sm text-neutral-600">See all</Link>
+          <Link to="/deals" className="inline-block text-sm font-semibold text-accent-600 hover:text-accent-700">See all</Link>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-2">
           {products.map((p) => (
@@ -58,12 +58,19 @@ function ProductGridSection({ title, productList }) {
       <div className="section-container">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-2xl font-semibold">{title}</h3>
-          <Link to="/collections" className="text-sm text-neutral-600">Browse all</Link>
+          {/* header button hidden on md+ to prefer side CTA */}
+          <Link to="/collections" className="inline-block md:hidden text-sm font-bold bg-accent-600 text-white px-3 py-1 rounded-md shadow-md hover:bg-accent-700 transition-colors">Browse all</Link>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-          {productList.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
+        <div className="relative">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+            {productList.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+          {/* Side CTA for larger screens */}
+          <div className="hidden md:flex absolute right-0 top-0 h-full items-start pl-4">
+            <Link to="/collections" className="inline-block text-sm font-bold bg-accent-600 text-white px-3 py-2 rounded-md shadow-lg hover:bg-accent-700 transition-colors translate-x-2">Browse all</Link>
+          </div>
         </div>
       </div>
     </section>
@@ -161,8 +168,8 @@ function CarouselSection({ images, title }) {
         </div>
 
         {/* Prev / Next buttons */}
-        <button aria-label="Previous" onClick={prev} className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow-md">‹</button>
-        <button aria-label="Next" onClick={next} className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow-md">›</button>
+        <button aria-label="Previous" onClick={prev} className="absolute left-4 top-1/2 -translate-y-1/2 bg-transparent/10 p-2 rounded-full shadow-md">‹</button>
+        <button aria-label="Next" onClick={next} className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent/10 p-2 rounded-full shadow-md">›</button>
 
         {/* Slide indicators */}
         <div className="absolute left-1/2 -translate-x-1/2 bottom-4 flex gap-2">

@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { showToast } from '../components/Toast';
 
 export const CartContext = createContext(null);
 
@@ -56,16 +57,42 @@ export function CartProvider({ children }) {
   const addToCart = (product, qty = 1) => {
     const pid = getProductId(product);
     if (!pid) return;
+    const available = Number(product?.stock ?? product?.quantity ?? 0) || 0;
     setCartItems((prev) => {
       const existing = prev.find((i) => i.id === pid);
-      if (existing) return prev.map((i) => i.id === pid ? { ...i, quantity: i.quantity + qty } : i);
+      if (existing) {
+        const requested = existing.quantity + Number(qty || 0);
+        if (available > 0 && requested > available) {
+          showToast(`Only ${available} items available`, 'error');
+          return prev.map((i) => i.id === pid ? { ...i, quantity: available } : i);
+        }
+        return prev.map((i) => i.id === pid ? { ...i, quantity: requested } : i);
+      }
+      // New item
+      const toAdd = available > 0 ? Math.min(Number(qty || 1), available) : Number(qty || 1);
+      if (available > 0 && Number(qty || 1) > available) showToast(`Only ${available} items available. Added ${toAdd} to cart.`, 'warning');
       const productWithId = { ...product, id: pid };
-      return [{ id: pid, product: productWithId, quantity: qty }, ...prev];
+      return [{ id: pid, product: productWithId, quantity: toAdd }, ...prev];
     });
   };
 
   const updateQuantity = (productId, quantity) => {
-    setCartItems((prev) => prev.map((i) => i.id === productId ? { ...i, quantity: Math.max(1, Number(quantity) || 1) } : i));
+    setCartItems((prev) => {
+      const existing = prev.find(i => i.id === productId);
+      if (!existing) return prev;
+      const available = Number(existing.product?.stock ?? existing.product?.quantity ?? 0) || 0;
+      const requested = Math.max(1, Number(quantity) || 1);
+      if (available <= 0) {
+        // remove item if no stock
+        showToast('Item is out of stock and was removed from cart', 'error');
+        return prev.filter(i => i.id !== productId);
+      }
+      if (requested > available) {
+        showToast(`Only ${available} items available`, 'error');
+        return prev.map(i => i.id === productId ? { ...i, quantity: available } : i);
+      }
+      return prev.map(i => i.id === productId ? { ...i, quantity: requested } : i);
+    });
   };
 
   const removeFromCart = (productId) => {

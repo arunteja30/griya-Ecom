@@ -10,6 +10,7 @@ export default function CategoriesAdmin(){
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
   const [name, setName] = useState('');
+  const [image, setImage] = useState('');
   const [showDelete, setShowDelete] = useState(false);
   const [toDelete, setToDelete] = useState(null);
 
@@ -24,11 +25,12 @@ export default function CategoriesAdmin(){
   const handleSave = async ()=>{
     try{
       if(editing){
-        await update(ref(db, `/categories/${editing}`), { name });
+        await update(ref(db, `/categories/${editing}`), { name, image: image || '' });
         showToast('Category updated');
       } else {
-        await push(ref(db, '/categories'), { name, slug: name.toLowerCase().replace(/\s+/g,'-') });
+        await push(ref(db, '/categories'), { name, slug: name.toLowerCase().replace(/\s+/g,'-'), image: image || '' });
         setName('');
+        setImage('');
         showToast('Category created');
       }
       setEditing(null);
@@ -66,18 +68,28 @@ export default function CategoriesAdmin(){
           <label className="block text-sm font-medium mb-1">Category name</label>
           <input value={name} onChange={(e)=>setName(e.target.value)} className="border p-2 w-full" placeholder="Category name" />
         </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Image URL</label>
+          <input value={image} onChange={(e)=>setImage(e.target.value)} className="border p-2 w-full" placeholder="Image URL (optional)" />
+        </div>
         <div className="flex gap-2 items-end">
           <button onClick={handleSave} className="bg-black text-white px-3 py-2 rounded">Save</button>
-          {editing && <button onClick={()=>{setEditing(null); setName('');}} className="px-3 py-2">Cancel</button>}
+          {editing && <button onClick={()=>{setEditing(null); setName(''); setImage('');}} className="px-3 py-2">Cancel</button>}
         </div>
       </div>
 
       <div className="space-y-2">
         {Object.entries(categories).map(([id, cat])=> (
           <div key={id} className="flex items-center justify-between border p-2 rounded">
-            <div>{cat.name}</div>
+            <div className="flex items-center gap-3">
+              {cat.image ? <img src={cat.image} alt={cat.name} className="w-10 h-10 object-cover rounded" /> : null}
+              <div>
+                <div className="font-medium">{cat.name}</div>
+                <div className="text-sm text-neutral-600">{cat.slug}</div>
+              </div>
+            </div>
             <div className="flex gap-2">
-              <button onClick={()=>{setEditing(id); setName(cat.name)}} className="text-blue-600">Edit</button>
+              <button onClick={()=>{setEditing(id); setName(cat.name); setImage(cat.image || '');}} className="text-blue-600">Edit</button>
               <button onClick={()=>confirmDelete(id)} className="text-red-600">Delete</button>
             </div>
           </div>

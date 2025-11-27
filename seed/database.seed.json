@@ -2,6 +2,7 @@
   "siteSettings": {
     "brandName": "Griya Jewellery",
     "tagline": "Timeless elegance, crafted with care",
+    "bannerVisible": false,
     "logoUrl": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
     "whatsapp": "+919812345678",
     "instagram": "https://instagram.com/griya_jewellery",
@@ -14,7 +15,8 @@
       { "id": "home", "title": "Home", "url": "/", "order": 1 },
       { "id": "collections", "title": "Collections", "url": "/collections", "order": 2 },
       { "id": "about", "title": "About", "url": "/about", "order": 3 },
-      { "id": "contact", "title": "Contact", "url": "/contact", "order": 4 }
+      { "id": "contact", "title": "Contact", "url": "/contact", "order": 4 },
+      { "id": "track", "title": "Track Order", "url": "/track-order", "order": 5 }
     ],
     "footer": [
       { "id": "privacy", "title": "Privacy Policy", "url": "/privacy", "order": 1 }
@@ -474,8 +476,32 @@
             "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
           }
         ]
+      },
+      "ord_001": {
+        "orderId": "ORD20251127-001",
+        "amount": 18000,
+        "currency": "INR",
+        "status": "paid",
+        "createdAt": "2025-11-27T00:00:00.000Z",
+        "promo": { "key": "promo_10", "code": "GIRIYA10", "discount": 2000 },
+        "customer": { "name": "Sangeeta Rao", "email": "sangeeta@example.com", "phone": "+919876543210" },
+        "shipping": { "line1": "12 MG Road", "city": "Mumbai", "state": "Maharashtra", "pincode": "400001", "cost": 0 },
+        "items": [
+          { "id": "prod_005", "name": "Delicate Gold Pendant", "price": 12000, "quantity": 1, "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp" },
+          { "id": "prod_007", "name": "Pearl Stud Earrings", "price": 8000, "quantity": 1, "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp" }
+        ],
+        "totalBreakdown": { "subtotal": 20000, "discount": 2000, "shipping": 0, "total": 18000 }
       }
+  },
+  
+  "promoCodes": {
+    "promo_10": {
+      "code": "GIRIYA10",
+      "type": "percent",
+      "amount": 10,
+      "used": 0,
+      "maxUses": 100,
+      "active": true
+    }
   }
-  
-  
 }

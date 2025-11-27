@@ -13,7 +13,21 @@ export default function ProductCard({ product }) {
   const reviews = Array.isArray(product.reviews) ? product.reviews : [];
   const reviewCount = reviews.length || Number(product.reviewCount || 0) || 0;
   const avgRating = reviewCount > 0 ? Math.round((reviews.reduce((s, r) => s + (Number(r.rating) || 0), 0) / reviewCount) * 10) / 10 : Number(product.rating || product.avgRating || 0);
-  const lowStock = typeof product.stock === 'number' && product.stock > 0 && product.stock <= 5;
+  // normalize stock value (some products store stock as string or in `quantity`)
+  const rawStockVal = product.stock ?? product.quantity ?? null;
+  const hasNumericStock = rawStockVal !== null && rawStockVal !== undefined;
+  const stock = hasNumericStock ? Math.max(0, Number(rawStockVal) || 0) : 0;
+  // Decide availability: prefer numeric stock when present. If numeric stock is provided and is 0 => out of stock even if product.inStock===true
+  let inStock;
+  if (hasNumericStock) {
+    inStock = stock > 0;
+  } else if (typeof product.inStock === 'boolean') {
+    inStock = product.inStock;
+  } else {
+    inStock = true; // default to available when no info
+  }
+  // show low-stock note only when less than 5 (i.e. 1-4)
+  const lowStock = inStock && stock > 0 && stock < 5;
   const isBestseller = Boolean(product.bestseller || product.isBestseller);
   const hasFreeShipping = Boolean(product.freeShipping || product.isFreeShipping);
 
@@ -108,17 +122,17 @@ export default function ProductCard({ product }) {
 
           <button
             onClick={handleAddToCart}
-            disabled={isLoading || !product.inStock}
-            className={`btn btn-primary btn-sm ${isLoading || !product.inStock ? "opacity-50 cursor-not-allowed" : ""}`}
+            disabled={isLoading || !inStock}
+            className={`btn btn-primary btn-sm ${isLoading || !inStock ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            {isLoading ? "Adding..." : product.inStock ? "Add" : "Out"}
+            {isLoading ? "Adding..." : inStock ? "Add" : "Out"}
           </button>
         </div>
 
         {/* Tactical notes */}
         <div className="flex items-center justify-between mt-2">
-          {lowStock && <div className="text-xs text-red-600 font-medium">Only {product.stock} left</div>}
-          {product.inStock === false && <div className="text-xs text-neutral-500">Out of stock</div>}
+          {lowStock && <div className="text-xs text-red-600 font-medium">Only {stock} left</div>}
+          {!inStock && <div className="text-xs text-neutral-500">Out of stock</div>}
         </div>
       </div>
     </div>
