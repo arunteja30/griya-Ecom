@@ -1,9 +1,9 @@
 {
   "redirects": [
     {
-      "source": "/",
-      "destination": "/admin",
-      "status": 302
+      "source": "/admin",
+      "destination": "/index.html",
+      "status": 200
     },
     {
       "source": "/admin/*",
