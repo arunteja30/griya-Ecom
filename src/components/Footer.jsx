@@ -30,6 +30,7 @@ export default function Footer() {
           <Link to="/collections" className="hover:text-white">Collections</Link>
           <Link to="/gallery" className="hover:text-white">Gallery</Link>
           <Link to="/contact" className="hover:text-white">Contact</Link>
+          <Link to="/admin" className="hover:text-white">Admin</Link>
           <a href="/track-order" className="hover:underline">Track Order</a>
         </nav>
 
@@ -50,6 +51,7 @@ export default function Footer() {
           <div className="flex items-center gap-3">
             <Link to="/privacy" className="hover:text-white">Privacy</Link>
             <Link to="/terms" className="hover:text-white">Terms</Link>
+            <Link to="/admin" className="hover:text-white">Admin</Link>
           </div>
         </div>
       </div>
