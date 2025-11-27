@@ -1,400 +1,328 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../../firebase';
-import { ref, onValue, update, set } from 'firebase/database';
+import { ref, onValue, set } from 'firebase/database';
 import Loader from '../../components/Loader';
 import { showToast } from '../../components/Toast';
-import { normalizeImageUrl } from '../../utils/imageHelpers';
 
 export default function HomepageAdmin(){
-  const [home, setHome] = useState(null);
+  const [config, setConfig] = useState({ festivals: {} });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [editingVisibility, setEditingVisibility] = useState(null);
-  const [visibilityForm, setVisibilityForm] = useState({ type: 'always', start: '', end: '', festivals: [] });
-  const [activeFestivalsText, setActiveFestivalsText] = useState('');
-  const [editingCarousel, setEditingCarousel] = useState(null);
-  const [carouselFormSlides, setCarouselFormSlides] = useState([]);
-  // New: create homepage section UI (carousel etc.)
-  const [newSectionId, setNewSectionId] = useState('');
-  const [newSectionTitle, setNewSectionTitle] = useState('');
-  const [newSectionType, setNewSectionType] = useState('carousel');
-  const [newVisibilityType, setNewVisibilityType] = useState('always');
-  const [newVisibilityStart, setNewVisibilityStart] = useState('');
-  const [newVisibilityEnd, setNewVisibilityEnd] = useState('');
-  // Simple admin mode: hide advanced fields and make quick defaults
-  const [simpleMode, setSimpleMode] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [opBusy, setOpBusy] = useState(false);
+  const [buffers, setBuffers] = useState({}); // keep raw input strings to preserve commas while typing
+  const [availableTags, setAvailableTags] = useState([]);
+  const [banners, setBanners] = useState([]);
+  const [bannersLoading, setBannersLoading] = useState(true);
+  const [newBanner, setNewBanner] = useState({ image: '', heading: '', body: '', ctaLabel: '', link: '' });
 
-
+  // subscribe to products and derive unique normalized tags for admin debugging
   useEffect(()=>{
-    const r = ref(db, '/home');
-    return onValue(r, snap=>{
-      try{
-        setHome(snap.val() || null);
-        setLoading(false);
-      }catch(e){
-        console.error('Failed to read /home', e);
-        setError(e);
-        setLoading(false);
-      }
+    const r = ref(db, '/products');
+    const unsub = onValue(r, snap => {
+      const raw = snap.val() || {};
+      const tagsSet = new Set();
+      Object.values(raw).forEach(p => {
+        const t = p?.tags;
+        if (!t) return;
+        const arr = Array.isArray(t) ? t : String(t).split(',');
+        arr.map(x => String(x || '').trim().toLowerCase()).filter(Boolean).forEach(tag => tagsSet.add(tag));
+      });
+      setAvailableTags(Array.from(tagsSet).sort());
     }, (e)=>{
-      console.error('Firebase error /home', e);
-      setError(e);
+      console.error('Failed to read /products for tags', e);
+      setAvailableTags([]);
+    });
+    return () => unsub();
+  }, []);
+
+  // subscribe to /homeConfig for festivals
+  useEffect(()=>{
+    const r = ref(db, '/homeConfig');
+    return onValue(r, snap => {
+      const val = snap.val() || {};
+      setConfig({ festivals: val.festivals || {} });
+      setLoading(false);
+    }, (e)=>{
+      console.error('Failed to read /homeConfig', e);
       setLoading(false);
     });
   },[]);
 
-  const openEditCarousel = (sid, slides) => {
-    setEditingCarousel(sid);
-    const norm = (slides || []).map(s => (typeof s === 'string' ? { image: s, title: '', subtitle: '', buttonText: '', buttonUrl: '' } : ({ image: s.image || '', title: s.title || '', subtitle: s.subtitle || s.body || '', buttonText: s.buttonText || '', buttonUrl: s.buttonUrl || '' })));
-    setCarouselFormSlides(norm);
-  };
-
-  const updateCarouselSlideField = (idx, key, value) => {
-    setCarouselFormSlides(prev => prev.map((s, i) => i === idx ? { ...s, [key]: value } : s));
-  };
-
-  const addCarouselSlide = () => setCarouselFormSlides(prev => [...prev, { image: '', title: '', subtitle: '', buttonText: '', buttonUrl: '' }]);
-  const removeCarouselSlide = (idx) => setCarouselFormSlides(prev => prev.filter((_, i) => i !== idx));
-
-  const saveCarouselSlides = async (sid) => {
-    try{
-      // Save the slides array to /home/sections/{sid}/images
-      const arr = carouselFormSlides.map(s => ({ image: s.image || '', title: s.title || '', subtitle: s.subtitle || '', buttonText: s.buttonText || '', buttonUrl: s.buttonUrl || '' }));
-      await update(ref(db, `/home/sections/${sid}`), { images: arr });
-      showToast('Carousel slides saved');
-      setEditingCarousel(null);
-      setCarouselFormSlides([]);
-    }catch(e){
-      console.error('Failed to save carousel slides', e);
-      showToast('Failed to save carousel slides');
-    }
-  };
-
+  // subscribe to /banners for basic banner management
   useEffect(()=>{
-    if(home?.activeFestivals) setActiveFestivalsText((home.activeFestivals || []).join(','));
-  }, [home]);
+    const r = ref(db, '/banners');
+    const unsub = onValue(r, snap => {
+      const raw = snap.val();
+      let arr = [];
+      if (!raw) arr = [];
+      else if (Array.isArray(raw)) arr = raw.map((b, i) => ({ id: b?.id || `b-${i}`, ...b }));
+      else arr = Object.entries(raw).map(([id,b]) => ({ id, ...b }));
+      setBanners(arr);
+      setBannersLoading(false);
+    }, (e)=>{
+      console.error('Failed to read /banners', e);
+      setBanners([]);
+      setBannersLoading(false);
+    });
+    return () => unsub();
+  }, []);
 
-  const saveActiveFestivals = async ()=>{
-    try{
-      const arr = activeFestivalsText.split(',').map(s=>s.trim()).filter(Boolean);
-      await update(ref(db, '/home'), { activeFestivals: arr });
-      showToast('Active festivals updated');
-    }catch(e){ console.error(e); showToast('Failed to update active festivals'); }
+  const updateField = (path, value)=>{
+    setConfig(c => {
+      const copy = JSON.parse(JSON.stringify(c || { festivals: {} }));
+      const parts = path.split('.');
+      let cur = copy;
+      for(let i=0;i<parts.length-1;i++){
+        cur = cur[parts[i]] = cur[parts[i]] || {};
+      }
+      cur[parts[parts.length-1]] = value;
+      return copy;
+    });
   };
 
-  const toggleFeatured = async (sectionId, productId, enabled)=>{
+  const save = async ()=>{
+    setSaving(true);
     try{
-      const path = `/home/sections/${sectionId}/items/${productId}`;
-      if(enabled){
-        await update(ref(db, path), { featured: true });
-      } else {
-        await update(ref(db, path), { featured: null });
-      }
-      showToast(enabled ? 'Added to section' : 'Removed from section');
+      // Only persist festivals here (we manage banners separately)
+      await set(ref(db, '/homeConfig/festivals'), config.festivals || {});
+      showToast('Festival config saved');
     }catch(e){
-      console.error(e);
-      showToast('Error updating section');
-    }
+      console.error('Failed to save /homeConfig/festivals', e);
+      showToast('Failed to save', 'error');
+    }finally{ setSaving(false); }
   };
 
-  const openEditVisibility = (sid, vis)=>{
-    setEditingVisibility(sid);
-    setVisibilityForm({ type: vis?.type || 'always', start: vis?.start || '', end: vis?.end || '', festivals: (vis?.festivals || []).join(',') });
-  };
-
-  const saveVisibility = async (sid)=>{
+  const saveEntry = async (type, key) => {
+    if(!type || !key) return;
+    setOpBusy(true);
     try{
-      const payload = { type: visibilityForm.type };
-      if(visibilityForm.type === 'time'){
-        if(visibilityForm.start) payload.start = visibilityForm.start;
-        if(visibilityForm.end) payload.end = visibilityForm.end;
+      const bufKey = `${type}.${key}`;
+      let value = (config?.[type] && config[type][key]) ? config[type][key] : null;
+      if(buffers[bufKey] !== undefined){
+        const parsed = String(buffers[bufKey] || '').split(',').map(s=>s.trim()).filter(Boolean);
+        value = parsed;
+        updateField(`${type}.${key}`, parsed);
       }
-      if(visibilityForm.type === 'festival'){
-        payload.festivals = visibilityForm.festivals.split(',').map(s=>s.trim()).filter(Boolean);
-      }
-      await update(ref(db, `/home/sections/${sid}`), { visibility: payload });
-      showToast('Visibility saved');
-      setEditingVisibility(null);
-    }catch(e){ console.error(e); showToast('Failed to save visibility'); }
+      await set(ref(db, `/homeConfig/${type}/${key}`), value);
+      showToast('Saved');
+    }catch(e){
+      console.error('Failed to save entry', e);
+      showToast('Failed to save', 'error');
+    }finally{ setOpBusy(false); }
   };
 
-  const createSection = async () => {
-    const idRaw = (newSectionId || '').trim();
-    const title = (newSectionTitle || '').trim();
-    if(!title){ showToast('Provide a section title'); return; }
-    const id = idRaw || title.toLowerCase().replace(/\s+/g,'-');
-    if(home?.sections && home.sections[id]){ showToast('Section id already exists'); return; }
+  const deleteEntry = async (type, key) => {
+    if(!confirm(`Delete ${type}/${key} from server? This cannot be undone.`)) return;
+    setOpBusy(true);
     try{
-      const payload = { title, type: newSectionType, images: [], items: {} };
-      if(newVisibilityType && newVisibilityType !== 'always'){
-        if(newVisibilityType === 'time'){
-          payload.visibility = { type: 'time' };
-          if(newVisibilityStart) payload.visibility.start = newVisibilityStart;
-          if(newVisibilityEnd) payload.visibility.end = newVisibilityEnd;
-        } else if(newVisibilityType === 'festival'){
-          payload.visibility = { type: 'festival', festivals: [] };
-        }
-      }
-      await set(ref(db, `/home/sections/${id}`), payload);
-      showToast('Section created');
-      // reset
-      setNewSectionId(''); setNewSectionTitle(''); setNewSectionType('carousel'); setNewVisibilityType('always'); setNewVisibilityStart(''); setNewVisibilityEnd('');
-    }catch(e){ console.error('Failed to create section', e); showToast('Failed to create section'); }
+      await set(ref(db, `/homeConfig/${type}/${key}`), null);
+      // also remove locally
+      setConfig(c => {
+        const copy = JSON.parse(JSON.stringify(c || { festivals:{} }));
+        if(copy[type]) delete copy[type][key];
+        return copy;
+      });
+      showToast('Deleted');
+    }catch(e){
+      console.error('Failed to delete entry', e);
+      showToast('Failed to delete', 'error');
+    }finally{ setOpBusy(false); }
   };
 
-  // Create a default "Shop by category" section if missing
-  const createDefaultShopByCategory = async () => {
-    const id = 'shop-by-category';
-    if(home?.sections && home.sections[id]){ showToast('Shop by category section already exists'); return; }
+  // Banner management helpers
+  const saveBanners = async () => {
+    setOpBusy(true);
     try{
-      const payload = {
-        title: 'Shop by category',
-        type: 'grid',
-        images: [],
-        items: {},
-        visibility: { type: 'always' }
-      };
-      await set(ref(db, `/home/sections/${id}`), payload);
-      showToast('Default "Shop by category" section created');
-    }catch(e){ console.error('Failed to create default shop-by-category', e); showToast('Failed to create default section'); }
+      // persist the banners array as-is
+      await set(ref(db, '/banners'), banners);
+      showToast('Banners saved');
+    }catch(e){
+      console.error('Failed to save banners', e);
+      showToast('Failed to save banners', 'error');
+    }finally{ setOpBusy(false); }
   };
 
+  const addBannerFromForm = () => {
+    if(!newBanner.image) { showToast('Please provide an image URL', 'error'); return; }
+    const banner = { id: `b-${Date.now()}`, image: newBanner.image, heading: newBanner.heading || '', body: newBanner.body || '', ctaLabel: newBanner.ctaLabel || '', link: newBanner.link || '' };
+    setBanners(b => ([...b, banner]));
+    setNewBanner({ image: '', heading: '', body: '', ctaLabel: '', link: '' });
+    showToast('Banner added (save to persist)');
+  };
 
-  if(loading) return <Loader />;
-  if(error) return <div className="text-red-600">Error loading homepage admin. Check console for details.</div>;
+  const clearNewBannerForm = () => setNewBanner({ image: '', heading: '', body: '', ctaLabel: '', link: '' });
 
-  if(!home){
-    return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Homepage sections</h2>
-        <div className="p-4 border rounded bg-yellow-50">
-          <p className="mb-2">No homepage configuration found at <code>/home</code> in the Realtime Database.</p>
-          <p className="text-sm text-gray-700">You can create the initial structure by adding a `home` node with a `hero` and `sections` object. Example payload is available in <code>seed/database.seed.json</code>.</p>
-          <p className="mt-2 text-sm">If you are logged in as admin and still see this, ensure your database rules permit reading `/home` and that the admin user has the correct custom claim.</p>
-        </div>
-      </div>
-    );
-  }
+  const updateBannerAt = (idx, field, value) => {
+    setBanners(b => {
+      const copy = JSON.parse(JSON.stringify(b || []));
+      if(copy[idx]) copy[idx][field] = value;
+      return copy;
+    });
+  };
 
-  const sections = home?.sections ?? {};
+  const deleteBannerAt = (idx) => {
+    if(!confirm('Delete this banner?')) return;
+    setBanners(b => {
+      const copy = JSON.parse(JSON.stringify(b || []));
+      copy.splice(idx, 1);
+      return copy;
+    });
+  };
+
+  if(loading || bannersLoading) return <Loader />;
 
   return (
-    <div>
-      {/* Simple admin mode toggle */}
-      <div className="mb-4 p-3 border rounded bg-white flex items-center justify-between">
-        <div>
-          <div className="font-medium">Admin mode</div>
-          <div className="text-sm text-neutral-600">Simple mode hides advanced visibility/time controls for quick edits.</div>
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={simpleMode} onChange={(e)=>setSimpleMode(e.target.checked)} />
-            <span className="text-sm">Simple mode</span>
-          </label>
+    <div className="p-6">
+      <h2 className="text-xl font-semibold mb-4">Homepage Configuration</h2>
+
+      {/* Saved summary */}
+      <div className="mb-4 p-3 bg-white rounded border">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm font-medium">Saved entries</div>
+          <div className="text-xs text-gray-500">Festivals: {Object.keys(config.festivals||{}).length} • Banners: {banners.length}</div>
         </div>
       </div>
 
-      <h2 className="text-xl font-semibold mb-4">Homepage sections</h2>
+      {/* Debug: available tags in system (derived from /products) */}
+      <div className="mb-4 p-3 bg-yellow-50 rounded border border-yellow-100 text-sm">
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-medium">Available product tags</div>
+          <div className="text-xs text-gray-500">{availableTags.length} tags</div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {availableTags.length === 0 ? (
+            <div className="text-xs text-gray-500">No tags found in products</div>
+          ) : (
+            availableTags.map(tag => (
+              <span key={tag} className="px-2 py-1 bg-white border rounded text-xs">{tag}</span>
+            ))
+          )}
+        </div>
+        <div className="text-xs text-gray-600 mt-2">This list is derived from product tag values in <code>/products</code>. Use these tags when configuring festivals.</div>
+      </div>
 
-      <div className="mb-4 p-4 border rounded bg-white">
-        <h3 className="font-medium mb-2">Global dynamic settings</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-end">
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">Active festivals (comma separated)</label>
-            <input value={activeFestivalsText} onChange={(e)=>setActiveFestivalsText(e.target.value)} className="border p-2 w-full" placeholder="e.g. diwali, navratri" />
-          </div>
+      {/* Festival mappings (dynamic) */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium mb-2">Festival mappings (dynamic)</h3>
           <div className="flex gap-2">
-            <button onClick={saveActiveFestivals} className="px-3 py-2 bg-primary-600 text-white rounded text-sm">Save festivals</button>
-            <button onClick={()=>setActiveFestivalsText('')} className="px-3 py-2 border rounded text-sm">Clear</button>
+            <button onClick={()=>{
+              const key = window.prompt('Enter festival key (e.g. diwali, christmas)');
+              if(!key) return;
+              const k = String(key).trim().toLowerCase().replace(/\s+/g,'-');
+              if(!k) return;
+              setConfig(c => ({ ...(c||{}), festivals: { ...(c.festivals||{}), [k]: [] } }));
+              showToast('Festival added');
+            }} className="px-3 py-1 bg-green-600 text-white rounded">Add Festival</button>
+            <button onClick={()=>{
+              setConfig(c => ({ ...(c||{}), festivals: Object.keys(c?.festivals||{}).length ? (c.festivals) : { diwali:[], christmas:[], easter:[], newyear:[] } }));
+              showToast('Defaults populated (if empty)');
+            }} className="px-3 py-1 bg-indigo-600 text-white rounded">Populate Defaults</button>
           </div>
+        </div>
+        <p className="text-sm text-gray-600 mb-2">Manage festival keys and their tag lists. Tags should be comma-separated.</p>
+        <div className="grid grid-cols-1 gap-3">
+          {Object.keys(config.festivals || {}).length === 0 && <div className="text-sm text-gray-500">No festivals configured yet.</div>}
+          {Object.entries(config.festivals || {}).map(([f, vals]) => {
+            const keyName = `festivals.${f}`;
+            return (
+            <div id={`homeconfig-fest-${f}`} key={f} className="flex items-center gap-3">
+              <div className="w-40 text-sm font-medium">{f.charAt(0).toUpperCase()+f.slice(1)}</div>
+              <input
+                value={buffers[keyName] !== undefined ? buffers[keyName] : (Array.isArray(vals) ? vals.join(',') : '')}
+                onChange={(e)=>{
+                  const raw = e.target.value;
+                  setBuffers(b => ({ ...b, [keyName]: raw }));
+                }}
+                onBlur={(e)=>{
+                  const raw = buffers[keyName] !== undefined ? buffers[keyName] : e.target.value;
+                  const arr = String(raw || '').split(',').map(s=>s.trim()).filter(Boolean);
+                  updateField(`festivals.${f}`, arr);
+                  setBuffers(b => { const c = {...b}; delete c[keyName]; return c; });
+                }}
+                className="flex-1 border rounded px-3 py-2" />
+              <div className="flex gap-2">
+                <button onClick={()=>saveEntry('festivals', f)} disabled={opBusy} className="px-3 py-1 bg-blue-600 text-white rounded">Save</button>
+                <button onClick={()=>deleteEntry('festivals', f)} disabled={opBusy} className="px-3 py-1 bg-red-500 text-white rounded">Delete</button>
+              </div>
+            </div>
+          )})}
         </div>
       </div>
 
-      {/* New: create homepage section (carousel etc.) */}
-      <div className="mb-4 p-4 border rounded bg-white">
-        <h3 className="font-medium mb-2">Create new homepage section</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-          <div>
-            <label className="block text-sm font-medium mb-1">Section ID (optional)</label>
-            <input value={newSectionId} onChange={(e)=>setNewSectionId(e.target.value)} className="border p-2 w-full" placeholder="section-id (auto from title)" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Title</label>
-            <input value={newSectionTitle} onChange={(e)=>setNewSectionTitle(e.target.value)} className="border p-2 w-full" placeholder="Section title" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Type</label>
-            <select value={newSectionType} onChange={(e)=>setNewSectionType(e.target.value)} className="border p-2 w-full">
-              <option value="carousel">Carousel</option>
-              <option value="grid">Grid</option>
-              <option value="hero">Hero</option>
-            </select>
-          </div>
-          {/* Visibility: simplified when simpleMode is enabled */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Visibility</label>
-            {simpleMode ? (
-              <div className="text-sm text-neutral-600">Default: Always visible</div>
-            ) : (
-              <>
-                <select value={newVisibilityType} onChange={(e)=>setNewVisibilityType(e.target.value)} className="border p-2 w-full">
-                  <option value="always">Always</option>
-                  <option value="time">Time window</option>
-                  <option value="festival">Festival</option>
-                </select>
-                {newVisibilityType === 'time' && (
-                  <>
-                    <div className="mt-2">
-                      <label className="block text-sm font-medium mb-1">Start (local)</label>
-                      <input type="datetime-local" value={newVisibilityStart} onChange={(e)=>setNewVisibilityStart(e.target.value)} className="border p-2 w-full" />
-                    </div>
-                    <div className="mt-2">
-                      <label className="block text-sm font-medium mb-1">End (local)</label>
-                      <input type="datetime-local" value={newVisibilityEnd} onChange={(e)=>setNewVisibilityEnd(e.target.value)} className="border p-2 w-full" />
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-          </div>
-          <div className="md:col-span-3 flex gap-2">
-            <button onClick={createSection} className="px-3 py-2 bg-primary-600 text-white rounded">Create section</button>
-            <button onClick={()=>{ setNewSectionId(''); setNewSectionTitle(''); setNewSectionType('carousel'); setNewVisibilityType('always'); setNewVisibilityStart(''); setNewVisibilityEnd(''); }} className="px-3 py-2 border rounded">Clear</button>
-          </div>
+      {/* Banner management */}
+      <div className="mb-6 p-4 bg-white rounded border">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-medium">Banners</h3>
+          <div className="text-sm text-gray-500">Manage homepage banners (image, heading, body, action label, action link)</div>
         </div>
-      </div>
-
-      {/* Offer quick-create for default Shop by category section when missing */}
-      {!sections['shop-by-category'] && (
-        <div className="mb-4 p-4 border rounded bg-yellow-50 flex items-center justify-between">
-          <div>
-            <div className="font-medium">No "Shop by category" section</div>
-            <div className="text-sm text-neutral-700">Create a default grid section to show categories on the homepage.</div>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={createDefaultShopByCategory} className="px-3 py-2 bg-primary-600 text-white rounded">Create "Shop by category"</button>
-          </div>
-        </div>
-      )}
-
-      {Object.keys(sections).length === 0 ? (
-        <div className="p-4 border rounded bg-yellow-50">No sections found under <code>/home/sections</code>. Use the seed or create sections in the admin UI.</div>
-      ) : (
-        Object.entries(sections).map(([sid, sec])=> (
-          <div key={sid} className="mb-4">
-            <h3 className="font-semibold">{sec?.title || sid}</h3>
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              <div className="col-span-3 mb-2 text-sm text-neutral-600">Visibility: {sec.visibility ? JSON.stringify(sec.visibility) : 'always'}</div>
-               {Object.entries(sec?.items ?? {}).length === 0 ? (
-                 <div className="text-sm text-gray-600">No items in this section.</div>
-               ) : (
-                 Object.entries(sec.items ?? {}).map(([pid, it])=> (
-                   <div key={pid} className="p-2 border rounded flex items-center justify-between">
-                     <div>{it?.name || it?.title || pid}</div>
-                     <div className="flex gap-2">
-                       <button onClick={()=>toggleFeatured(sid, pid, true)} className="text-green-600">Add</button>
-                       <button onClick={()=>toggleFeatured(sid, pid, false)} className="text-red-600">Remove</button>
-                     </div>
-                   </div>
-                 ))
-               )}
-            </div>
-
-            <div className="mt-2 flex gap-2">
-              <button onClick={()=>openEditVisibility(sid, sec.visibility)} className="px-3 py-1 border rounded text-sm">Edit visibility</button>
-              { (sec.type === 'carousel' || (sec.images && Array.isArray(sec.images))) && (
-                 <button onClick={()=>openEditCarousel(sid, sec.images)} className="px-3 py-1 border rounded text-sm">Edit carousel slides</button>
-              )}
-              <button onClick={async ()=>{ if(!confirm('Clear visibility for this section?')) return; await update(ref(db, `/home/sections/${sid}`), { visibility: null }); showToast('Visibility cleared'); }} className="px-3 py-1 border rounded text-sm">Clear visibility</button>
-            </div>
-
-            {editingVisibility === sid && (
-              <div className="mt-3 p-3 border rounded bg-gray-50">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Type</label>
-                    {simpleMode ? (
-                      <div className="text-sm text-neutral-600">{visibilityForm.type || 'always'}</div>
-                    ) : (
-                      <select value={visibilityForm.type} onChange={(e)=>setVisibilityForm(f=>({...f, type:e.target.value}))} className="border p-2 w-full">
-                        <option value="always">Always</option>
-                        <option value="time">Time window</option>
-                        <option value="festival">Festival</option>
-                      </select>
-                    )}
-                  </div>
-                  {!simpleMode && visibilityForm.type === 'time' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Start (local)</label>
-                        <input type="datetime-local" value={visibilityForm.start} onChange={(e)=>setVisibilityForm(f=>({...f, start:e.target.value}))} className="border p-2 w-full" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">End (local)</label>
-                        <input type="datetime-local" value={visibilityForm.end} onChange={(e)=>setVisibilityForm(f=>({...f, end:e.target.value}))} className="border p-2 w-full" />
-                      </div>
-                    </>
-                  )}
-                  {!simpleMode && visibilityForm.type === 'festival' && (
-                    <div className="md:col-span-3">
-                      <label className="block text-sm font-medium mb-1">Festivals (comma separated)</label>
-                      <input value={visibilityForm.festivals} onChange={(e)=>setVisibilityForm(f=>({...f, festivals:e.target.value}))} className="border p-2 w-full" placeholder="diwali, navratri" />
-                    </div>
-                  )}
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <button onClick={()=>saveVisibility(sid)} className="px-3 py-2 bg-primary-600 text-white rounded">Save visibility</button>
-                  <button onClick={()=>setEditingVisibility(null)} className="px-3 py-2 border rounded">Cancel</button>
+        <div className="space-y-3">
+          {/* New banner form */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-start mb-2">
+            <div className="md:col-span-2">
+              <label className="block text-xs text-gray-600 mb-1">Image URL *</label>
+              <input value={newBanner.image} onChange={(e)=>setNewBanner(n => ({ ...n, image: e.target.value }))} className="w-full border p-2" placeholder="https://... (direct image link)" />
+              <div className="mt-2">
+                <div className="text-xs text-gray-500 mb-1">Preview</div>
+                <div className="w-full bg-gray-50 rounded overflow-hidden border">
+                  <img src={newBanner.image || '/placeholder.jpg'} alt={newBanner.heading || 'preview'} className="w-full h-40 object-cover" />
                 </div>
               </div>
-            )}
+            </div>
 
-            {editingCarousel === sid && (
-              <div className="mt-3 p-3 border rounded bg-white">
-                <h4 className="font-medium mb-2">Edit slides for {sec?.title || sid}</h4>
-                {carouselFormSlides.length === 0 && <div className="text-sm text-neutral-500 mb-2">No slides defined.</div>}
-                <div className="space-y-3">
-                  {carouselFormSlides.map((s, idx) => (
-                    <div key={idx} className="p-3 border rounded">
-                      <div className="grid grid-cols-1 md:grid-cols-6 gap-2 items-center">
-                        <div className="md:col-span-3">
-                          <label className="block text-sm font-medium">Image URL</label>
-                          <input value={s.image} onChange={(e)=>updateCarouselSlideField(idx, 'image', e.target.value)} className="border p-2 w-full" />
-                        </div>
-                        <div className="md:col-span-3">
-                          <label className="block text-sm font-medium">Title</label>
-                          <input value={s.title} onChange={(e)=>updateCarouselSlideField(idx, 'title', e.target.value)} className="border p-2 w-full" />
-                        </div>
-                        <div className="md:col-span-6 mt-2">
-                          <label className="block text-sm font-medium">Subtitle / Body</label>
-                          <input value={s.subtitle} onChange={(e)=>updateCarouselSlideField(idx, 'subtitle', e.target.value)} className="border p-2 w-full" />
-                        </div>
-                        <div className="md:col-span-3 mt-2">
-                          <label className="block text-sm font-medium">Button text</label>
-                          <input value={s.buttonText} onChange={(e)=>updateCarouselSlideField(idx, 'buttonText', e.target.value)} className="border p-2 w-full" />
-                        </div>
-                        <div className="md:col-span-3 mt-2">
-                          <label className="block text-sm font-medium">Button URL</label>
-                          <input value={s.buttonUrl} onChange={(e)=>updateCarouselSlideField(idx, 'buttonUrl', e.target.value)} className="border p-2 w-full" />
-                        </div>
-                      </div>
-                      <div className="mt-2 flex gap-2">
-                        <button onClick={()=>removeCarouselSlide(idx)} className="px-3 py-1 border text-red-600">Remove</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <button onClick={addCarouselSlide} className="px-3 py-2 border rounded text-sm">Add slide</button>
-                  <button onClick={()=>saveCarouselSlides(sid)} className="px-3 py-2 bg-primary-600 text-white rounded text-sm">Save slides</button>
-                  <button onClick={()=>{ setEditingCarousel(null); setCarouselFormSlides([]); }} className="px-3 py-2 border rounded text-sm">Cancel</button>
+            <div className="md:col-span-1">
+              <label className="block text-xs text-gray-600 mb-1">Heading</label>
+              <input value={newBanner.heading} onChange={(e)=>setNewBanner(n => ({ ...n, heading: e.target.value }))} className="w-full border p-2" placeholder="Banner heading / title" />
+
+              <label className="block text-xs text-gray-600 mt-3 mb-1">Button label</label>
+              <input value={newBanner.ctaLabel} onChange={(e)=>setNewBanner(n => ({ ...n, ctaLabel: e.target.value }))} className="w-full border p-2" placeholder="CTA button text" />
+            </div>
+
+            <div className="md:col-span-1">
+              <label className="block text-xs text-gray-600 mb-1">Body / description</label>
+              <textarea value={newBanner.body} onChange={(e)=>setNewBanner(n => ({ ...n, body: e.target.value }))} className="w-full border p-2 h-24" placeholder="Short description for the banner" />
+
+              <label className="block text-xs text-gray-600 mt-3 mb-1">CTA link</label>
+              <input value={newBanner.link} onChange={(e)=>setNewBanner(n => ({ ...n, link: e.target.value }))} className="w-full border p-2" placeholder="https://... (optional)" />
+            </div>
+
+            <div className="md:col-span-4 flex gap-2">
+              <button onClick={addBannerFromForm} className="px-3 py-2 bg-green-600 text-white rounded">Add Banner</button>
+              <button onClick={clearNewBannerForm} className="px-3 py-2 border rounded">Clear</button>
+              <button onClick={saveBanners} disabled={opBusy} className="px-3 py-2 bg-blue-600 text-white rounded">Save Banners</button>
+            </div>
+          </div>
+
+          {/* Existing banners list */}
+          {banners.length === 0 && <div className="text-sm text-gray-500">No banners configured yet.</div>}
+          {banners.map((b, idx) => (
+            <div key={b.id || `ban-${idx}`} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-2 border rounded">
+              <div className="md:col-span-3">
+                <div className="w-full bg-gray-50 rounded overflow-hidden border">
+                  <img src={b.image || '/placeholder.jpg'} alt={b.heading || b.title || ''} className="w-full h-28 object-cover" />
                 </div>
               </div>
-            )}
+              <div className="md:col-span-6">
+                <input value={b.image || ''} onChange={(e)=>updateBannerAt(idx, 'image', e.target.value)} className="w-full border p-2 mb-2" placeholder="Image URL" />
+                <input value={b.heading || ''} onChange={(e)=>updateBannerAt(idx, 'heading', e.target.value)} className="w-full border p-2 mb-2" placeholder="Heading / Title" />
+                <textarea value={b.body || ''} onChange={(e)=>updateBannerAt(idx, 'body', e.target.value)} className="w-full border p-2 mb-2 h-20" placeholder="Body / description (optional)" />
+              </div>
+              <div className="md:col-span-2">
+                <input value={b.ctaLabel || ''} onChange={(e)=>updateBannerAt(idx, 'ctaLabel', e.target.value)} className="w-full border p-2 mb-2" placeholder="Button label" />
+                <input value={b.link || ''} onChange={(e)=>updateBannerAt(idx, 'link', e.target.value)} className="w-full border p-2" placeholder="CTA link" />
+              </div>
+              <div className="md:col-span-1 flex justify-end">
+                <button onClick={()=>deleteBannerAt(idx)} className="px-3 py-2 border rounded">Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-          </div>
-        ))
-      )}
+      <div className="flex gap-3">
+        <button onClick={save} disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50">{saving ? 'Saving...' : 'Save Festivals'}</button>
+        <button onClick={()=>{ setConfig({ festivals:{} }); showToast('Reset locally'); }} className="px-4 py-2 bg-gray-100 rounded">Reset</button>
+      </div>
     </div>
   );
 }

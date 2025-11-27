@@ -4,10 +4,8 @@ import Loader from "../components/Loader";
 import { normalizeImageUrl } from "../utils/imageHelpers";
 import { useFirebaseList } from "../hooks/useFirebase";
 import ProductCard from "../components/ProductCard";
-// Note: some builds reference server-side helpers/components that may not exist in this repo.
-// Provide lightweight local fallbacks to avoid runtime module errors.
 
-// Lightweight local BannerCarousel/HomeSection/RecommendationsSection fallbacks
+// Lightweight local BannerCarousel fallback
 function BannerCarousel({ banners }) {
   if (!banners || banners.length === 0) return null;
   const items = Array.isArray(banners) ? banners : Object.entries(banners).map(([id,b])=>({ id, ...b }));
@@ -39,26 +37,15 @@ function HomeSection({ title, subtitle, products = [], layout = 'grid', limit = 
   );
 }
 
-function RecommendationsSection(props) {
-  // Minimal placeholder: advanced recommendation logic is optional.
-  return null;
-}
-
-import { useCart } from '../context/CartContext';
-
 export default function HomePage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const { data: productsData } = useFirebaseList("/products");
   const { data: bannersData } = useFirebaseList('/banners');
   const { data: categoriesData } = useFirebaseList('/categories');
-  // read server-configured recommendation maps (optional)
   const { data: homeConfig } = useFirebaseList('/homeConfig');
-  const { cartItems } = useCart();
 
   useEffect(() => {
-    // Populate categories from realtime DB list if available
     if (categoriesData) {
       const arr = Array.isArray(categoriesData) ? categoriesData : Object.entries(categoriesData).map(([id, v]) => ({ id, ...v }));
       setCategories(arr);
@@ -69,38 +56,11 @@ export default function HomePage() {
     }
   }, [categoriesData]);
 
-  // derive product lists from realtime products data
+  // derive product list
   const productsList = React.useMemo(() => {
     if (!productsData) return [];
     return Object.entries(productsData).map(([id, v]) => ({ id, ...v }));
   }, [productsData]);
-
-  const timeOfDay = React.useMemo(() => {
-    const h = new Date().getHours();
-    if (h < 11) return 'morning';
-    if (h < 16) return 'afternoon';
-    return 'evening';
-  }, []);
-
-
-  // day-of-week based recommendations (e.g., Monday -> healthy)
-  const dayOfWeek = React.useMemo(() => {
-    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-    return days[new Date().getDay()];
-  }, []);
-
-  // normalize server-provided day/festival maps (keys -> lowercase, values -> array)
-  const serverDays = React.useMemo(() => {
-    const raw = (homeConfig && homeConfig.days) ? homeConfig.days : {};
-    const out = {};
-    Object.entries(raw).forEach(([k, v]) => {
-      const kk = String(k || '').trim().toLowerCase();
-      if (!kk) return;
-      if (Array.isArray(v)) out[kk] = v.map(x => String(x).trim().toLowerCase()).filter(Boolean);
-      else out[kk] = String(v || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-    });
-    return out;
-  }, [homeConfig]);
 
   const serverFestivals = React.useMemo(() => {
     const raw = (homeConfig && homeConfig.festivals) ? homeConfig.festivals : {};
@@ -114,8 +74,7 @@ export default function HomePage() {
     return out;
   }, [homeConfig]);
 
-
-  // Build festival sections from serverFestivals. Render a section for every festival key that yields products.
+  // Build festival sections from serverFestivals
   const festivalSections = React.useMemo(() => {
     const sections = [];
     Object.entries(serverFestivals).forEach(([festKey, tags]) => {
@@ -130,20 +89,7 @@ export default function HomePage() {
     return sections;
   }, [productsList, serverFestivals]);
 
-  const popularProducts = React.useMemo(() => {
-    return [...productsList].sort((a, b) => (b.orderCount || 0) - (a.orderCount || 0)).slice(0, 8);
-  }, [productsList]);
-
-  const offers = React.useMemo(() => {
-    return productsList.filter(p => (p.discount || p.discountPercent || p.discountAmount) > 0).slice(0, 8);
-  }, [productsList]);
-
-  const quickBuys = React.useMemo(() => {
-    return productsList.filter(p => p.inStock !== false).slice(0, 8);
-  }, [productsList]);
-
   const banners = React.useMemo(() => {
-    // bannersData may be an array or an object keyed by id
     const global = [];
     if (bannersData) {
       if (Array.isArray(bannersData)) {
@@ -152,55 +98,22 @@ export default function HomePage() {
         Object.entries(bannersData).forEach(([id, b]) => global.push({ id, ...b }));
       }
     }
-
-    // simple personalization: promote category of last cart item
-    const personalized = [];
-    try {
-      if (cartItems && cartItems.length) {
-        const last = cartItems[0];
-        const cat = last.product?.category || last.product?.categoryId;
-        if (cat) {
-          personalized.push({ id: 'p-cart-cat', title: 'Recommended for you', subtitle: last.product?.name, image: last.product?.image || last.product?.imageUrl, ctaLink: `/category/${cat}` });
-        }
-      }
-    } catch (e) {}
-
-    return [...personalized, ...global];
-  }, [bannersData, cartItems]);
+    return global;
+  }, [bannersData]);
 
   if (loading) return <Loader />;
 
   return (
     <main className="space-y-8 pb-8">
 
-       {/* Banners */}
+      {/* Banners / Carousel */}
       <section>
         <BannerCarousel banners={banners} />
-      </section>
-     
-
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-orange-50 via-red-50 to-pink-50">
-        <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="text-center space-y-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
-              Griya Jewellery
-            </h1>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Discover exquisite jewellery pieces crafted with precision and care.
-            </p>
-          </div>
-        </div>
       </section>
 
       {/* Categories Section */}
       <section className="max-w-7xl mx-auto px-4">
-        {error ? (
-          <div className="text-center py-12">
-            <div className="text-red-600 font-medium mb-2">Failed to load categories</div>
-            <div className="text-sm text-gray-600">{error}</div>
-          </div>
-        ) : categories && categories.length ? (
+        {categories && categories.length ? (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-gray-800">Shop by Category</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -235,46 +148,11 @@ export default function HomePage() {
         )}
       </section>
 
-     
-
-      {/* Dynamic Home Sections */}
+      {/* Festival Sections (server configured) */}
       <section className="max-w-7xl mx-auto px-4 space-y-6">
-  
-
-        {/* render festival sections configured on server */}
         {festivalSections && festivalSections.length > 0 && festivalSections.map(s => (
           <HomeSection key={`fest-${s.key}`} title={s.title} subtitle="Festive essentials" products={s.products} layout="grid" limit={8} />
         ))}
-
-        {popularProducts && popularProducts.length > 0 && (
-          <HomeSection
-            title="Popular near you"
-            products={popularProducts}
-            layout="carousel"
-            limit={8}
-          />
-        )}
-
-        {offers && offers.length > 0 && (
-          <HomeSection
-            title="Deals & Offers"
-            products={offers}
-            layout="grid"
-            limit={8}
-          />
-        )}
-
-        <RecommendationsSection title="Recommended for You" limit={8} />
-
-        {quickBuys && quickBuys.length > 0 && (
-          <HomeSection
-            title="Quick Buys"
-            subtitle="Everyday essentials"
-            products={quickBuys}
-            layout="grid"
-            limit={8}
-          />
-        )}
       </section>
 
     </main>
