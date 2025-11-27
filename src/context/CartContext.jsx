@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { showToast } from '../components/Toast';
 
 export const CartContext = createContext(null);
@@ -111,4 +111,9 @@ export function CartProvider({ children }) {
       {children}
     </CartContext.Provider>
   );
+}
+
+// convenience hook for consumers
+export function useCart(){
+  return useContext(CartContext);
 }

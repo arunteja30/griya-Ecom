@@ -21,6 +21,8 @@ export default function HomepageAdmin(){
   const [newVisibilityType, setNewVisibilityType] = useState('always');
   const [newVisibilityStart, setNewVisibilityStart] = useState('');
   const [newVisibilityEnd, setNewVisibilityEnd] = useState('');
+  // Simple admin mode: hide advanced fields and make quick defaults
+  const [simpleMode, setSimpleMode] = useState(true);
 
 
   useEffect(()=>{
@@ -178,7 +180,20 @@ export default function HomepageAdmin(){
 
   return (
     <div>
-     
+      {/* Simple admin mode toggle */}
+      <div className="mb-4 p-3 border rounded bg-white flex items-center justify-between">
+        <div>
+          <div className="font-medium">Admin mode</div>
+          <div className="text-sm text-neutral-600">Simple mode hides advanced visibility/time controls for quick edits.</div>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={simpleMode} onChange={(e)=>setSimpleMode(e.target.checked)} />
+            <span className="text-sm">Simple mode</span>
+          </label>
+        </div>
+      </div>
+
       <h2 className="text-xl font-semibold mb-4">Homepage sections</h2>
 
       <div className="mb-4 p-4 border rounded bg-white">
@@ -215,26 +230,33 @@ export default function HomepageAdmin(){
               <option value="hero">Hero</option>
             </select>
           </div>
+          {/* Visibility: simplified when simpleMode is enabled */}
           <div>
             <label className="block text-sm font-medium mb-1">Visibility</label>
-            <select value={newVisibilityType} onChange={(e)=>setNewVisibilityType(e.target.value)} className="border p-2 w-full">
-              <option value="always">Always</option>
-              <option value="time">Time window</option>
-              <option value="festival">Festival</option>
-            </select>
+            {simpleMode ? (
+              <div className="text-sm text-neutral-600">Default: Always visible</div>
+            ) : (
+              <>
+                <select value={newVisibilityType} onChange={(e)=>setNewVisibilityType(e.target.value)} className="border p-2 w-full">
+                  <option value="always">Always</option>
+                  <option value="time">Time window</option>
+                  <option value="festival">Festival</option>
+                </select>
+                {newVisibilityType === 'time' && (
+                  <>
+                    <div className="mt-2">
+                      <label className="block text-sm font-medium mb-1">Start (local)</label>
+                      <input type="datetime-local" value={newVisibilityStart} onChange={(e)=>setNewVisibilityStart(e.target.value)} className="border p-2 w-full" />
+                    </div>
+                    <div className="mt-2">
+                      <label className="block text-sm font-medium mb-1">End (local)</label>
+                      <input type="datetime-local" value={newVisibilityEnd} onChange={(e)=>setNewVisibilityEnd(e.target.value)} className="border p-2 w-full" />
+                    </div>
+                  </>
+                )}
+              </>
+            )}
           </div>
-          {newVisibilityType === 'time' && (
-            <>
-              <div>
-                <label className="block text-sm font-medium mb-1">Start (local)</label>
-                <input type="datetime-local" value={newVisibilityStart} onChange={(e)=>setNewVisibilityStart(e.target.value)} className="border p-2 w-full" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">End (local)</label>
-                <input type="datetime-local" value={newVisibilityEnd} onChange={(e)=>setNewVisibilityEnd(e.target.value)} className="border p-2 w-full" />
-              </div>
-            </>
-          )}
           <div className="md:col-span-3 flex gap-2">
             <button onClick={createSection} className="px-3 py-2 bg-primary-600 text-white rounded">Create section</button>
             <button onClick={()=>{ setNewSectionId(''); setNewSectionTitle(''); setNewSectionType('carousel'); setNewVisibilityType('always'); setNewVisibilityStart(''); setNewVisibilityEnd(''); }} className="px-3 py-2 border rounded">Clear</button>
@@ -291,13 +313,17 @@ export default function HomepageAdmin(){
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                   <div>
                     <label className="block text-sm font-medium mb-1">Type</label>
-                    <select value={visibilityForm.type} onChange={(e)=>setVisibilityForm(f=>({...f, type:e.target.value}))} className="border p-2 w-full">
-                      <option value="always">Always</option>
-                      <option value="time">Time window</option>
-                      <option value="festival">Festival</option>
-                    </select>
+                    {simpleMode ? (
+                      <div className="text-sm text-neutral-600">{visibilityForm.type || 'always'}</div>
+                    ) : (
+                      <select value={visibilityForm.type} onChange={(e)=>setVisibilityForm(f=>({...f, type:e.target.value}))} className="border p-2 w-full">
+                        <option value="always">Always</option>
+                        <option value="time">Time window</option>
+                        <option value="festival">Festival</option>
+                      </select>
+                    )}
                   </div>
-                  {visibilityForm.type === 'time' && (
+                  {!simpleMode && visibilityForm.type === 'time' && (
                     <>
                       <div>
                         <label className="block text-sm font-medium mb-1">Start (local)</label>
@@ -309,7 +335,7 @@ export default function HomepageAdmin(){
                       </div>
                     </>
                   )}
-                  {visibilityForm.type === 'festival' && (
+                  {!simpleMode && visibilityForm.type === 'festival' && (
                     <div className="md:col-span-3">
                       <label className="block text-sm font-medium mb-1">Festivals (comma separated)</label>
                       <input value={visibilityForm.festivals} onChange={(e)=>setVisibilityForm(f=>({...f, festivals:e.target.value}))} className="border p-2 w-full" placeholder="diwali, navratri" />

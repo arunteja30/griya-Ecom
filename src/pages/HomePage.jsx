@@ -1,346 +1,282 @@
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useFirebaseObject, useFirebaseList } from "../hooks/useFirebase";
-import ProductCard from "../components/ProductCard";
 import Loader from "../components/Loader";
 import { normalizeImageUrl } from "../utils/imageHelpers";
+import { useFirebaseList } from "../hooks/useFirebase";
+import ProductCard from "../components/ProductCard";
+// Note: some builds reference server-side helpers/components that may not exist in this repo.
+// Provide lightweight local fallbacks to avoid runtime module errors.
 
-// Small helpers for rendering different section types
-function HeroSection({ data }) {
-  if (!data) return null;
+// Lightweight local BannerCarousel/HomeSection/RecommendationsSection fallbacks
+function BannerCarousel({ banners }) {
+  if (!banners || banners.length === 0) return null;
+  const items = Array.isArray(banners) ? banners : Object.entries(banners).map(([id,b])=>({ id, ...b }));
+  const first = items[0];
   return (
-    <section className="relative">
-      <div className="w-full">
-        <img src={normalizeImageUrl(data.image) || "/placeholder.jpg"} alt={data.title} className="w-full h-72 md:h-[420px] object-cover" />
-        <div className={`hero-overlay ${data.compact ? 'hero-overlay--sm' : ''} absolute inset-0 flex items-center`}>
-          <div className="hero-content">
-            <h1 className="section-title text-white">{data.title}</h1>
-            {data.subtitle && <p className="text-white/90 mb-4">{data.subtitle}</p>}
-            {data.buttonUrl && (
-              <a href={data.buttonUrl} className="btn btn-primary">{data.buttonText || 'Shop Now'}</a>
-            )}
-          </div>
-        </div>
+    <div className="w-full rounded overflow-hidden">
+      {first && (
+        <a href={first.ctaLink || first.link || '#'} className="block">
+          <img src={normalizeImageUrl(first.image) || '/placeholder.jpg'} alt={first.title || ''} className="w-full h-48 object-cover" />
+        </a>
+      )}
+    </div>
+  );
+}
+
+function HomeSection({ title, subtitle, products = [], layout = 'grid', limit = 8 }) {
+  const list = (products || []).slice(0, limit);
+  if (!list || list.length === 0) return null;
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-semibold">{title}</h3>
+        {subtitle && <div className="text-sm text-neutral-600">{subtitle}</div>}
+      </div>
+      <div className={`${layout === 'carousel' ? 'flex gap-4 overflow-x-auto' : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6'}`}>
+        {list.map(p => <ProductCard key={p.id} product={p} />)}
       </div>
     </section>
   );
 }
 
-function DealsCarousel({ products }) {
-  if (!products || products.length === 0) return null;
-  return (
-    <section className="py-6">
-      <div className="section-container">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold">Top Deals</h3>
-          <Link to="/deals" className="inline-block text-sm font-semibold text-accent-600 hover:text-accent-700">See all</Link>
-        </div>
-        <div className="flex gap-4 overflow-x-auto pb-2">
-          {products.map((p) => (
-            <div key={p.id} className="min-w-[220px] card p-3">
-              <Link to={`/product/${p.id}`} className="block">
-                <img src={normalizeImageUrl(p.images?.[0]) || '/placeholder.jpg'} alt={p.name} className="w-full h-40 object-cover mb-3 rounded" />
-                <div className="text-sm font-medium text-neutral-800 mb-1 line-clamp-2">{p.name}</div>
-                <div className="text-sm text-accent-600 font-semibold">{p.price ? `₹${p.price}` : p.displayPrice || ''}</div>
-              </Link>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+function RecommendationsSection(props) {
+  // Minimal placeholder: advanced recommendation logic is optional.
+  return null;
 }
 
-function ProductGridSection({ title, productList }) {
-  if (!productList || productList.length === 0) return null;
-  return (
-    <section className="py-8 bg-white">
-      <div className="section-container">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-2xl font-semibold">{title}</h3>
-          {/* header button hidden on md+ to prefer side CTA */}
-          <Link to="/collections" className="inline-block md:hidden text-sm font-bold bg-accent-600 text-white px-3 py-1 rounded-md shadow-md hover:bg-accent-700 transition-colors">Browse all</Link>
-        </div>
-        <div className="relative">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {productList.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-          {/* Side CTA for larger screens */}
-          <div className="hidden md:flex absolute right-0 top-0 h-full items-start pl-4">
-            <Link to="/collections" className="inline-block text-sm font-bold bg-accent-600 text-white px-3 py-2 rounded-md shadow-lg hover:bg-accent-700 transition-colors translate-x-2">Browse all</Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
+import { useCart } from '../context/CartContext';
 
-function CategoriesSection({ categories }) {
-  if (!categories || categories.length === 0) return null;
-  return (
-    <section className="py-8 mb-12">
-      <div className="section-container">
-        <h3 className="text-2xl font-semibold mb-6">Shop by Category</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-          {categories.map((c) => (
-            <Link key={c.id || c.slug || c.name} to={`/category/${c.slug || c.id}`} className="card p-4 text-center hover:shadow-md">
-              {/* Support multiple possible image fields in data: image, thumbnail, thumbnailUrl */}
-              <img src={normalizeImageUrl(c.image || c.thumbnail || c.thumbnailUrl) || '/placeholder.jpg'} alt={c.name} className="w-full h-28 object-cover rounded mb-3" />
-               <div className="font-medium text-sm text-neutral-700">{c.name}</div>
-             </Link>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function TestimonialsSection({ testimonials }) {
-  if (!testimonials || Object.keys(testimonials).length === 0) return null;
-  return (
-    <section className="py-8 bg-gradient-to-br from-primary-50 to-accent-50">
-      <div className="section-container">
-        <h3 className="text-2xl font-semibold mb-6">What Our Customers Say</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {Object.entries(testimonials).map(([id, t]) => (
-            <div key={id} className="card-glass p-6 text-center">
-              <blockquote className="text-neutral-700 mb-4 italic">"{t.message ?? t.review}"</blockquote>
-              <div className="font-medium">{t.name}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function CarouselSection({ images, title }) {
-  if (!images || images.length === 0) return null;
-
-  // normalize slides: allow array of strings or objects { image, title, subtitle, buttonText, buttonUrl }
-  const slides = images.map((it) => (typeof it === 'string' ? { image: it } : it || {}));
-  const length = slides.length;
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const timerRef = useRef(null);
+export default function HomePage() {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { data: productsData } = useFirebaseList("/products");
+  const { data: bannersData } = useFirebaseList('/banners');
+  const { data: categoriesData } = useFirebaseList('/categories');
+  // read server-configured recommendation maps (optional)
+  const { data: homeConfig } = useFirebaseList('/homeConfig');
+  const { cartItems } = useCart();
 
   useEffect(() => {
-    if (length <= 1) return;
-    clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      if (!paused) setIndex(i => (i + 1) % length);
-    }, 4000);
-    return () => clearInterval(timerRef.current);
-  }, [length, paused]);
+    // Populate categories from realtime DB list if available
+    if (categoriesData) {
+      const arr = Array.isArray(categoriesData) ? categoriesData : Object.entries(categoriesData).map(([id, v]) => ({ id, ...v }));
+      setCategories(arr);
+      setLoading(false);
+    } else {
+      setCategories([]);
+      setLoading(false);
+    }
+  }, [categoriesData]);
 
-  const prev = () => setIndex(i => (i - 1 + length) % length);
-  const next = () => setIndex(i => (i + 1) % length);
+  // derive product lists from realtime products data
+  const productsList = React.useMemo(() => {
+    if (!productsData) return [];
+    return Object.entries(productsData).map(([id, v]) => ({ id, ...v }));
+  }, [productsData]);
+
+  const timeOfDay = React.useMemo(() => {
+    const h = new Date().getHours();
+    if (h < 11) return 'morning';
+    if (h < 16) return 'afternoon';
+    return 'evening';
+  }, []);
+
+
+  // day-of-week based recommendations (e.g., Monday -> healthy)
+  const dayOfWeek = React.useMemo(() => {
+    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    return days[new Date().getDay()];
+  }, []);
+
+  // normalize server-provided day/festival maps (keys -> lowercase, values -> array)
+  const serverDays = React.useMemo(() => {
+    const raw = (homeConfig && homeConfig.days) ? homeConfig.days : {};
+    const out = {};
+    Object.entries(raw).forEach(([k, v]) => {
+      const kk = String(k || '').trim().toLowerCase();
+      if (!kk) return;
+      if (Array.isArray(v)) out[kk] = v.map(x => String(x).trim().toLowerCase()).filter(Boolean);
+      else out[kk] = String(v || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    });
+    return out;
+  }, [homeConfig]);
+
+  const serverFestivals = React.useMemo(() => {
+    const raw = (homeConfig && homeConfig.festivals) ? homeConfig.festivals : {};
+    const out = {};
+    Object.entries(raw).forEach(([k, v]) => {
+      const kk = String(k || '').trim().toLowerCase();
+      if (!kk) return;
+      if (Array.isArray(v)) out[kk] = v.map(x => String(x).trim().toLowerCase()).filter(Boolean);
+      else out[kk] = String(v || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    });
+    return out;
+  }, [homeConfig]);
+
+
+  // Build festival sections from serverFestivals. Render a section for every festival key that yields products.
+  const festivalSections = React.useMemo(() => {
+    const sections = [];
+    Object.entries(serverFestivals).forEach(([festKey, tags]) => {
+      if (!tags || !tags.length) return;
+      const prods = productsList.filter(p => {
+        if (!p.tags) return false;
+        const t = Array.isArray(p.tags) ? p.tags : (String(p.tags).split(',') || []).map(s => s.trim().toLowerCase());
+        return t.some(tag => tags.includes(String(tag).toLowerCase()));
+      }).slice(0, 8);
+      if (prods.length) sections.push({ key: festKey, title: `${festKey.charAt(0).toUpperCase()+festKey.slice(1)} Picks`, products: prods });
+    });
+    return sections;
+  }, [productsList, serverFestivals]);
+
+  const popularProducts = React.useMemo(() => {
+    return [...productsList].sort((a, b) => (b.orderCount || 0) - (a.orderCount || 0)).slice(0, 8);
+  }, [productsList]);
+
+  const offers = React.useMemo(() => {
+    return productsList.filter(p => (p.discount || p.discountPercent || p.discountAmount) > 0).slice(0, 8);
+  }, [productsList]);
+
+  const quickBuys = React.useMemo(() => {
+    return productsList.filter(p => p.inStock !== false).slice(0, 8);
+  }, [productsList]);
+
+  const banners = React.useMemo(() => {
+    // bannersData may be an array or an object keyed by id
+    const global = [];
+    if (bannersData) {
+      if (Array.isArray(bannersData)) {
+        global.push(...bannersData.map((b, i) => ({ id: b.id || `b-${i}`, ...b })));
+      } else {
+        Object.entries(bannersData).forEach(([id, b]) => global.push({ id, ...b }));
+      }
+    }
+
+    // simple personalization: promote category of last cart item
+    const personalized = [];
+    try {
+      if (cartItems && cartItems.length) {
+        const last = cartItems[0];
+        const cat = last.product?.category || last.product?.categoryId;
+        if (cat) {
+          personalized.push({ id: 'p-cart-cat', title: 'Recommended for you', subtitle: last.product?.name, image: last.product?.image || last.product?.imageUrl, ctaLink: `/category/${cat}` });
+        }
+      }
+    } catch (e) {}
+
+    return [...personalized, ...global];
+  }, [bannersData, cartItems]);
+
+  if (loading) return <Loader />;
 
   return (
-    <section className="py-6">
-      {/* Constrain carousel to section-container to add left/right margins on wide screens */}
-      <div className="section-container">
-        {title && (
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-semibold">{title}</h3>
+    <main className="space-y-8 pb-8">
+
+       {/* Banners */}
+      <section>
+        <BannerCarousel banners={banners} />
+      </section>
+     
+
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-orange-50 via-red-50 to-pink-50">
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <div className="text-center space-y-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
+              Griya Jewellery
+            </h1>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Discover exquisite jewellery pieces crafted with precision and care.
+            </p>
           </div>
-        )}
+        </div>
+      </section>
 
-        <div className="relative">
-          <div className="w-full overflow-hidden" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-            <div className="flex transition-transform duration-700" style={{ transform: `translateX(-${index * 100}%)` }}>
-              {slides.map((slide, idx) => (
-                <div key={idx} className="w-full flex-shrink-0 relative">
-                  <img src={normalizeImageUrl(slide.image) || '/placeholder.jpg'} alt={slide.title || `slide-${idx}`} className="w-full h-72 md:h-[420px] object-cover" />
-
-                  {/* Bottom-left overlay for heading and body */}
-                  <div className="absolute inset-0 flex items-end">
-                    <div className="w-full bg-gradient-to-t from-black/65 via-transparent to-transparent px-6 py-6 md:py-10">
-                      <div className="max-w-xl text-left">
-                        {slide.title && <h2 className="text-white text-2xl md:text-3xl font-semibold leading-tight">{slide.title}</h2>}
-                        {slide.subtitle && <p className="text-white/90 mt-2 text-sm md:text-base">{slide.subtitle}</p>}
-                        {slide.body && <p className="text-white/90 mt-2 text-sm md:text-base">{slide.body}</p>}
-                        {slide.buttonUrl && (
-                          <a href={slide.buttonUrl} className="inline-block mt-4 btn btn-primary">{slide.buttonText || 'Learn more'}</a>
-                        )}
-                      </div>
+      {/* Categories Section */}
+      <section className="max-w-7xl mx-auto px-4">
+        {error ? (
+          <div className="text-center py-12">
+            <div className="text-red-600 font-medium mb-2">Failed to load categories</div>
+            <div className="text-sm text-gray-600">{error}</div>
+          </div>
+        ) : categories && categories.length ? (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-gray-800">Shop by Category</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {categories.map((col) => (
+                <Link
+                  key={col.id}
+                  to={`/collections/${col.slug || col.id}`}
+                  className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100"
+                >
+                  <div className="relative aspect-square bg-gradient-to-br from-orange-50 to-orange-100">
+                    <img
+                      src={normalizeImageUrl(col?.image || col?.imageUrl || '/placeholder.jpg')}
+                      alt={col?.title || col?.name || col.id}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                  </div>
+                  <div className="p-3 text-center">
+                    <div className="font-medium text-gray-800 text-sm group-hover:text-orange-600 transition-colors">
+                      {col?.title || col?.name || col.id}
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
-
-          {/* Prev / Next buttons */}
-          <button aria-label="Previous" onClick={prev} className="absolute left-4 top-1/2 -translate-y-1/2 bg-transparent/10 p-2 rounded-full shadow-md">‹</button>
-          <button aria-label="Next" onClick={next} className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent/10 p-2 rounded-full shadow-md">›</button>
-
-          {/* Slide indicators */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-4 flex gap-2">
-            {slides.map((_, i) => (
-              <button key={i} onClick={() => setIndex(i)} className={`w-3 h-3 rounded-full ${i === index ? 'bg-white' : 'bg-white/50'}`} aria-label={`Go to slide ${i+1}`} />
-            ))}
+        ) : (
+          <div className="text-center py-12">
+            <div className="text-gray-400 text-6xl mb-4">🛒</div>
+            <p className="text-gray-600">No categories available</p>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-}
+        )}
+      </section>
 
-export default function HomePage() {
-  const { data: home, loading: homeLoading } = useFirebaseObject("/home");
-  const { data: productsDataObj, loading: productsLoading } = useFirebaseList("/products");
-  const products = productsDataObj ? productsDataObj : null;
-  const { data: categoriesData } = useFirebaseList("/categories");
+     
 
-  // helpers
-  const findProducts = (ids) => ids.map((id) => products?.[id]).filter(Boolean);
-  const allProducts = products ? Object.values(products) : [];
+      {/* Dynamic Home Sections */}
+      <section className="max-w-7xl mx-auto px-4 space-y-6">
+  
 
-  // Determine dynamic layout order using home.layout (array of keys) or fallback to the keys in home.sections
-  const sectionsConfig = home?.sections || {};
-  const layoutOrder = Array.isArray(home?.layout) && home.layout.length > 0 ? home.layout : Object.keys(sectionsConfig || {});
+        {/* render festival sections configured on server */}
+        {festivalSections && festivalSections.length > 0 && festivalSections.map(s => (
+          <HomeSection key={`fest-${s.key}`} title={s.title} subtitle="Festive essentials" products={s.products} layout="grid" limit={8} />
+        ))}
 
-  // Active festivals configured by admin
-  const activeFestivals = home?.activeFestivals || [];
+        {popularProducts && popularProducts.length > 0 && (
+          <HomeSection
+            title="Popular near you"
+            products={popularProducts}
+            layout="carousel"
+            limit={8}
+          />
+        )}
 
-  // Visibility evaluation for sections
-  const isSectionVisible = (sec) => {
-    if (!sec || !sec.visibility) return true;
-    const v = sec.visibility || {};
-    const type = (v.type || 'always').toLowerCase();
-    if (type === 'always') return true;
-    const now = new Date();
-    if (type === 'time') {
-      try {
-        const start = v.start ? new Date(v.start) : null;
-        const end = v.end ? new Date(v.end) : null;
-        if (start && now < start) return false;
-        if (end && now > end) return false;
-        return true;
-      } catch (e) {
-        return true;
-      }
-    }
-    if (type === 'festival') {
-      const festList = Array.isArray(v.festivals) ? v.festivals : (typeof v.festivals === 'string' ? v.festivals.split(',').map(s=>s.trim()) : []);
-      if (!festList || festList.length === 0) return false;
-      return festList.some(f => (activeFestivals || []).map(a=>a.toLowerCase()).includes(String(f).toLowerCase()));
-    }
-    return true;
-  };
+        {offers && offers.length > 0 && (
+          <HomeSection
+            title="Deals & Offers"
+            products={offers}
+            layout="grid"
+            limit={8}
+          />
+        )}
 
-  // compute visible layout with a hook — ensure this hook runs on every render to keep hooks order stable
-  const visibleLayout = useMemo(() => layoutOrder.filter(k => isSectionVisible(sectionsConfig[k])), [layoutOrder, sectionsConfig, home?.activeFestivals]);
+        <RecommendationsSection title="Recommended for You" limit={8} />
 
-  // On slow mobile networks one listener may lag — show loader only when both are still loading.
-  if (homeLoading && productsLoading) return <Loader />;
+        {quickBuys && quickBuys.length > 0 && (
+          <HomeSection
+            title="Quick Buys"
+            subtitle="Everyday essentials"
+            products={quickBuys}
+            layout="grid"
+            limit={8}
+          />
+        )}
+      </section>
 
-  // Debug info for mobile loading issues (non-invasive)
-  try { console.debug('[HomePage] homeLoaded=', !homeLoading, 'productsLoaded=', !productsLoading, 'homeSections=', Object.keys(sectionsConfig || {}).length); } catch (e) {}
-
-  return (
-    <div className="bg-neutral-50">
-      {visibleLayout.map((sectionKey) => {
-         const section = sectionsConfig[sectionKey];
-         if (!section) return null;
-
-        // Section types can be explicit via section.type or inferred by key name
-        const type = (section.type || sectionKey).toLowerCase();
-
-        switch (type) {
-          case 'hero':
-            return <HeroSection key={sectionKey} data={section} />;
-
-          case 'deals':
-            return <DealsCarousel key={sectionKey} products={findProducts(section.productIds || [])} />;
-
-          case 'carousel':
-            // If the section has explicit images, render an image carousel.
-            if (section.images && section.images.length) {
-              return <CarouselSection key={sectionKey} images={section.images} title={section.title} />;
-            }
-            // Fallback: treat as deals carousel when productIds are present
-            return <DealsCarousel key={sectionKey} products={findProducts(section.productIds || [])} />;
-
-          case 'productlist':
-            return (
-              <ProductGridSection
-                key={sectionKey}
-                title={section.title || sectionKey}
-                productList={findProducts(section.productIds || [])}
-              />
-            );
-
-          case 'collectionlist':
-            // map collectionIds to categories data (if available)
-            const collections = (section.collectionIds || []).map(id => (categoriesData ? categoriesData[id] : null)).filter(Boolean);
-            return <CategoriesSection key={sectionKey} categories={collections} />;
-
-          case 'grid':
-          case 'products':
-          case 'bestsellers':
-          case 'recommended':
-            return (
-              <ProductGridSection
-                key={sectionKey}
-                title={section.title || (sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1))}
-                productList={findProducts(section.productIds || [])}
-              />
-            );
-
-          case 'categories':
-            return <CategoriesSection key={sectionKey} categories={categoriesData ? Object.values(categoriesData) : []} />;
-
-          case 'testimonials':
-            return <TestimonialsSection key={sectionKey} testimonials={home.testimonials || {}} />;
-
-          case 'promo':
-            return (
-              <section key={sectionKey} className="py-8">
-                <div className="section-container">
-                  <div className="card p-6 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-xl font-semibold">{section.title}</h3>
-                      <p className="text-neutral-600">{section.subtitle}</p>
-                    </div>
-                    {section.buttonUrl && (
-                      <a href={section.buttonUrl} className="btn btn-accent">{section.buttonText || 'Explore'}</a>
-                    )}
-                  </div>
-                </div>
-              </section>
-            );
-
-          default:
-            // Unknown section type — render as a generic product grid if it has productIds
-            if (section.productIds && section.productIds.length > 0) {
-              return (
-                <ProductGridSection
-                  key={sectionKey}
-                  title={section.title || sectionKey}
-                  productList={findProducts(section.productIds)}
-                />
-              );
-            }
-            return null;
-        }
-      })}
-
-      {/* Footer CTA (optional, keep as last section) */}
-      {home?.footerCta && (
-        <section className="py-12 bg-primary-900 text-white">
-          <div className="section-container text-center">
-            <h3 className="text-2xl font-semibold mb-2">{home.footerCta.title}</h3>
-            <p className="text-sm opacity-90 mb-4">{home.footerCta.subtitle}</p>
-            {home.footerCta.buttonUrl && (
-              <a href={home.footerCta.buttonUrl} className="btn btn-accent">{home.footerCta.buttonText || 'Learn more'}</a>
-            )}
-          </div>
-        </section>
-      )}
-    </div>
+    </main>
   );
 }
