@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSiteSettings, useNavigation } from "../hooks/useRealtime";
+import { normalizeImageUrl } from "../utils/imageHelpers";
 import { CartContext } from "../context/CartContext";
 
 export default function Navbar() {
@@ -50,7 +51,7 @@ export default function Navbar() {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 mr-2">
               <img
-                src={settings?.logoUrl || "/placeholder.jpg"}
+                src={normalizeImageUrl(settings?.logoUrl) || "/placeholder.jpg"}
                 alt={settings?.brandName || "Brand"}
                 className="h-12 w-12 object-cover rounded-md shadow-sm"
               />
