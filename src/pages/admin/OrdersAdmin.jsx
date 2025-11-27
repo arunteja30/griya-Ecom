@@ -87,7 +87,7 @@ export default function OrdersAdmin(){
             <div key={id} className="border p-4 rounded flex items-start justify-between">
               <div>
                 <div className="font-medium">{o.customer?.name || '—'} • <span className="text-sm text-neutral-500">{o.customer?.phone || ''}</span></div>
-                <div className="text-sm text-neutral-600">Order: {o.orderId || id} • {o.items?.length || 0} item(s)</div>
+                <div className="text-sm text-neutral-600">Order: {o.orderId || id} • {o.items?.length || 0} item(s) {o.createdAt ? '• ' : ''}{o.createdAt ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(o.createdAt)) : ''}</div>
                 <div className="text-sm text-neutral-500">{o.shipping?.city || ''}, {o.shipping?.state || ''} • {o.pincode || o.shipping?.pincode || ''}</div>
 
                 {o.items && o.items.length > 0 && (
@@ -116,7 +116,14 @@ export default function OrdersAdmin(){
                 <div className={`px-3 py-1 rounded text-sm ${o.status === 'paid' ? 'bg-green-100 text-green-700' : o.status === 'shipped' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>{o.status || 'pending'}</div>
                 <div className="flex gap-2">
                   <button onClick={()=>setSelected({ id, data: o })} className="text-sm text-primary-700">View</button>
-                  {o.status !== 'shipped' && <button onClick={()=>updateStatus(id, 'shipped')} className="text-sm text-green-700">Mark Shipped</button>}
+                  {/* Show 'Mark Shipped' when not shipped and not cancelled */}
+                  {o.status !== 'shipped' && o.status !== 'cancelled' && (
+                    <button onClick={()=>updateStatus(id, 'shipped')} className="text-sm text-green-700">Mark Shipped</button>
+                  )}
+                  {/* Show 'Mark Delivered' only when order is shipped (to follow normal flow) */}
+                  {o.status === 'shipped' && o.status !== 'cancelled' && (
+                    <button onClick={()=>updateStatus(id, 'delivered')} className="text-sm text-emerald-700">Mark Delivered</button>
+                  )}
                   {o.status !== 'cancelled' && <button onClick={()=>updateStatus(id, 'cancelled')} className="text-sm text-red-600">Cancel</button>}
                 </div>
               </div>
@@ -136,6 +143,10 @@ export default function OrdersAdmin(){
               <div className="font-semibold">Shipping</div>
               <div>{selected.data.shipping?.line1}</div>
               <div>{selected.data.shipping?.city}, {selected.data.shipping?.state} - {selected.data.shipping?.pincode}</div>
+            </div>
+            <div className="mb-3">
+              <div className="font-semibold">Placed</div>
+              <div>{selected.data.createdAt ? new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(selected.data.createdAt)) : '—'}</div>
             </div>
             <div className="mb-3">
               <div className="font-semibold">Items</div>

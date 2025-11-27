@@ -221,7 +221,11 @@ export default function HomePage() {
   // compute visible layout with a hook — ensure this hook runs on every render to keep hooks order stable
   const visibleLayout = useMemo(() => layoutOrder.filter(k => isSectionVisible(sectionsConfig[k])), [layoutOrder, sectionsConfig, home?.activeFestivals]);
 
-  if (homeLoading || productsLoading) return <Loader />;
+  // On slow mobile networks one listener may lag — show loader only when both are still loading.
+  if (homeLoading && productsLoading) return <Loader />;
+
+  // Debug info for mobile loading issues (non-invasive)
+  try { console.debug('[HomePage] homeLoaded=', !homeLoading, 'productsLoaded=', !productsLoading, 'homeSections=', Object.keys(sectionsConfig || {}).length); } catch (e) {}
 
   return (
     <div className="bg-neutral-50">

@@ -24,7 +24,8 @@ export default function TopBanner(){
   }, [items.length]);
 
   // If admin disabled banner via site settings, hide
-  const bannerVisible = siteSettings?.bannerVisible !== false;
+  // Default: hidden. Only show when siteSettings.bannerVisible === true
+  const bannerVisible = siteSettings?.bannerVisible === true;
   if(!visible || !items.length || !bannerVisible) return null;
 
   return (
