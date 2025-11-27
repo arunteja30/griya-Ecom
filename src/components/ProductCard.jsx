@@ -11,8 +11,12 @@ export default function ProductCard({ product }) {
 
   // compute tactical UI data
   const reviews = Array.isArray(product.reviews) ? product.reviews : [];
-  const reviewCount = reviews.length || Number(product.reviewCount || 0) || 0;
-  const avgRating = reviewCount > 0 ? Math.round((reviews.reduce((s, r) => s + (Number(r.rating) || 0), 0) / reviewCount) * 10) / 10 : Number(product.rating || product.avgRating || 0);
+  // reviewCount for display: prefer actual reviews length, fall back to product.reviewCount
+  const reviewCount = reviews.length > 0 ? reviews.length : (Number(product.reviewCount || 0) || 0);
+  // avgRating: compute from reviews when available, otherwise use stored avgRating or rating
+  const avgRating = reviews.length > 0
+    ? Math.round((reviews.reduce((s, r) => s + (Number(r.rating) || 0), 0) / reviews.length) * 10) / 10
+    : Number(product.avgRating || product.rating || 0);
   // normalize stock value (some products store stock as string or in `quantity`)
   const rawStockVal = product.stock ?? product.quantity ?? null;
   const hasNumericStock = rawStockVal !== null && rawStockVal !== undefined;
@@ -77,9 +81,9 @@ export default function ProductCard({ product }) {
       {/* Compact image area */}
       <div className="relative overflow-hidden bg-neutral-50 h-36 md:h-40">
         <img
+          className="w-full h-full object-contain object-center"
           src={normalizeImageUrl(product.images?.[0] || "/placeholder.jpg")}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
 
         {/* Hover quick action */}

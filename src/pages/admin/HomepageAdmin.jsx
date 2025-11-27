@@ -3,6 +3,7 @@ import { db } from '../../firebase';
 import { ref, onValue, update, set } from 'firebase/database';
 import Loader from '../../components/Loader';
 import { showToast } from '../../components/Toast';
+import { normalizeImageUrl } from '../../utils/imageHelpers';
 
 export default function HomepageAdmin(){
   const [home, setHome] = useState(null);
@@ -20,6 +21,7 @@ export default function HomepageAdmin(){
   const [newVisibilityType, setNewVisibilityType] = useState('always');
   const [newVisibilityStart, setNewVisibilityStart] = useState('');
   const [newVisibilityEnd, setNewVisibilityEnd] = useState('');
+
 
   useEffect(()=>{
     const r = ref(db, '/home');
@@ -138,6 +140,24 @@ export default function HomepageAdmin(){
     }catch(e){ console.error('Failed to create section', e); showToast('Failed to create section'); }
   };
 
+  // Create a default "Shop by category" section if missing
+  const createDefaultShopByCategory = async () => {
+    const id = 'shop-by-category';
+    if(home?.sections && home.sections[id]){ showToast('Shop by category section already exists'); return; }
+    try{
+      const payload = {
+        title: 'Shop by category',
+        type: 'grid',
+        images: [],
+        items: {},
+        visibility: { type: 'always' }
+      };
+      await set(ref(db, `/home/sections/${id}`), payload);
+      showToast('Default "Shop by category" section created');
+    }catch(e){ console.error('Failed to create default shop-by-category', e); showToast('Failed to create default section'); }
+  };
+
+
   if(loading) return <Loader />;
   if(error) return <div className="text-red-600">Error loading homepage admin. Check console for details.</div>;
 
@@ -158,6 +178,7 @@ export default function HomepageAdmin(){
 
   return (
     <div>
+     
       <h2 className="text-xl font-semibold mb-4">Homepage sections</h2>
 
       <div className="mb-4 p-4 border rounded bg-white">
@@ -220,6 +241,19 @@ export default function HomepageAdmin(){
           </div>
         </div>
       </div>
+
+      {/* Offer quick-create for default Shop by category section when missing */}
+      {!sections['shop-by-category'] && (
+        <div className="mb-4 p-4 border rounded bg-yellow-50 flex items-center justify-between">
+          <div>
+            <div className="font-medium">No "Shop by category" section</div>
+            <div className="text-sm text-neutral-700">Create a default grid section to show categories on the homepage.</div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={createDefaultShopByCategory} className="px-3 py-2 bg-primary-600 text-white rounded">Create "Shop by category"</button>
+          </div>
+        </div>
+      )}
 
       {Object.keys(sections).length === 0 ? (
         <div className="p-4 border rounded bg-yellow-50">No sections found under <code>/home/sections</code>. Use the seed or create sections in the admin UI.</div>

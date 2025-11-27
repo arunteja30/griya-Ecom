@@ -78,8 +78,7 @@ export default function ProductDetailPage() {
                 <img
                   src={normalizeImageUrl(product.images?.[selectedImage]) || "/placeholder.jpg"}
                   alt={product.name}
-                  className="w-full h-full object-cover cursor-zoom-in"
-                  onClick={() => setLightboxOpen(true)}
+                  className="w-full h-full object-contain"
                 />
               </div>
 
@@ -91,7 +90,7 @@ export default function ProductDetailPage() {
                     className={`overflow-hidden rounded border ${i === selectedImage ? 'ring-2 ring-primary-500' : 'border-transparent'}`}
                     aria-label={`View image ${i + 1}`}
                   >
-                    <img src={normalizeImageUrl(img) || '/placeholder.jpg'} className="w-full h-20 object-cover" alt={`thumb-${i}`} />
+                    <img src={normalizeImageUrl(img) || '/placeholder.jpg'} className="w-full h-20 object-contain" alt={`thumb-${i}`} />
                   </button>
                 ))}
               </div>
@@ -103,6 +102,17 @@ export default function ProductDetailPage() {
         <div className="lg:col-span-5">
           <div className="space-y-4">
             <h1 className="text-2xl md:text-3xl font-bold text-primary-900">{product.name}</h1>
+
+            {product.avgRating !== undefined && (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center text-yellow-500" aria-hidden>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span key={i} className={i < Math.round(product.avgRating) ? '' : 'opacity-30'}>★</span>
+                  ))}
+                </div>
+                <div className="text-sm text-neutral-600">{(product.avgRating || 0).toFixed(1)} · {product.reviewCount || 0} reviews</div>
+              </div>
+            )}
 
             <div className="flex items-center gap-3">
               <div className="text-2xl font-bold text-primary-900">₹{displayPrice}</div>

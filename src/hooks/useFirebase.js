@@ -110,7 +110,14 @@ export function useCategoryBySlug(slug) {
           setLoading(false);
           return;
         }
-        const found = Object.values(categories).find((c) => c.slug === slug || c.id === slug);
+        // iterate entries to preserve the category key as id
+        let found = null;
+        for (const [key, c] of Object.entries(categories)) {
+          if (c.slug === slug || key === slug || c.id === slug) {
+            found = { ...c, id: key };
+            break;
+          }
+        }
         setData(found || null);
         setLoading(false);
       },

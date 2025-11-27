@@ -140,42 +140,49 @@ function CarouselSection({ images, title }) {
 
   return (
     <section className="py-6">
-      {title && <div className="section-container"><div className="flex items-center justify-between mb-4"><h3 className="text-xl font-semibold">{title}</h3></div></div>}
+      {/* Constrain carousel to section-container to add left/right margins on wide screens */}
+      <div className="section-container">
+        {title && (
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-semibold">{title}</h3>
+          </div>
+        )}
 
-      <div className="relative">
-        <div className="w-full overflow-hidden" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-          <div className="flex transition-transform duration-700" style={{ transform: `translateX(-${index * 100}%)` }}>
-            {slides.map((slide, idx) => (
-              <div key={idx} className="w-full flex-shrink-0 relative">
-                <img src={normalizeImageUrl(slide.image) || '/placeholder.jpg'} alt={slide.title || `slide-${idx}`} className="w-full h-72 md:h-[420px] object-cover" />
+        <div className="relative">
+          <div className="w-full overflow-hidden" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+            <div className="flex transition-transform duration-700" style={{ transform: `translateX(-${index * 100}%)` }}>
+              {slides.map((slide, idx) => (
+                <div key={idx} className="w-full flex-shrink-0 relative">
+                  <img src={normalizeImageUrl(slide.image) || '/placeholder.jpg'} alt={slide.title || `slide-${idx}`} className="w-full h-72 md:h-[420px] object-cover" />
 
-                {/* Bottom-left overlay for heading and body */}
-                <div className="absolute inset-0 flex items-end">
-                  <div className="w-full bg-gradient-to-t from-black/65 via-transparent to-transparent px-6 py-6 md:py-10">
-                    <div className="max-w-xl text-left">
-                      {slide.title && <h2 className="text-white text-2xl md:text-3xl font-semibold leading-tight">{slide.title}</h2>}
-                      {slide.subtitle && <p className="text-white/90 mt-2 text-sm md:text-base">{slide.subtitle}</p>}
-                      {slide.body && <p className="text-white/90 mt-2 text-sm md:text-base">{slide.body}</p>}
-                      {slide.buttonUrl && (
-                        <a href={slide.buttonUrl} className="inline-block mt-4 btn btn-primary">{slide.buttonText || 'Learn more'}</a>
-                      )}
+                  {/* Bottom-left overlay for heading and body */}
+                  <div className="absolute inset-0 flex items-end">
+                    <div className="w-full bg-gradient-to-t from-black/65 via-transparent to-transparent px-6 py-6 md:py-10">
+                      <div className="max-w-xl text-left">
+                        {slide.title && <h2 className="text-white text-2xl md:text-3xl font-semibold leading-tight">{slide.title}</h2>}
+                        {slide.subtitle && <p className="text-white/90 mt-2 text-sm md:text-base">{slide.subtitle}</p>}
+                        {slide.body && <p className="text-white/90 mt-2 text-sm md:text-base">{slide.body}</p>}
+                        {slide.buttonUrl && (
+                          <a href={slide.buttonUrl} className="inline-block mt-4 btn btn-primary">{slide.buttonText || 'Learn more'}</a>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Prev / Next buttons */}
+          <button aria-label="Previous" onClick={prev} className="absolute left-4 top-1/2 -translate-y-1/2 bg-transparent/10 p-2 rounded-full shadow-md">‹</button>
+          <button aria-label="Next" onClick={next} className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent/10 p-2 rounded-full shadow-md">›</button>
+
+          {/* Slide indicators */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-4 flex gap-2">
+            {slides.map((_, i) => (
+              <button key={i} onClick={() => setIndex(i)} className={`w-3 h-3 rounded-full ${i === index ? 'bg-white' : 'bg-white/50'}`} aria-label={`Go to slide ${i+1}`} />
             ))}
           </div>
-        </div>
-
-        {/* Prev / Next buttons */}
-        <button aria-label="Previous" onClick={prev} className="absolute left-4 top-1/2 -translate-y-1/2 bg-transparent/10 p-2 rounded-full shadow-md">‹</button>
-        <button aria-label="Next" onClick={next} className="absolute right-4 top-1/2 -translate-y-1/2 bg-transparent/10 p-2 rounded-full shadow-md">›</button>
-
-        {/* Slide indicators */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-4 flex gap-2">
-          {slides.map((_, i) => (
-            <button key={i} onClick={() => setIndex(i)} className={`w-3 h-3 rounded-full ${i === index ? 'bg-white' : 'bg-white/50'}`} aria-label={`Go to slide ${i+1}`} />
-          ))}
         </div>
       </div>
     </section>
