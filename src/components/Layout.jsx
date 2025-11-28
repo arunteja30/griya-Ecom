@@ -9,7 +9,8 @@ import { ThemeProvider } from '../context/ThemeContext';
 export default function Layout({ children, className = "", fullWidth = false }) {
   const location = useLocation();
   const showFooterOnlyOnHome = location.pathname === '/';
-  const showMobileNav = location.pathname !== '/cart';
+  // Hide mobile bottom nav on cart and checkout pages (and any subpaths)
+  const showMobileNav = !(location.pathname.startsWith('/cart') || location.pathname.startsWith('/checkout'));
 
   return (
     <ThemeProvider>

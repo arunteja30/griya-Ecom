@@ -122,7 +122,7 @@ export default function CheckoutPage() {
     if (found.active === false) return setPromoError('Promo code is inactive');
     const used = Number(found.used || 0);
     const max = Number(found.maxUses || 0);
-    if (max > 0 && used >= max) return setPromoError('Promo code has no remaining uses');
+    if (max > 0 && used >= max) return setPromoError('Promo code has expired');
 
     setAppliedPromoKey(foundKey);
     setAppliedPromo(found);
