@@ -56,82 +56,62 @@ export default function CollectionsPage() {
 
   try {
     return (
-      <div className="section-container py-8">
-        {/* Hero / Title - with back button */}
-        <div className="mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="section-container py-8" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}>
+        {/* Hero + toolbar: fixed on mobile, normal on larger screens */}
+          <div className="lg:hidden">
+            <div
+              className="mobile-hero-fixed fixed left-0 right-0 z-40"
+              style={{
+                // push the fixed mobile hero below the nav bar; --nav-height can be defined in your global CSS
+                top: "calc(var(--nav-height, 66px) + env(safe-area-inset-top, 0px))",
+                paddingLeft: "1rem",
+                paddingRight: "1rem",
+              }}
+            >
+              <div className="p-4 bg-white shadow-sm rounded-b-md">
+                <div className="flex items-center gap-3 mb-2">
+            <Link to="/" aria-label="Back to home" title="Back" className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </Link>
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <h1 className="text-lg font-bold text-primary-900">Collections</h1>
+              </div>
+              <div className="text-neutral-600 text-sm">Browse curated categories.</div>
+            </div>
+                </div>
+
+                {/* mobile toolbar (search + sort) */}
+              <div className="flex items-center gap-3 mt-2">
+                <div className="relative flex-1">
+                  <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search collections..." className="form-input header-search w-full" />
+                  {query && <button className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-neutral-500" onClick={() => setQuery("")}>Clear</button>}
+                </div>
+                <select value={sort} onChange={(e) => setSort(e.target.value)} className="form-input text-sm w-36">
+                  <option value="name_asc">Name: A → Z</option>
+                  <option value="name_desc">Name: Z → A</option>
+                  <option value="newest">Newest</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className="mobile-hero-spacer" aria-hidden />
+        </div>
+
+        {/* Desktop hero */}
+        <div className="hidden lg:flex mb-6 flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <Link
-                to="/"
-                aria-label="Back to home"
-                title="Back"
-                className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-4 h-4"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
+              <Link to="/" aria-label="Back to home" title="Back" className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
               </Link>
-              <h1 className="text-3xl md:text-4xl font-bold text-primary-900">
-                Collections
-              </h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-primary-900">Collections</h1>
             </div>
-            <p className="text-neutral-600 mt-1">
-              Browse curated categories.
-            </p>
-          </div>
-
-          {/* Toolbar */}
-          <div className="flex items-center gap-3 w-full md:w-auto lg:hidden">
-            <div className="relative flex-1 md:flex-none">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search collections..."
-                className="form-input header-search w-full md:w-64"
-              />
-              {query && (
-                <button
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-neutral-500"
-                  onClick={() => setQuery("")}
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              className="form-input text-sm w-40"
-            >
-              <option value="name_asc">Name: A → Z</option>
-              <option value="name_desc">Name: Z → A</option>
-              <option value="newest">Newest</option>
-            </select>
-
-            <div className="hidden md:flex items-center gap-2">
-              <button
-                className="btn btn-ghost"
-                onClick={() => setShowSidebar(true)}
-              >
-                Filters
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={() => setVisible((v) => v + 12)}
-              >
-                Show more
-              </button>
-            </div>
+            <p className="text-neutral-600 mt-1">Browse curated categories.</p>
           </div>
         </div>
 
@@ -182,32 +162,34 @@ export default function CollectionsPage() {
 
           {/* Grid */}
           <main className="lg:col-span-9">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {visibleItems.map((c) => (
-                <Link
-                  key={c.id}
-                  to={`/collections/${c.slug || c.id}`}
-                  className="card overflow-hidden hover:shadow-lg transition-shadow duration-300 p-0"
-                >
-                  <div className="w-full h-36 bg-neutral-100 overflow-hidden">
-                    <img
-                      src={c.thumbnail || c.image || "/placeholder.jpg"}
-                      alt={c.name || c.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="p-3">
-                    <div className="font-semibold text-sm text-primary-900 leading-tight">
-                      {c.name || c.title}
+            <div className="mobile-products-scroll">
+              <div className="mt-10 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {visibleItems.map((c) => (
+                  <Link
+                    key={c.id}
+                    to={`/collections/${c.slug || c.id}`}
+                    className="card overflow-hidden hover:shadow-lg transition-shadow duration-300 p-0"
+                  >
+                    <div className="w-full h-36 bg-neutral-100 overflow-hidden">
+                      <img
+                        src={c.thumbnail || c.image || "/placeholder.jpg"}
+                        alt={c.name || c.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    {c.description && (
-                      <div className="text-xs text-neutral-500 mt-1 line-clamp-2">
-                        {c.description}
+                    <div className="p-3">
+                      <div className="font-semibold text-sm text-primary-900 leading-tight">
+                        {c.name || c.title}
                       </div>
-                    )}
-                  </div>
-                </Link>
-              ))}
+                      {c.description && (
+                        <div className="text-xs text-neutral-500 mt-1 line-clamp-2">
+                          {c.description}
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
 
             {filtered.length === 0 && (

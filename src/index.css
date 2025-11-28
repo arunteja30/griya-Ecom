@@ -345,3 +345,66 @@
   /* Compact footer spacing */
   footer .section-container { padding-top: 0.5rem; padding-bottom: 0.5rem; }
 }
+
+/* Mobile overflow fixes: prevent accidental horizontal scrollbars from grids or wide children */
+@media (max-width: 640px) {
+  /* Ensure main containers never overflow horizontally */
+  .section-container, .container-fluid, body, html {
+    overflow-x: hidden !important;
+  }
+
+  /* Allow grid children to shrink instead of forcing overflow */
+  .grid, .grid > *, .flex, .flex > * {
+    min-width: 0;
+  }
+
+  /* Constrain images and media to the viewport */
+  img, .product-image, .card img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Keep horizontal scrollers usable but hide the native scrollbar (touch scrolling still works)
+     Use overflow-x-auto on elements that are intentionally horizontally scrollable. */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  .overflow-x-auto::-webkit-scrollbar { height: 0; }
+}
+
+/* Hide vertical scrollbars visually while preserving scroll (applies in modern browsers) */
+/* Use specific selectors to avoid interfering with horizontal scrollers */
+html, body, .section-container, .container-fluid, .overflow-y-auto, .overflow-auto {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+html::-webkit-scrollbar, body::-webkit-scrollbar, .section-container::-webkit-scrollbar, .container-fluid::-webkit-scrollbar, .overflow-y-auto::-webkit-scrollbar, .overflow-auto::-webkit-scrollbar {
+  width: 0px; /* hide vertical scrollbar in WebKit */
+  background: transparent;
+}
+
+/* Keep horizontal scrollbar visible if needed (set height) */
+html::-webkit-scrollbar:horizontal, body::-webkit-scrollbar:horizontal {
+  height: 8px;
+}
+
+/* Mobile category hero fixed spacer and product list scroll behavior */
+@media (max-width: 1024px) {
+  .mobile-hero-fixed { position: fixed; }
+  .mobile-hero-spacer { height: 96px; } /* match hero height (p-6 ~ 96px) */
+  .mobile-products-scroll { max-height: calc(100vh - 96px - env(safe-area-inset-bottom, 0px)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .mobile-products-scroll::-webkit-scrollbar { width: 0; }
+}
+
+/* Collections specific: ensure mobile hero spacer smaller when using p-4 */
+@media (max-width: 768px) {
+  .mobile-hero-spacer { height: 72px; }
+  .mobile-products-scroll { max-height: calc(100vh - 72px - env(safe-area-inset-bottom, 0px)); }
+  /* Ensure mobile-products-scroll also applies to Collections */
+  @media (max-width: 1024px) {
+    .mobile-products-scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .mobile-products-scroll::-webkit-scrollbar { width: 0; }
+  }
+}

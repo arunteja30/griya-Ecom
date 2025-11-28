@@ -115,7 +115,7 @@ export default function CategoryProductsPage() {
   if (!category && !festivalTags) return <div className="py-12 text-center">Category not found</div>;
 
   return (
-    <div className="section-container py-8">
+    <div className="w-full px-4 lg:px-8 py-8" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}>
       {/* Mobile filter floating icon (bottom-right) */}
       <div className="lg:hidden">
         <button
@@ -132,22 +132,25 @@ export default function CategoryProductsPage() {
         </button>
       </div>
 
-      {/* Category hero */}
-      {/* show hero on small screens; on large screens the title is moved to the sticky sidebar */}
-      <div className="mb-6 lg:hidden">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-3">
-            <Link to="/collections" aria-label="Back to collections" title="Back" className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </Link>
-            <h2 className="text-2xl font-bold text-primary-900">{category ? category.name : (categorySlug ? (categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)) : 'Products')}</h2>
+      {/* Category hero (fixed on mobile) */}
+      <div className="lg:hidden">
+        <div className="mobile-hero-fixed fixed mt-20 left-0 right-0 z-40" style={{ top: 'env(safe-area-inset-top, 0px)', paddingLeft: '1rem', paddingRight: '1rem' }}>
+          <div className="p-6 bg-white shadow-sm rounded-b-md">
+            <div className="flex items-center gap-3 mb-3">
+              <Link to="/collections" aria-label="Back to collections" title="Back" className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </Link>
+              <h2 className="text-2xl font-bold text-primary-900">{category ? category.name : (categorySlug ? (categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)) : 'Products')}</h2>
+            </div>
+            {category && category.description && <p className="text-neutral-600 mt-2">{category.description}</p>}
+            {!category && festivalTags && <p className="text-neutral-600 mt-2">Browse curated picks</p>}
           </div>
-           {category && category.description && <p className="text-neutral-600 mt-2">{category.description}</p>}
-           {!category && festivalTags && <p className="text-neutral-600 mt-2">Browse curated picks</p>}
-         </div>
-       </div>
+        </div>
+        {/* spacer to preserve layout space for fixed hero */}
+        <div className="mobile-hero-spacer" aria-hidden />
+      </div>
 
       {/* Main layout: filters on left, products on right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-4">
@@ -215,9 +218,9 @@ export default function CategoryProductsPage() {
         </aside>
 
         <main className="lg:col-span-9">
-          {/* make products column scrollable separately so the left sidebar remains sticky */}
-          <div className="" style={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto' }}>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {/* products: on mobile make product-list scrollable while hero stays fixed */}
+          <div className="mobile-products-scroll">
+            <div className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {visibleItems.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
@@ -231,7 +234,7 @@ export default function CategoryProductsPage() {
               </div>
             )}
           </div>
-        </main>
+         </main>
       </div>
 
       {/* Mobile filters bottom-sheet */}

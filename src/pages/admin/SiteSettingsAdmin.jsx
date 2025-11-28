@@ -45,6 +45,10 @@ export default function SiteSettingsAdmin() {
           <input value={form.logoUrl||''} onChange={(e)=>setForm({...form, logoUrl: e.target.value})} className="border p-2 w-full" placeholder="Logo URL" />
         </div>
         <div>
+          <label className="block text-sm font-medium mb-1">Default product image URL</label>
+          <input value={form.defaultProductImage||''} onChange={(e)=>setForm({...form, defaultProductImage: e.target.value})} className="border p-2 w-full" placeholder="URL used as fallback for products (e.g. https://.../placeholder.jpg)" />
+        </div>
+        <div>
           <label className="block text-sm font-medium mb-1">WhatsApp number</label>
           <input value={form.whatsapp||''} onChange={(e)=>setForm({...form, whatsapp: e.target.value})} className="border p-2 w-full" placeholder="WhatsApp number" />
         </div>

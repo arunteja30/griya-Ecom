@@ -1,14 +1,35 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { showToast } from "./Toast";
 import { normalizeImageUrl } from "../utils/imageHelpers";
+import { useSiteSettings } from "../hooks/useRealtime";
 
 export default function ProductCard({ product, variant = 'normal' }) {
   const { addToCart } = useContext(CartContext);
+  const { data: siteSettings } = useSiteSettings();
   const [isHovered, setIsHovered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const isLarge = variant === 'large' || variant === 'lg';
+
+  // Image source state with fallback to admin-configured default
+  const defaultImageFromAdmin = normalizeImageUrl(siteSettings?.defaultProductImage) || '/placeholder.jpg';
+  const [imgSrc, setImgSrc] = useState(() => normalizeImageUrl(product.images?.[0]) || defaultImageFromAdmin);
+  const triedDefault = useRef(false);
+
+  useEffect(() => {
+    // update src when product images or admin default changes
+    const src = normalizeImageUrl(product.images?.[0]) || normalizeImageUrl(siteSettings?.defaultProductImage) || '/placeholder.jpg';
+    setImgSrc(src);
+    triedDefault.current = false;
+  }, [product.images, siteSettings]);
+
+  const handleImgError = () => {
+    if (triedDefault.current) return; // avoid infinite loop if fallback also fails
+    triedDefault.current = true;
+    const fallback = normalizeImageUrl(siteSettings?.defaultProductImage) || '/placeholder.jpg';
+    setImgSrc(fallback);
+  };
 
   // compute tactical UI data
   const reviews = Array.isArray(product.reviews) ? product.reviews : [];
@@ -91,8 +112,10 @@ export default function ProductCard({ product, variant = 'normal' }) {
         {/* Use object-cover to fill the area while keeping center; slight scale on hover for subtle effect */}
         <img
           className="w-full h-full object-cover object-center transition-transform duration-300 ease-out group-hover:scale-105"
-          src={normalizeImageUrl(product.images?.[0] || "/placeholder.jpg")}
+          src={imgSrc}
+          onError={handleImgError}
           alt={product.name}
+          loading="lazy"
           draggable={false}
         />
 
