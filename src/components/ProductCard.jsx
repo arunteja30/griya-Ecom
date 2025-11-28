@@ -4,10 +4,11 @@ import { CartContext } from "../context/CartContext";
 import { showToast } from "./Toast";
 import { normalizeImageUrl } from "../utils/imageHelpers";
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, variant = 'normal' }) {
   const { addToCart } = useContext(CartContext);
   const [isHovered, setIsHovered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const isLarge = variant === 'large' || variant === 'lg';
 
   // compute tactical UI data
   const reviews = Array.isArray(product.reviews) ? product.reviews : [];
@@ -86,40 +87,51 @@ export default function ProductCard({ product }) {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Compact image area */}
-      <div className="relative overflow-hidden bg-neutral-50 h-36 md:h-40">
+      <div className={`relative overflow-hidden ${isLarge ? 'h-48 md:h-56' : 'h-36 md:h-40'} flex items-center justify-center`} style={{ background: 'var(--pc-image-bg, #f3f4f6)' }}>
+        {/* Use object-cover to fill the area while keeping center; slight scale on hover for subtle effect */}
         <img
-          className="w-full h-full object-contain object-center"
+          className="w-full h-full object-cover object-center transition-transform duration-300 ease-out group-hover:scale-105"
           src={normalizeImageUrl(product.images?.[0] || "/placeholder.jpg")}
           alt={product.name}
+          draggable={false}
         />
 
-        {/* Hover quick action */}
-        <div className={`absolute inset-0 bg-black/16 transition-opacity duration-200 ${isHovered ? "opacity-100" : "opacity-0"}`}>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Link
-              to={`/product/${product.slug}`}
-              className="btn btn-secondary btn-sm opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-200"
-            >
-              Quick
-            </Link>
-          </div>
+        {/* Hover quick action - stays centered */}
+        <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${isHovered ? "opacity-100" : "opacity-0"}`}>
+          <Link
+            to={`/product/${product.slug}`}
+            className={`btn btn-secondary ${isLarge ? 'btn-lg' : 'btn-sm'} bg-white/90 text-neutral-800 shadow-sm`}
+            aria-label="View product"
+          >
+            View
+          </Link>
         </div>
-
-        {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-2">
-          {product.isNew && <div className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-new, #10B981)' }}>New</div>}
-          {isBestseller && <div className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-bestseller, #F59E0B)' }}>Bestseller</div>}
-          {hasFreeShipping && <div className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-new, #10B981)' }}>Free shipping</div>}
-        </div>
-        {product.discount && <div className="absolute top-2 right-2 bg-error text-white text-[10px] font-bold px-2 py-0.5 rounded-full">-{product.discount}%</div>}
       </div>
 
+      {/* Badges row (placed below image) */}
+      {(product.isNew || isBestseller || hasFreeShipping || product.discount) && (
+        <div className="flex items-center gap-2 mt-2">
+          {product.isNew && (
+            <div className="text-white text-[10px] ml-2 font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-new, #10B981)' }}>New</div>
+          )}
+          {isBestseller && (
+            <div className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-bestseller, #F59E0B)' }}>Bestseller</div>
+          )}
+          {hasFreeShipping && (
+            <div className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-new, #10B981)' }}>Free shipping</div>
+          )}
+          {product.discount && (
+            <div className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-discount, #DC2626)' }}>-{product.discount}%</div>
+          )}
+        </div>
+      )}
+
       {/* Compact details */}
-      <div className="p-3 space-y-1">
+      <div className={`p-3 space-y-1 ${isLarge ? 'p-4' : ''}`}>
         {product.category && <div className="text-[11px] text-accent-600 font-semibold uppercase tracking-wide">{product.category}</div>}
 
         <Link to={`/product/${product.slug}`} className="block">
-          <h3 className="font-semibold text-primary-900 text-sm line-clamp-2 hover:text-accent-600 transition-colors duration-150" style={{ color: 'var(--pc-name, #0b2a66)' }}>{product.name}</h3>
+          <h3 className={`font-semibold text-primary-900 ${isLarge ? 'text-base' : 'text-sm'} line-clamp-2 hover:text-accent-600 transition-colors duration-150`} style={{ color: 'var(--pc-name, #0b2a66)' }}>{product.name}</h3>
         </Link>
 
         {/* Rating */}
@@ -127,14 +139,14 @@ export default function ProductCard({ product }) {
 
         <div className="flex items-center justify-between mt-1">
           <div className="flex items-center gap-2">
-            <span className="text-base font-bold" style={{ color: 'var(--pc-price, #0b2a66)' }}>{formatPrice(product.price)}</span>
+            <span className={`font-bold ${isLarge ? 'text-lg' : 'text-base'}`} style={{ color: 'var(--pc-price, #0b2a66)' }}>{formatPrice(product.price)}</span>
             {product.originalPrice && product.originalPrice > product.price && <span className="text-sm text-neutral-500 line-through">{formatPrice(product.originalPrice)}</span>}
           </div>
 
           <button
             onClick={handleAddToCart}
             disabled={isLoading || !inStock}
-            className={`btn btn-primary btn-sm ${isLoading || !inStock ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`btn btn-primary ${isLarge ? 'btn-sm' : 'btn-sm'} ${isLoading || !inStock ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             {isLoading ? "Adding..." : inStock ? "Add" : "Out"}
           </button>
