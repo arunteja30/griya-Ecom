@@ -151,7 +151,14 @@ export default function HomePage() {
       {/* Festival Sections (server configured) */}
       <section className="max-w-7xl mx-auto px-4 space-y-6">
         {festivalSections && festivalSections.length > 0 && festivalSections.map(s => (
-          <HomeSection key={`fest-${s.key}`} title={s.title} subtitle="Festive essentials" products={s.products} layout="grid" limit={8} />
+          <HomeSection
+            key={`fest-${s.key}`}
+            title={s.title}
+            subtitle={<Link to={`/collections/${s.key}`} className="text-sm border-b border-fill border-accent-600">Browse all</Link>}
+            products={s.products}
+            layout="grid"
+            limit={8}
+          />
         ))}
       </section>
 

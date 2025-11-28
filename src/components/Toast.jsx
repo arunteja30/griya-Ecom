@@ -82,14 +82,14 @@ export default function ToastContainer(){
   };
 
   return (
-    <div className="fixed right-4 top-4 z-50 flex flex-col gap-3 max-w-sm">
+    <div className="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 flex flex-col gap-3 items-center max-w-full px-4">
       {toasts.map(toast => (
         <div 
           key={toast.id} 
           className={`transform transition-all duration-300 ease-out ${
             toast.visible 
-              ? 'opacity-100 translate-x-0 scale-100' 
-              : 'opacity-0 translate-x-full scale-95'
+              ? 'opacity-100 translate-y-0 scale-100' 
+              : 'opacity-0 translate-y-6 scale-95'
           } ${getToastStyles(toast.type)} rounded-xl px-4 py-3 min-w-[280px]`}
         >
           <div className="flex items-center gap-3">

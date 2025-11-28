@@ -11,6 +11,7 @@ export default function CategoryProductsPage() {
   // data hooks (stable order)
   const { data: category, loading: catLoading } = useCategoryBySlug(categorySlug);
   const { data: productsData, loading: prodLoading } = useFirebaseList("/products");
+  const { data: homeConfig, loading: homeLoading } = useFirebaseList("/homeConfig");
 
   // UI state
   const [query, setQuery] = useState("");
@@ -21,11 +22,32 @@ export default function CategoryProductsPage() {
   // Normalize products into an array
   const products = productsData && typeof productsData === "object" ? Object.values(productsData) : [];
 
+  // derive festival tags for this slug (if any)
+  const festivalTags = useMemo(() => {
+    if (!homeConfig || !homeConfig.festivals) return null;
+    const raw = homeConfig.festivals[categorySlug];
+    if (!raw) return null;
+    const arr = Array.isArray(raw) ? raw : String(raw || '').split(',');
+    return arr.map(s => String(s).trim().toLowerCase()).filter(Boolean);
+  }, [homeConfig, categorySlug]);
+
   // Derived filtered/sorted list (memoized)
   const filtered = useMemo(() => {
-    if (!category) return [];
+    // if neither category nor festival tags, nothing to show
+    if (!category && !festivalTags) return [];
 
-    let list = products.filter((p) => p.categoryId === category.id);
+    let list = [];
+
+    if (category) {
+      list = products.filter((p) => p.categoryId === category.id);
+    } else if (festivalTags) {
+      // filter products by matching any of the festival tags
+      list = products.filter((p) => {
+        if (!p.tags) return false;
+        const t = Array.isArray(p.tags) ? p.tags : (String(p.tags).split(',') || []).map(s => s.trim().toLowerCase());
+        return t.some(tag => festivalTags.includes(String(tag).toLowerCase()));
+      });
+    }
 
     if (query.trim()) {
       const q = query.trim().toLowerCase();
@@ -48,20 +70,21 @@ export default function CategoryProductsPage() {
     }
 
     return list;
-  }, [products, category, query, sort]);
+  }, [products, category, festivalTags, query, sort]);
 
   const visibleItems = filtered.slice(0, visible);
 
-  if (catLoading || prodLoading) return <Loader />;
-  if (!category) return <div className="py-12 text-center">Category not found</div>;
+  if (catLoading || prodLoading || homeLoading) return <Loader />;
+  if (!category && !festivalTags) return <div className="py-12 text-center">Category not found</div>;
 
   return (
     <div className="section-container py-8">
       {/* Category hero */}
       <div className="mb-6">
         <div className="p-6">
-          <h2 className="text-2xl font-bold text-primary-900">{category.name}</h2>
-          {category.description && <p className="text-neutral-600 mt-2">{category.description}</p>}
+          <h2 className="text-2xl font-bold text-primary-900">{category ? category.name : (categorySlug ? (categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)) : 'Products')}</h2>
+          {category && category.description && <p className="text-neutral-600 mt-2">{category.description}</p>}
+          {!category && festivalTags && <p className="text-neutral-600 mt-2">Browse curated picks</p>}
         </div>
       </div>
 
