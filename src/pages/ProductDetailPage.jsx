@@ -14,6 +14,7 @@ export default function ProductDetailPage() {
 
   const { data: product, loading } = useProductBySlug(productSlug);
   const { data: allProducts } = useFirebaseList("/products");
+  const { data: allReviews } = useFirebaseList("/reviews");
   const { addToCart } = useContext(CartContext);
 
   // UI state
@@ -29,6 +30,19 @@ export default function ProductDetailPage() {
     : [];
 
   const prodCategory = product?.categoryId || product?.category || product?.categorySlug;
+
+  // Reviews: normalize and filter for this product (only enabled)
+  const reviewsArray = allReviews && typeof allReviews === 'object'
+    ? Object.entries(allReviews).map(([k, v]) => ({ id: k, ...v }))
+    : [];
+  const productIdKey = product?.id || product?.slug || null;
+  const productReviews = reviewsArray
+    .filter(r => r && (r.enabled === undefined || r.enabled === true) && (r.productId === productIdKey))
+    .sort((a,b)=> (b.createdAt || '') > (a.createdAt || '') ? 1 : -1);
+  const reviewCount = productReviews.length;
+  const computedAvgRating = reviewCount > 0
+    ? Math.round((productReviews.reduce((s,r)=> s + (Number(r.rating)||0),0) / reviewCount) * 10) / 10
+    : (product?.avgRating || 0);
 
   // related products
   const related = useMemo(() => {
@@ -103,14 +117,15 @@ export default function ProductDetailPage() {
           <div className="space-y-4">
             <h1 className="text-2xl md:text-3xl font-bold text-primary-900">{product.name}</h1>
 
-            {product.avgRating !== undefined && (
+            {/** Use computedAvgRating and reviewCount when available **/}
+            { (computedAvgRating || reviewCount > 0) && (
               <div className="flex items-center gap-3">
                 <div className="flex items-center text-yellow-500" aria-hidden>
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <span key={i} className={i < Math.round(product.avgRating) ? '' : 'opacity-30'}>★</span>
+                    <span key={i} className={i < Math.round(computedAvgRating) ? '' : 'opacity-30'}>★</span>
                   ))}
                 </div>
-                <div className="text-sm text-neutral-600">{(product.avgRating || 0).toFixed(1)} · {product.reviewCount || 0} reviews</div>
+                <div className="text-sm text-neutral-600">{(computedAvgRating || 0).toFixed(1)} · {reviewCount} reviews</div>
               </div>
             )}
 
@@ -158,10 +173,11 @@ export default function ProductDetailPage() {
             {!inStock && <div className="text-sm text-error">Currently out of stock</div>}
 
             {/* Meta */}
-            <div className="text-sm text-neutral-500 mt-4">
-              <div>SKU: {product.sku || product.id}</div>
-              {product.brand && <div>Brand: {product.brand}</div>}
-            </div>
+            {product.brand && (
+              <div className="text-sm text-neutral-500 mt-4">
+                <div>Brand: {product.brand}</div>
+              </div>
+            )}
 
             {/* Tabs */}
             <div className="mt-6">
@@ -187,11 +203,11 @@ export default function ProductDetailPage() {
 
                 {activeTab === 'reviews' && (
                   <div>
-                    {product.reviews && product.reviews.length > 0 ? (
-                      product.reviews.map((r, i) => (
-                        <div key={i} className="border-b py-2">
-                          <div className="font-semibold">{r.name}</div>
-                          <div className="text-sm text-neutral-600">{r.comment}</div>
+                    {productReviews && productReviews.length > 0 ? (
+                      productReviews.map((r) => (
+                        <div key={r.id} className="border-b py-2">
+                          <div className="font-semibold">{r.name} <span className="text-sm text-neutral-500">{r.rating}★</span></div>
+                          <div className="text-sm text-neutral-600">{r.message}</div>
                         </div>
                       ))
                     ) : (

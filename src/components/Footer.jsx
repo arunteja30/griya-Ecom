@@ -17,8 +17,8 @@ export default function Footer() {
       <div className="section-container py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <h3 className="font-semibold">About</h3>
-            <p className="text-sm mt-2">{/* ... */}</p>
+            <h3 className="font-semibold" style={{ color: 'var(--site-footer-text, white)' }}>About</h3>
+            <p className="text-sm mt-2" style={{ color: 'var(--site-footer-text, rgba(255,255,255,0.85))' }}>{/* ... */}</p>
           </div>
           <div>
             <h3 className="font-semibold" style={{ color: 'var(--site-footer-text, white)' }}>Contact</h3>
@@ -26,11 +26,20 @@ export default function Footer() {
           </div>
           <div>
             <h3 className="font-semibold" style={{ color: 'var(--site-footer-text, white)' }}>Follow</h3>
-            <div className="text-sm mt-2" style={{ color: 'var(--site-footer-text, rgba(255,255,255,0.85))' }}>{settings?.instagram}</div>
+            <div className="text-sm mt-2" style={{ color: 'var(--site-footer-text, rgba(255,255,255,0.85))' }}>
+              {settings?.instagram ? (
+                // if instagram is a URL, render as external link, otherwise just text
+                String(settings.instagram).startsWith('http') ? (
+                  <a href={settings.instagram} target="_blank" rel="noreferrer" className="hover:underline" style={{ color: 'var(--site-footer-text, rgba(255,255,255,0.85))' }}>{settings.instagram}</a>
+                ) : (
+                  <span>{settings.instagram}</span>
+                )
+              ) : null}
+            </div>
           </div>
         </div>
 
-        <div className="mt-8 text-sm text-white">© {new Date().getFullYear()} {settings?.brandName}. All rights reserved.</div>
+        <div className="mt-8 text-sm" style={{ color: 'var(--site-footer-text, white)' }}>© {currentYear} {settings?.brandName}. All rights reserved.</div>
       </div>
     </footer>
   );

@@ -83,17 +83,26 @@ export default function ThemeAdmin(){
 
             <div>
               <label className="block text-sm font-medium mb-1">Nav background</label>
-              <input value={theme.navBg||''} onChange={(e)=>setTheme(t=>({...t, navBg: e.target.value}))} className="border p-2 w-full" placeholder="#ffffff or rgba(...)"></input>
+              <div className="flex items-center gap-2">
+                <input type="color" value={theme.navBg||'#ffffff'} onChange={(e)=>setTheme(t=>({...t, navBg: e.target.value}))} className="w-12 h-10 p-0 border" />
+                <input value={theme.navBg||''} onChange={(e)=>setTheme(t=>({...t, navBg: e.target.value}))} className="border p-2 flex-1" placeholder="#ffffff or rgba(...)" />
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1">Footer background</label>
-              <input value={theme.footerBg||''} onChange={(e)=>setTheme(t=>({...t, footerBg: e.target.value}))} className="border p-2 w-full" placeholder="#0b2a66"></input>
+              <div className="flex items-center gap-2">
+                <input type="color" value={theme.footerBg||'#0b2a66'} onChange={(e)=>setTheme(t=>({...t, footerBg: e.target.value}))} className="w-12 h-10 p-0 border" />
+                <input value={theme.footerBg||''} onChange={(e)=>setTheme(t=>({...t, footerBg: e.target.value}))} className="border p-2 flex-1" placeholder="#0b2a66" />
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1">Button background</label>
-              <input value={theme.buttonBg||''} onChange={(e)=>setTheme(t=>({...t, buttonBg: e.target.value}))} className="border p-2 w-full" placeholder="#2874F0"></input>
+              <div className="flex items-center gap-2">
+                <input type="color" value={theme.buttonBg||theme.primary||'#2874F0'} onChange={(e)=>setTheme(t=>({...t, buttonBg: e.target.value}))} className="w-12 h-10 p-0 border" />
+                <input value={theme.buttonBg||''} onChange={(e)=>setTheme(t=>({...t, buttonBg: e.target.value}))} className="border p-2 flex-1" placeholder="#2874F0" />
+              </div>
             </div>
 
             <div>
@@ -108,17 +117,26 @@ export default function ThemeAdmin(){
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium mb-1">Card background</label>
-                <input value={(theme.productCard && theme.productCard.cardBg) || ''} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), cardBg: e.target.value}}))} className="border p-2 w-full" placeholder="#ffffff or rgba(...)"></input>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={(theme.productCard && theme.productCard.cardBg) || '#ffffff'} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), cardBg: e.target.value}}))} className="w-12 h-10 p-0 border" />
+                  <input value={(theme.productCard && theme.productCard.cardBg) || ''} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), cardBg: e.target.value}}))} className="border p-2 flex-1" placeholder="#ffffff or rgba(...)" />
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Product name color</label>
-                <input value={(theme.productCard && theme.productCard.name) || ''} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), name: e.target.value}}))} className="border p-2 w-full" placeholder="#0b2a66"></input>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={(theme.productCard && theme.productCard.name) || '#0b2a66'} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), name: e.target.value}}))} className="w-12 h-10 p-0 border" />
+                  <input value={(theme.productCard && theme.productCard.name) || ''} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), name: e.target.value}}))} className="border p-2 flex-1" placeholder="#0b2a66" />
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Price color</label>
-                <input value={(theme.productCard && theme.productCard.price) || ''} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), price: e.target.value}}))} className="border p-2 w-full" placeholder="#0b2a66"></input>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={(theme.productCard && theme.productCard.price) || '#0b2a66'} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), price: e.target.value}}))} className="w-12 h-10 p-0 border" />
+                  <input value={(theme.productCard && theme.productCard.price) || ''} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), price: e.target.value}}))} className="border p-2 flex-1" placeholder="#0b2a66" />
+                </div>
               </div>
 
               <div>
@@ -129,17 +147,26 @@ export default function ThemeAdmin(){
 
               <div>
                 <label className="block text-sm font-medium mb-1">Badge: New</label>
-                <input value={(theme.productCard && theme.productCard.badgeNew) || ''} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), badgeNew: e.target.value}}))} className="border p-2 w-full" placeholder="#10B981"></input>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={(theme.productCard && theme.productCard.badgeNew) || '#10B981'} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), badgeNew: e.target.value}}))} className="w-12 h-10 p-0 border" />
+                  <input value={(theme.productCard && theme.productCard.badgeNew) || ''} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), badgeNew: e.target.value}}))} className="border p-2 flex-1" placeholder="#10B981" />
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Badge: Bestseller</label>
-                <input value={(theme.productCard && theme.productCard.badgeBestseller) || ''} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), badgeBestseller: e.target.value}}))} className="border p-2 w-full" placeholder="#F59E0B"></input>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={(theme.productCard && theme.productCard.badgeBestseller) || '#F59E0B'} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), badgeBestseller: e.target.value}}))} className="w-12 h-10 p-0 border" />
+                  <input value={(theme.productCard && theme.productCard.badgeBestseller) || ''} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), badgeBestseller: e.target.value}}))} className="border p-2 flex-1" placeholder="#F59E0B" />
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font medium mb-1">Badge: Discount</label>
-                <input value={(theme.productCard && theme.productCard.badgeDiscount) || ''} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), badgeDiscount: e.target.value}}))} className="border p-2 w-full" placeholder="#DC2626"></input>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={(theme.productCard && theme.productCard.badgeDiscount) || '#DC2626'} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), badgeDiscount: e.target.value}}))} className="w-12 h-10 p-0 border" />
+                  <input value={(theme.productCard && theme.productCard.badgeDiscount) || ''} onChange={(e)=>setTheme(t=>({...t, productCard: {...(t.productCard||{}), badgeDiscount: e.target.value}}))} className="border p-2 flex-1" placeholder="#DC2626" />
+                </div>
               </div>
             </div>
           </div>

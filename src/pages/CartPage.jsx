@@ -5,7 +5,7 @@ import Loader from "../components/Loader";
 import Modal from "../components/Modal";
 import { showToast } from "../components/Toast";
 import { normalizeImageUrl } from '../utils/imageHelpers'; 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function CartPage() {
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, appliedPromo, appliedPromoKey, applyPromo, clearPromo } = useContext(CartContext);
@@ -126,11 +126,13 @@ export default function CartPage() {
           <div className="lg:col-span-2 space-y-4">
             {cartItems.map((item) => (
               <div key={item.id} className="card flex items-center gap-4 p-4">
-                <img src={normalizeImageUrl(item.product?.images?.[0]) || '/placeholder.jpg'} className="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-lg" alt={item.product?.name} />
+                <Link to={`/product/${item.product?.slug}`} className="block flex-shrink-0">
+                  <img src={normalizeImageUrl(item.product?.images?.[0]) || '/placeholder.jpg'} className="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-lg" alt={item.product?.name} />
+                </Link>
                 <div className="flex-1">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <div className="font-semibold text-base line-clamp-2">{item.product?.name}</div>
+                      <Link to={`/product/${item.product?.slug}`} className="font-semibold text-base line-clamp-2 block">{item.product?.name}</Link>
                       <div className="text-sm text-neutral-500">{item.product?.variant || ''}</div>
                     </div>
                     <div className="text-right hidden sm:block">
