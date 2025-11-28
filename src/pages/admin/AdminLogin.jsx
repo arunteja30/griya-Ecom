@@ -27,7 +27,7 @@ export default function AdminLogin() {
       <form onSubmit={onSubmit} className="space-y-3">
         <input className="w-full border px-3 py-2" placeholder="Email" value={email} onChange={(e)=>setEmail(e.target.value)} />
         <input className="w-full border px-3 py-2" type="password" placeholder="Password" value={password} onChange={(e)=>setPassword(e.target.value)} />
-        <button className="w-full bg-black text-white px-3 py-2 rounded">Login</button>
+        <button className="w-full btn btn-primary">Login</button>
       </form>
     </div>
   );

@@ -81,7 +81,7 @@ export default function SeedAdmin(){
       </div>
 
       <div className="mt-4 flex gap-2">
-        <button onClick={saveToDb} disabled={loading} className="px-4 py-2 bg-green-600 text-white rounded">Save to DB</button>
+        <button onClick={saveToDb} disabled={loading} className="px-4 py-2 btn btn-accent">Save to DB</button>
         <button onClick={()=>{ if(confirm('Clear editor?')) setJsonText(''); }} className="px-4 py-2 border rounded">Clear</button>
         <button onClick={()=>{ setJsonText('// Paste JSON here or load from DB'); }} className="px-4 py-2 border rounded">Insert placeholder</button>
       </div>

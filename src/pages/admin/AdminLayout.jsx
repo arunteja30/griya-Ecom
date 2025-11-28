@@ -10,8 +10,10 @@ export default function AdminLayout({ children }) {
         <div className="mb-6 font-bold">Admin Panel</div>
         <nav className="flex flex-col gap-2">
           <Link to="/admin" className="text-sm">Site Settings</Link>
+          <Link to="/admin/theme" className="text-sm">Theme</Link>
           <Link to="/admin/categories" className="text-sm">Categories</Link>
           <Link to="/admin/products" className="text-sm">Products</Link>
+          <Link to="/admin/banners" className="text-sm">Banners</Link>
           <Link to="/admin/home" className="text-sm">Homepage Sections</Link>
           <Link to="/admin/gallery" className="text-sm">Gallery</Link>
           <Link to="/admin/testimonials" className="text-sm">Testimonials</Link>

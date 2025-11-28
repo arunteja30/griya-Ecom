@@ -71,15 +71,19 @@
   }
   
   .btn-primary {
-    @apply bg-primary-900 text-white hover:bg-primary-800 focus:ring-primary-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
-  }
-  
-  .btn-secondary {
+    background: var(--site-button-bg, var(--site-primary, #0b2a66));
+    color: var(--site-button-text, white);
+    @apply focus:ring-primary-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+   }
+   
+   .btn-secondary {
     @apply bg-white text-primary-900 border-2 border-primary-200 hover:border-primary-300 hover:bg-primary-50 focus:ring-primary-300 shadow-md hover:shadow-lg;
-  }
-  
-  .btn-accent {
-    @apply bg-accent-600 text-white hover:bg-accent-700 focus:ring-accent-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+   }
+   
+   .btn-accent {
+    background: var(--site-accent, #FFCC00);
+    color: var(--site-button-text, white);
+    @apply focus:ring-accent-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
   }
 
   .btn-ghost {

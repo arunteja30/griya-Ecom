@@ -67,7 +67,7 @@ export default function PromoAdmin() {
           <div className="text-sm text-neutral-600">Used: {form.used || 0}</div>
         </div>
         <div className="mt-4">
-          <button onClick={save} className="bg-black text-white px-3 py-2 rounded">Save</button>
+          <button onClick={save} className="btn btn-primary">Save</button>
           <button onClick={resetForm} className="px-3 py-2">Reset</button>
           {status==='saved' && <span className="ml-3 text-green-600">Saved</span>}
           {status==='error' && <span className="ml-3 text-red-600">Error</span>}

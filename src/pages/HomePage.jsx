@@ -7,16 +7,74 @@ import ProductCard from "../components/ProductCard";
 
 // Lightweight local BannerCarousel fallback
 function BannerCarousel({ banners }) {
-  if (!banners || banners.length === 0) return null;
-  const items = Array.isArray(banners) ? banners : Object.entries(banners).map(([id,b])=>({ id, ...b }));
-  const first = items[0];
+  if (!banners) return null;
+  const items = Array.isArray(banners) ? banners : Object.entries(banners).map(([id, b]) => ({ id, ...b }));
+  if (!items || items.length === 0) return null;
+
+  // filter by optional startDate / endDate (ISO date strings or date-only)
+  const now = Date.now();
+  const active = items.filter((b) => {
+    try {
+      if (b.startDate) {
+        const s = Date.parse(b.startDate);
+        if (!isNaN(s) && now < s) return false;
+      }
+      if (b.endDate) {
+        const e = Date.parse(b.endDate);
+        if (!isNaN(e) && now > e) return false;
+      }
+      return true;
+    } catch (e) { return true; }
+  });
+
+  if (!active || active.length === 0) return null;
+
+  const [idx, setIdx] = React.useState(0);
+  const [paused, setPaused] = React.useState(false);
+
+  // reset index if active length changes
+  React.useEffect(() => { if (idx >= active.length) setIdx(0); }, [active.length]);
+
+  // autoplay every 5s
+  React.useEffect(() => {
+    if (paused || active.length <= 1) return;
+    const tid = setInterval(() => {
+      setIdx(i => (i + 1) % active.length);
+    }, 5000);
+    return () => clearInterval(tid);
+  }, [active.length, paused]);
+
+  const prev = () => setIdx(i => (i - 1 + active.length) % active.length);
+  const next = () => setIdx(i => (i + 1) % active.length);
+
+  const item = active[idx];
+
   return (
-    <div className="w-full rounded overflow-hidden">
-      {first && (
-        <a href={first.ctaLink || first.link || '#'} className="block">
-          <img src={normalizeImageUrl(first.image) || '/placeholder.jpg'} alt={first.title || ''} className="w-full h-48 object-cover" />
-        </a>
-      )}
+    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} className="w-full rounded overflow-hidden relative">
+      <a href={item.ctaLink || item.link || '#'} className="block">
+        <img src={normalizeImageUrl(item.image) || item.image || '/placeholder.jpg'} alt={item.heading || ''} className="w-full h-64 md:h-96 object-cover" />
+      </a>
+
+      {/* overlay content */}
+      <div className="absolute inset-0 flex items-end">
+        <div className="w-full bg-gradient-to-t from-black/60 to-transparent p-6 md:p-12">
+          <div className="max-w-2xl text-white">
+            {item.heading && <h2 className="text-2xl md:text-4xl font-bold">{item.heading}</h2>}
+            {item.body && <p className="mt-2 text-sm md:text-base">{item.body}</p>}
+            {(item.ctaLabel && (item.link || item.ctaLink)) && (
+              <a href={item.link || item.ctaLink} className="inline-block mt-4 px-4 py-2 bg-orange-600 text-white rounded">{item.ctaLabel}</a>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* controls */}
+      <button onClick={prev} aria-label="Previous" className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/30 text-white rounded-full p-2">
+        ‹
+      </button>
+      <button onClick={next} aria-label="Next" className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/30 text-white rounded-full p-2">
+        ›
+      </button>
     </div>
   );
 }
@@ -107,7 +165,7 @@ export default function HomePage() {
     <main className="space-y-8 pb-8">
 
       {/* Banners / Carousel */}
-      <section>
+      <section className="max-w-7xl mx-auto px-4 mb-3 md:mb-0">
         <BannerCarousel banners={banners} />
       </section>
 

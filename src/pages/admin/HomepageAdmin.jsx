@@ -3,6 +3,8 @@ import { db } from '../../firebase';
 import { ref, onValue, set } from 'firebase/database';
 import Loader from '../../components/Loader';
 import { showToast } from '../../components/Toast';
+import { Link } from 'react-router-dom';
+import { normalizeImageUrl } from '../../utils/imageHelpers';
 
 export default function HomepageAdmin(){
   const [config, setConfig] = useState({ festivals: {} });
@@ -14,6 +16,9 @@ export default function HomepageAdmin(){
   const [banners, setBanners] = useState([]);
   const [bannersLoading, setBannersLoading] = useState(true);
   const [newBanner, setNewBanner] = useState({ image: '', heading: '', body: '', ctaLabel: '', link: '' });
+  // admin debug / save options
+  const [saveAsArray, setSaveAsArray] = useState(false);
+  const [savePreviewOpen, setSavePreviewOpen] = useState(false);
 
   // subscribe to products and derive unique normalized tags for admin debugging
   useEffect(()=>{
@@ -133,18 +138,38 @@ export default function HomepageAdmin(){
   const saveBanners = async () => {
     setOpBusy(true);
     try{
-      // persist the banners array as-is
-      await set(ref(db, '/banners'), banners);
+      // Build payload depending on admin choice (array vs object)
+      const normalized = (banners || []).map(b => ({
+        id: b?.id || `b-${Date.now()}`,
+        image: normalizeImageUrl(b?.image) || b?.image || '',
+        heading: b?.heading || '',
+        body: b?.body || '',
+        ctaLabel: b?.ctaLabel || '',
+        link: b?.link || ''
+      }));
+
+      const payload = saveAsArray ? normalized : normalized.reduce((acc, b) => { acc[b.id] = b; return acc; }, {});
+
+      console.log('Saving /banners payload:', payload);
+      await set(ref(db, '/banners'), payload);
       showToast('Banners saved');
     }catch(e){
       console.error('Failed to save banners', e);
-      showToast('Failed to save banners', 'error');
+      showToast(`Failed to save banners: ${e?.message || e}`, 'error');
     }finally{ setOpBusy(false); }
   };
 
   const addBannerFromForm = () => {
     if(!newBanner.image) { showToast('Please provide an image URL', 'error'); return; }
-    const banner = { id: `b-${Date.now()}`, image: newBanner.image, heading: newBanner.heading || '', body: newBanner.body || '', ctaLabel: newBanner.ctaLabel || '', link: newBanner.link || '' };
+    const id = `b-${Date.now()}`;
+    const banner = {
+      id,
+      image: normalizeImageUrl(newBanner.image) || newBanner.image,
+      heading: newBanner.heading || '',
+      body: newBanner.body || '',
+      ctaLabel: newBanner.ctaLabel || '',
+      link: newBanner.link || ''
+    };
     setBanners(b => ([...b, banner]));
     setNewBanner({ image: '', heading: '', body: '', ctaLabel: '', link: '' });
     showToast('Banner added (save to persist)');
@@ -254,68 +279,11 @@ export default function HomepageAdmin(){
       <div className="mb-6 p-4 bg-white rounded border">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-medium">Banners</h3>
-          <div className="text-sm text-gray-500">Manage homepage banners (image, heading, body, action label, action link)</div>
+          <div className="text-sm text-gray-500">Manage homepage banners separately</div>
         </div>
-        <div className="space-y-3">
-          {/* New banner form */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-start mb-2">
-            <div className="md:col-span-2">
-              <label className="block text-xs text-gray-600 mb-1">Image URL *</label>
-              <input value={newBanner.image} onChange={(e)=>setNewBanner(n => ({ ...n, image: e.target.value }))} className="w-full border p-2" placeholder="https://... (direct image link)" />
-              <div className="mt-2">
-                <div className="text-xs text-gray-500 mb-1">Preview</div>
-                <div className="w-full bg-gray-50 rounded overflow-hidden border">
-                  <img src={newBanner.image || '/placeholder.jpg'} alt={newBanner.heading || 'preview'} className="w-full h-40 object-cover" />
-                </div>
-              </div>
-            </div>
-
-            <div className="md:col-span-1">
-              <label className="block text-xs text-gray-600 mb-1">Heading</label>
-              <input value={newBanner.heading} onChange={(e)=>setNewBanner(n => ({ ...n, heading: e.target.value }))} className="w-full border p-2" placeholder="Banner heading / title" />
-
-              <label className="block text-xs text-gray-600 mt-3 mb-1">Button label</label>
-              <input value={newBanner.ctaLabel} onChange={(e)=>setNewBanner(n => ({ ...n, ctaLabel: e.target.value }))} className="w-full border p-2" placeholder="CTA button text" />
-            </div>
-
-            <div className="md:col-span-1">
-              <label className="block text-xs text-gray-600 mb-1">Body / description</label>
-              <textarea value={newBanner.body} onChange={(e)=>setNewBanner(n => ({ ...n, body: e.target.value }))} className="w-full border p-2 h-24" placeholder="Short description for the banner" />
-
-              <label className="block text-xs text-gray-600 mt-3 mb-1">CTA link</label>
-              <input value={newBanner.link} onChange={(e)=>setNewBanner(n => ({ ...n, link: e.target.value }))} className="w-full border p-2" placeholder="https://... (optional)" />
-            </div>
-
-            <div className="md:col-span-4 flex gap-2">
-              <button onClick={addBannerFromForm} className="px-3 py-2 bg-green-600 text-white rounded">Add Banner</button>
-              <button onClick={clearNewBannerForm} className="px-3 py-2 border rounded">Clear</button>
-              <button onClick={saveBanners} disabled={opBusy} className="px-3 py-2 bg-blue-600 text-white rounded">Save Banners</button>
-            </div>
-          </div>
-
-          {/* Existing banners list */}
-          {banners.length === 0 && <div className="text-sm text-gray-500">No banners configured yet.</div>}
-          {banners.map((b, idx) => (
-            <div key={b.id || `ban-${idx}`} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-2 border rounded">
-              <div className="md:col-span-3">
-                <div className="w-full bg-gray-50 rounded overflow-hidden border">
-                  <img src={b.image || '/placeholder.jpg'} alt={b.heading || b.title || ''} className="w-full h-28 object-cover" />
-                </div>
-              </div>
-              <div className="md:col-span-6">
-                <input value={b.image || ''} onChange={(e)=>updateBannerAt(idx, 'image', e.target.value)} className="w-full border p-2 mb-2" placeholder="Image URL" />
-                <input value={b.heading || ''} onChange={(e)=>updateBannerAt(idx, 'heading', e.target.value)} className="w-full border p-2 mb-2" placeholder="Heading / Title" />
-                <textarea value={b.body || ''} onChange={(e)=>updateBannerAt(idx, 'body', e.target.value)} className="w-full border p-2 mb-2 h-20" placeholder="Body / description (optional)" />
-              </div>
-              <div className="md:col-span-2">
-                <input value={b.ctaLabel || ''} onChange={(e)=>updateBannerAt(idx, 'ctaLabel', e.target.value)} className="w-full border p-2 mb-2" placeholder="Button label" />
-                <input value={b.link || ''} onChange={(e)=>updateBannerAt(idx, 'link', e.target.value)} className="w-full border p-2" placeholder="CTA link" />
-              </div>
-              <div className="md:col-span-1 flex justify-end">
-                <button onClick={()=>deleteBannerAt(idx)} className="px-3 py-2 border rounded">Delete</button>
-              </div>
-            </div>
-          ))}
+        <div>
+          <p className="text-sm text-gray-600">Banners have moved to a dedicated admin page.</p>
+          <Link to="/admin/banners" className="inline-block mt-3 px-3 py-2 bg-blue-600 text-white rounded">Open Banners Admin</Link>
         </div>
       </div>
 

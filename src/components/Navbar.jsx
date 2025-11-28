@@ -41,8 +41,9 @@ export default function Navbar() {
     <>
       <header
         className={`w-full top-0 z-50 sticky transition-all duration-300 shadow-sm ${
-          isSticky ? "glass-effect shadow-lg backdrop-blur-xl bg-white/80" : "bg-primary-50"
+          isSticky ? "glass-effect shadow-lg backdrop-blur-xl bg-white/80" : "bg-[var(--site-nav-bg,theme('colors.primary.50'))]"
         }`}
+        style={{ borderBottomColor: 'var(--site-nav-border, rgba(0,0,0,0.06))' }}
       >
         {/* Top row */}
         <div className="section-container">
@@ -55,11 +56,11 @@ export default function Navbar() {
                 className="h-12 w-12 object-cover rounded-md shadow-sm"
               />
               <div className="hidden sm:block">
-                <div className="font-bold text-lg text-primary-900 font-serif">
+                <div className="font-bold text-lg" style={{ color: 'var(--site-nav-text, var(--primary-900))', fontFamily: 'Playfair Display, serif' }}>
                   {settings?.brandName || "Griya Jewellery"}
                 </div>
                 {settings?.tagline && (
-                  <div className="text-xs text-neutral-500 font-medium">{settings.tagline}</div>
+                  <div className="text-xs font-medium" style={{ color: 'var(--site-nav-subtext, #6b7280)' }}>{settings.tagline}</div>
                 )}
               </div>
             </Link>
@@ -75,8 +76,9 @@ export default function Navbar() {
                   />
                   <button
                     type="submit"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 btn btn-primary px-3 md:px-4 py-2 rounded-md"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 btn px-3 md:px-4 py-2 rounded-md"
                     aria-label="Search"
+                    style={{ background: 'var(--site-button-bg, var(--site-primary, #111827))', color: 'var(--site-button-text, white)' }}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path
@@ -96,7 +98,7 @@ export default function Navbar() {
               <form onSubmit={handleSearchSubmit} className="mt-2">
                 <div className="relative">
                   <input name="q" placeholder="Search products, categories, brands..." className="form-input header-search w-full pr-10" />
-                  <button type="submit" className="absolute right-1 top-1/2 -translate-y-1/2 btn btn-primary px-3 py-1 rounded-md" aria-label="Search">
+                  <button type="submit" className="absolute right-1 top-1/2 -translate-y-1/2 btn px-3 py-1 rounded-md" aria-label="Search" style={{ background: 'var(--site-button-bg, var(--site-primary, #111827))', color: 'var(--site-button-text, white)' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l4.387 4.387a1 1 0 01-1.414 1.414l-4.387-4.387zM8 14a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
                     </svg>
@@ -113,7 +115,7 @@ export default function Navbar() {
                 </svg>
                 <span className="hidden sm:inline text-sm font-medium">Cart</span>
                 {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-accent-600 text-white text-xs font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1">
+                  <span className="absolute -top-2 -right-2 text-white text-xs font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1" style={{ background: 'var(--site-accent, #FFCC00)' }}>
                     {cartCount}
                   </span>
                 )}

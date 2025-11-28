@@ -399,9 +399,7 @@ export default function CheckoutPage() {
               </div>
             </div>
             <div className="flex gap-3 mt-6 pt-6 border-t">
-              <button onClick={() => { setPlacedOrder(null); navigate('/'); }} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 text-center rounded-lg font-medium transition-colors">
-                Continue Shopping
-              </button>
+              <button onClick={() => { setPlacedOrder(null); navigate('/'); }} className="flex-1 btn btn-accent">Continue Shopping</button>
               <button onClick={() => { window.print(); }} className="flex-1 border border-gray-300 hover:border-gray-400 text-gray-700 py-3 text-center rounded-lg font-medium transition-colors">
                 Print Receipt
               </button>

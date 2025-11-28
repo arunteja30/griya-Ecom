@@ -13,45 +13,24 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-primary-900 text-white">
-      <div className="section-container py-6 flex items-center justify-between gap-4">
-        {/* Brand */}
-        <div className="flex items-center gap-3">
-          <img src={settings?.logoUrl || '/placeholder.jpg'} alt="logo" className="h-8 w-8 rounded-md object-cover" />
-          <div className="text-sm">
-            <div className="font-bold leading-tight">{settings?.brandName || 'Griya Jewellery'}</div>
-            <div className="text-primary-300 text-xs">{settings?.tagline || ''}</div>
+    <footer style={{ background: 'var(--site-footer-bg, var(--primary-900))', color: 'var(--site-footer-text, white)' }}>
+      <div className="section-container py-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <h3 className="font-semibold">About</h3>
+            <p className="text-sm mt-2">{/* ... */}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold" style={{ color: 'var(--site-footer-text, white)' }}>Contact</h3>
+            <div className="text-sm mt-2" style={{ color: 'var(--site-footer-text, rgba(255,255,255,0.85))' }}>{settings?.address}</div>
+          </div>
+          <div>
+            <h3 className="font-semibold" style={{ color: 'var(--site-footer-text, white)' }}>Follow</h3>
+            <div className="text-sm mt-2" style={{ color: 'var(--site-footer-text, rgba(255,255,255,0.85))' }}>{settings?.instagram}</div>
           </div>
         </div>
 
-        {/* Quick Links - inline */}
-        <nav className="hidden sm:flex items-center gap-4 text-xs text-primary-300">
-          <Link to="/" className="hover:text-white">Home</Link>
-          <Link to="/collections" className="hover:text-white">Collections</Link>
-          <Link to="/gallery" className="hover:text-white">Gallery</Link>
-          <Link to="/contact" className="hover:text-white">Contact</Link>
-          <a href="/track-order" className="hover:underline">Track Order</a>
-        </nav>
-
-        {/* Social / small details */}
-        <div className="flex items-center gap-3 text-xs text-primary-300">
-          {settings?.whatsapp && (
-            <a href={`https://wa.me/${cleanPhone(settings.whatsapp)}`} target="_blank" rel="noreferrer" className="hover:text-white">WhatsApp</a>
-          )}
-          {settings?.instagram && (
-            <a href={settings.instagram} target="_blank" rel="noreferrer" className="hover:text-white">Instagram</a>
-          )}
-        </div>
-      </div>
-
-      <div className="border-t border-primary-800">
-        <div className="section-container py-3 flex items-center justify-between text-xs text-primary-300">
-          <div>© {currentYear} {settings?.brandName || 'Griya Jewellery'}. All rights reserved.</div>
-          <div className="flex items-center gap-3">
-            <Link to="/privacy" className="hover:text-white">Privacy</Link>
-            <Link to="/terms" className="hover:text-white">Terms</Link>
-          </div>
-        </div>
+        <div className="mt-8 text-sm text-white">© {new Date().getFullYear()} {settings?.brandName}. All rights reserved.</div>
       </div>
     </footer>
   );

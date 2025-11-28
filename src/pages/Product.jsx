@@ -18,7 +18,7 @@ export default function Product() {
         <h1 className="text-2xl font-bold mb-2">{product.title}</h1>
         <div className="text-xl text-gray-700 mb-4">₹{product.price}</div>
         <div className="prose mb-4">{product.description}</div>
-        <button className="bg-black text-white px-4 py-2 rounded">Add to cart</button>
+        <button className="btn btn-primary">Add to cart</button>
       </div>
     </div>
   );

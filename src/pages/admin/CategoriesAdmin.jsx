@@ -127,7 +127,7 @@ export default function CategoriesAdmin(){
           <input type="number" value={sortOrder} onChange={(e)=>setSortOrder(e.target.value)} className="border p-2 w-full" placeholder="Sort order (optional)" />
         </div>
         <div className="flex gap-2 items-end">
-          <button onClick={handleSave} className="bg-black text-white px-3 py-2 rounded">{editing ? 'Update' : 'Create'}</button>
+          <button onClick={handleSave} className="btn btn-primary">{editing ? 'Update' : 'Create'}</button>
           {editing && <button onClick={()=>{setEditing(null); setCatId(''); setName(''); setSlug(''); setImage(''); setDescription(''); setSortOrder('');}} className="px-3 py-2">Cancel</button>}
         </div>
       </div>

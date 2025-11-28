@@ -65,6 +65,12 @@ export default function SiteSettingsAdmin() {
           <textarea value={form.bannerText||''} onChange={(e)=>setForm({...form, bannerText: e.target.value})} className="border p-2 w-full" placeholder="Top banner text (single message)"></textarea>
         </div>
 
+        {/* Theme settings */}
+        <div className="col-span-1 md:col-span-2">
+          <h3 className="text-sm font-semibold mb-2">Theme / Colors</h3>
+          <p className="text-sm text-neutral-600">Theme settings have been moved to a dedicated panel. Manage site colors and backgrounds in <a href="/admin/theme" className="text-blue-600">Admin » Theme</a>.</p>
+        </div>
+
         {/* banner visibility and checkout toggles */}
         <label className="flex items-center gap-2"><input type="checkbox" checked={form.bannerVisible !== false} onChange={(e)=>setForm({...form, bannerVisible: e.target.checked})} /> Show top banner</label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={form.enableWhatsAppCheckout !== false} onChange={(e)=>setForm({...form, enableWhatsAppCheckout: e.target.checked})} /> Enable WhatsApp checkout</label>
@@ -72,7 +78,7 @@ export default function SiteSettingsAdmin() {
         <textarea value={form.offersRaw || (form.offers ? form.offers.join('\n') : '')} onChange={(e)=>setForm({...form, offersRaw: e.target.value})} className="border p-2" placeholder="Offers (one per line)" />
       </div>
       <div className="mt-4">
-        <button onClick={onSave} className="bg-black text-white px-4 py-2 rounded">Save</button>
+        <button onClick={onSave} className="btn btn-primary">Save</button>
         {status==='saved' && <span className="ml-3 text-green-600">Saved</span>}
         {status==='error' && <span className="ml-3 text-red-600">Error saving</span>}
       </div>

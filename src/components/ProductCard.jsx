@@ -51,21 +51,27 @@ export default function ProductCard({ product }) {
     new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(price);
 
   const renderStars = (rating) => {
-    const full = Math.floor(rating);
-    const half = rating - full >= 0.5;
+    const full = Math.floor(rating || 0);
+    const half = (rating || 0) - full >= 0.5;
     const stars = [];
     for (let i = 0; i < 5; i++) {
       if (i < full) {
         stars.push(
-          <svg key={i} className="w-3 h-3 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.387 2.46a1 1 0 00-.364 1.118l1.287 3.974c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.387 2.46c-.785.57-1.84-.197-1.54-1.118l1.287-3.974a1 1 0 00-.364-1.118L2.609 9.4c-.783-.57-.38-1.81.588-1.81h4.18a1 1 0 00.95-.69L9.05 2.927z"/></svg>
+          <svg key={i} className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--pc-star, #F59E0B)' }}>
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.387 2.46a1 1 0 00-.364 1.118l1.287 3.974c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.387 2.46c-.785.57-1.84-.197-1.54-1.118l1.287-3.974a1 1 0 00-.364-1.118L2.609 9.4c-.783-.57-.38-1.81.588-1.81h4.18a1 1 0 00.95-.69L9.05 2.927z" />
+          </svg>
         );
       } else if (i === full && half) {
         stars.push(
-          <svg key={i} className="w-3 h-3 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.387 2.46a1 1 0 00-.364 1.118l1.287 3.974c.3.921-.755 1.688-1.54 1.118L10 15.347V2.927z"/></svg>
+          <svg key={i} className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--pc-star, #F59E0B)' }}>
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.387 2.46a1 1 0 00-.364 1.118l1.287 3.974c.3.921-.755 1.688-1.54 1.118L10 15.347V2.927z" />
+          </svg>
         );
       } else {
         stars.push(
-          <svg key={i} className="w-3 h-3 text-neutral-300" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.387 2.46a1 1 0 00-.364 1.118l1.287 3.974c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.387 2.46c-.785.57-1.84-.197-1.54-1.118l1.287-3.974a1 1 0 00-.364-1.118L2.609 9.4c-.783-.57-.38-1.81.588-1.81h4.18a1 1 0 00.95-.69L9.05 2.927z"/></svg>
+          <svg key={i} className="w-3 h-3 text-neutral-300" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.387 2.46a1 1 0 00-.364 1.118l1.287 3.974c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.387 2.46c-.785.57-1.84-.197-1.54-1.118l1.287-3.974a1 1 0 00-.364-1.118L2.609 9.4c-.783-.57-.38-1.81.588-1.81h4.18a1 1 0 00.95-.69L9.05 2.927z" />
+          </svg>
         );
       }
     }
@@ -75,6 +81,7 @@ export default function ProductCard({ product }) {
   return (
     <div
       className="product-card card group overflow-hidden"
+      style={{ background: 'var(--pc-card-bg, white)' }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -100,9 +107,9 @@ export default function ProductCard({ product }) {
 
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-2">
-          {product.isNew && <div className="bg-accent-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">New</div>}
-          {isBestseller && <div className="bg-yellow-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Bestseller</div>}
-          {hasFreeShipping && <div className="bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Free shipping</div>}
+          {product.isNew && <div className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-new, #10B981)' }}>New</div>}
+          {isBestseller && <div className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-bestseller, #F59E0B)' }}>Bestseller</div>}
+          {hasFreeShipping && <div className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-new, #10B981)' }}>Free shipping</div>}
         </div>
         {product.discount && <div className="absolute top-2 right-2 bg-error text-white text-[10px] font-bold px-2 py-0.5 rounded-full">-{product.discount}%</div>}
       </div>
@@ -112,7 +119,7 @@ export default function ProductCard({ product }) {
         {product.category && <div className="text-[11px] text-accent-600 font-semibold uppercase tracking-wide">{product.category}</div>}
 
         <Link to={`/product/${product.slug}`} className="block">
-          <h3 className="font-semibold text-primary-900 text-sm line-clamp-2 hover:text-accent-600 transition-colors duration-150">{product.name}</h3>
+          <h3 className="font-semibold text-primary-900 text-sm line-clamp-2 hover:text-accent-600 transition-colors duration-150" style={{ color: 'var(--pc-name, #0b2a66)' }}>{product.name}</h3>
         </Link>
 
         {/* Rating */}
@@ -120,7 +127,7 @@ export default function ProductCard({ product }) {
 
         <div className="flex items-center justify-between mt-1">
           <div className="flex items-center gap-2">
-            <span className="text-base font-bold text-primary-900">{formatPrice(product.price)}</span>
+            <span className="text-base font-bold" style={{ color: 'var(--pc-price, #0b2a66)' }}>{formatPrice(product.price)}</span>
             {product.originalPrice && product.originalPrice > product.price && <span className="text-sm text-neutral-500 line-through">{formatPrice(product.originalPrice)}</span>}
           </div>
 
