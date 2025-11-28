@@ -13,6 +13,8 @@ export default function HomepageAdmin(){
   const [opBusy, setOpBusy] = useState(false);
   const [buffers, setBuffers] = useState({}); // keep raw input strings to preserve commas while typing
   const [availableTags, setAvailableTags] = useState([]);
+  const [tagFilter, setTagFilter] = useState('');
+  const [targetFestival, setTargetFestival] = useState('');
   const [banners, setBanners] = useState([]);
   const [bannersLoading, setBannersLoading] = useState(true);
   const [newBanner, setNewBanner] = useState({ image: '', heading: '', body: '', ctaLabel: '', link: '' });
@@ -194,6 +196,25 @@ export default function HomepageAdmin(){
     });
   };
 
+  // Add tag to a festival buffer (deduped) or copy to clipboard when no festival selected
+  const addTagToFestival = (tag) => {
+    if (!tag) return;
+    if (targetFestival) {
+      const keyName = `festivals.${targetFestival}`;
+      const existingRaw = buffers[keyName] !== undefined ? buffers[keyName] : (Array.isArray(config?.festivals?.[targetFestival]) ? config.festivals[targetFestival].join(',') : '');
+      const parts = String(existingRaw || '').split(',').map(s=>s.trim()).filter(Boolean);
+      if (!parts.includes(tag)) parts.push(tag);
+      const raw = parts.join(',');
+      setBuffers(b => ({ ...b, [keyName]: raw }));
+      // update both local config preview and persist in DB when saved
+      updateField(`festivals.${targetFestival}`, parts);
+      showToast(`Added tag '${tag}' to ${targetFestival}`);
+    } else {
+      try { navigator.clipboard.writeText(tag); showToast('Tag copied to clipboard'); }
+      catch(e){ showToast('Tag copied (manual copy)'); }
+    }
+  };
+
   if(loading || bannersLoading) return <Loader />;
 
   return (
@@ -214,13 +235,22 @@ export default function HomepageAdmin(){
           <div className="font-medium">Available product tags</div>
           <div className="text-xs text-gray-500">{availableTags.length} tags</div>
         </div>
+        <div className="mb-2 flex items-center gap-2">
+          <input value={tagFilter} onChange={(e)=>setTagFilter(e.target.value)} placeholder="Filter tags" className="border p-1 text-sm flex-1" />
+          <select value={targetFestival} onChange={(e)=>setTargetFestival(e.target.value)} className="border p-1 text-sm">
+            <option value="">No target (copy)</option>
+            {Object.keys(config.festivals || {}).map(f => (<option key={f} value={f}>{f}</option>))}
+          </select>
+        </div>
         <div className="flex flex-wrap gap-2">
           {availableTags.length === 0 ? (
             <div className="text-xs text-gray-500">No tags found in products</div>
           ) : (
-            availableTags.map(tag => (
-              <span key={tag} className="px-2 py-1 bg-white border rounded text-xs">{tag}</span>
-            ))
+            availableTags
+              .filter(t => !tagFilter || t.includes(tagFilter.toLowerCase()))
+              .map(tag => (
+                <button key={tag} onClick={()=>addTagToFestival(tag)} className="px-2 py-1 bg-white border rounded text-xs hover:bg-gray-100">{tag}</button>
+              ))
           )}
         </div>
         <div className="text-xs text-gray-600 mt-2">This list is derived from product tag values in <code>/products</code>. Use these tags when configuring festivals.</div>

@@ -75,6 +75,28 @@ export default function SiteSettingsAdmin() {
         <label className="flex items-center gap-2"><input type="checkbox" checked={form.bannerVisible !== false} onChange={(e)=>setForm({...form, bannerVisible: e.target.checked})} /> Show top banner</label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={form.enableWhatsAppCheckout !== false} onChange={(e)=>setForm({...form, enableWhatsAppCheckout: e.target.checked})} /> Enable WhatsApp checkout</label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={form.enableRazorpayCheckout !== false} onChange={(e)=>setForm({...form, enableRazorpayCheckout: e.target.checked})} /> Enable Razorpay checkout</label>
+
+        {/* Minimum order and free shipping settings */}
+        <div className="mt-2">
+          <label className="block text-sm font-medium mb-1">Minimum purchase amount for checkout (₹)</label>
+          <input type="number" min="0" value={form.minPurchaseAmount||''} onChange={(e)=>setForm({...form, minPurchaseAmount: e.target.value})} className="border p-2 w-full" placeholder="e.g. 500" />
+        </div>
+        <div className="mt-2 flex items-center gap-3">
+          <label className="flex items-center gap-2"><input type="checkbox" checked={form.freeShippingEnabled !== false} onChange={(e)=>setForm({...form, freeShippingEnabled: e.target.checked})} /> Enable free shipping</label>
+        </div>
+        <div className="mt-2">
+          <label className="block text-sm font-medium mb-1">Free shipping threshold (₹)</label>
+          <input type="number" min="0" value={form.freeShippingThreshold||''} onChange={(e)=>setForm({...form, freeShippingThreshold: e.target.value})} className="border p-2 w-full" placeholder="e.g. 1000" />
+        </div>
+
+        {/* Delivery charge settings */}
+        <div className="mt-3">
+          <label className="flex items-center gap-2"><input type="checkbox" checked={form.deliveryEnabled !== false} onChange={(e)=>setForm({...form, deliveryEnabled: e.target.checked})} /> Enable delivery charges</label>
+        </div>
+        <div className="mt-2">
+          <label className="block text-sm font-medium mb-1">Delivery charge amount (₹)</label>
+          <input type="number" min="0" value={form.deliveryChargeAmount||''} onChange={(e)=>setForm({...form, deliveryChargeAmount: e.target.value})} className="border p-2 w-full" placeholder="e.g. 50" />
+        </div>
         <textarea value={form.offersRaw || (form.offers ? form.offers.join('\n') : '')} onChange={(e)=>setForm({...form, offersRaw: e.target.value})} className="border p-2" placeholder="Offers (one per line)" />
       </div>
       <div className="mt-4">

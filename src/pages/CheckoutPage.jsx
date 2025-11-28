@@ -79,6 +79,14 @@ export default function CheckoutPage() {
   
   const discountedAmount = computeDiscount(cartTotal, appliedPromo);
   const discountedTotal = Math.max(0, cartTotal - discountedAmount);
+  // Delivery & free-shipping calculations
+  const freeShippingEnabled = siteSettings?.freeShippingEnabled !== false;
+  const freeShippingThreshold = Number(siteSettings?.freeShippingThreshold || 0);
+  const qualifiesFreeShipping = freeShippingEnabled && freeShippingThreshold > 0 && discountedTotal >= freeShippingThreshold;
+  const deliveryEnabled = siteSettings?.deliveryEnabled !== false;
+  const deliveryChargeAmount = Number(siteSettings?.deliveryChargeAmount || 0);
+  const deliveryCharge = deliveryEnabled ? (qualifiesFreeShipping ? 0 : deliveryChargeAmount) : 0;
+  const finalTotal = Math.max(0, discountedTotal + deliveryCharge);
   
   // Normalize cart items for order payloads: cartItems items may be stored as { id, product, quantity }
   const normalizeCartItems = (items) => (Array.isArray(items) ? items.map((it) => {
@@ -133,15 +141,16 @@ export default function CheckoutPage() {
         return showToast('Razorpay key not configured', 'error');
       }
 
-      // Determine the amount to charge (respect local promo applied on this checkout page)
-      const amountToCharge = Number(discountedTotal || 0);
+      // Determine the amount to charge (include delivery charge)
+      const amountToCharge = Number(finalTotal || 0);
       // Create order on server (amount in rupees) - pass discounted amount so server normalizes to paise
       // Prepare notes/metadata to send to payment server (useful for admin and reconciliation)
       const promoNotes = appliedPromo ? { promoCode: appliedPromo.code || '', promoKey: appliedPromoKey || '', discount: discountedAmount || 0 } : {};
-      const order = await createOrderOnServer({ amount: amountToCharge, unit: 'INR' }, promoNotes);
+      const notes = { ...promoNotes, deliveryCharge };
+      const order = await createOrderOnServer({ amount: amountToCharge, unit: 'INR' }, notes);
       if (!order || !order.id) throw new Error('Order creation failed');
-
-      const shippingText = `${address.name}, ${address.line1}, ${address.city}, ${address.state} - ${address.pincode}`;
+       
+       const shippingText = `${address.name}, ${address.line1}, ${address.city}, ${address.state} - ${address.pincode}`;
 
       // Helper: decrement stock for ordered items using Firebase transactions
       const decrementProductStocks = async (items) => {
@@ -201,6 +210,7 @@ export default function CheckoutPage() {
                   status: 'paid',
                   createdAt: new Date().toISOString(),
                   promo: appliedPromo ? { key: appliedPromoKey, code: appliedPromo.code, discount: discountedAmount } : null,
+                  delivery: { charge: deliveryCharge },
                   customer: {
                     name: address.name,
                     email: address.email,
@@ -273,6 +283,7 @@ export default function CheckoutPage() {
                    status: 'verification_failed',
                    createdAt: new Date().toISOString(),
                    promo: appliedPromo ? { key: appliedPromoKey, code: appliedPromo.code, discount: discountedAmount } : null,
+                   delivery: { charge: deliveryCharge },
                    customer: { name: address.name, email: address.email, phone: address.phone },
                    shipping: { line1: address.line1, city: address.city, state: address.state, pincode: address.pincode },
                    items: normalizeCartItems(cartItems)
@@ -307,6 +318,7 @@ export default function CheckoutPage() {
               currency: 'INR',
               status: 'failed',
               promo: appliedPromo ? { key: appliedPromoKey, code: appliedPromo.code, discount: discountedAmount } : null,
+              delivery: { charge: deliveryCharge },
               failure: failureResp || null,
               createdAt: new Date().toISOString(),
               customer: { name: address.name, email: address.email, phone: address.phone },
@@ -525,12 +537,33 @@ export default function CheckoutPage() {
             </div>
           </div>
           {promoError && <div className="text-sm text-red-600">{promoError}</div>}
-          <div className="flex items-center justify-between">
-            <div className="text-sm">Subtotal: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(cartTotal)}</div>
-            <div className="text-sm">Discount: -{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(discountedAmount)}</div>
-          </div>
-          <div className="flex items-center justify-between mt-2">
-            <div className="text-lg font-semibold">Total: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(discountedTotal)}</div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div className="text-sm">Subtotal</div>
+              <div className="text-sm">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(cartTotal)}</div>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="text-sm">Discount</div>
+              <div className="text-sm">-{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(discountedAmount)}</div>
+            </div>
+            
+            {deliveryEnabled && (
+              <div className="flex items-center justify-between">
+                <div className="text-sm">Delivery</div>
+                <div className="text-sm">{deliveryCharge > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(deliveryCharge) : 'Free'}</div>
+              </div>
+            )}
+            
+            {freeShippingEnabled && freeShippingThreshold > 0 && !qualifiesFreeShipping && (
+              <div className="text-xs text-neutral-500">Add {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Math.max(0, freeShippingThreshold - discountedTotal))} more for free shipping</div>
+            )}
+            
+            <div className="flex items-center justify-between mt-2">
+              <div className="text-lg font-semibold">Total</div>
+              <div className="text-lg font-semibold">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(finalTotal)}</div>
+            </div>
+
             <div className="flex items-center gap-3">
               <button onClick={()=>navigate('/cart')} className="btn btn-ghost">Back to Cart</button>
               <button onClick={proceedToPay} disabled={!isValid() || loading || !(cartTotal > 0) || siteSettings?.enableRazorpayCheckout === false} className="btn btn-accent">Proceed to Pay</button>
@@ -540,7 +573,7 @@ export default function CheckoutPage() {
       </div>
 
       <Modal isOpen={confirmOpen} hideActions onClose={()=>setConfirmOpen(false)} title="Confirm & Pay">
-        <p>Proceed to pay {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(discountedTotal)}? Your address will be used for shipping.</p>
+        <p>Proceed to pay {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(finalTotal)}? Your address will be used for shipping.</p>
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={()=>setConfirmOpen(false)} className="px-4 py-2">Cancel</button>
           <button onClick={startPayment} className="px-4 py-2 btn btn-primary">Yes, Pay</button>

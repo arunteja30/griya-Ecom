@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useCategoryBySlug, useFirebaseList } from "../hooks/useFirebase";
 import ProductCard from "../components/ProductCard";
 import Loader from "../components/Loader";
@@ -116,26 +116,58 @@ export default function CategoryProductsPage() {
 
   return (
     <div className="section-container py-8">
+      {/* Mobile filter floating icon (bottom-right) */}
+      <div className="lg:hidden">
+        <button
+          onClick={() => setShowFilters(true)}
+          className="fixed right-4 z-50 bg-primary-600 hover:bg-primary-700 text-white p-3 rounded-full shadow-lg flex items-center justify-center"
+          aria-label="Open filters"
+          title="Filters"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 72px)' }}
+        >
+          {/* filter/funnel icon */}
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 3H2l8 9v6l4 2v-8l8-9z" />
+          </svg>
+        </button>
+      </div>
+
       {/* Category hero */}
       {/* show hero on small screens; on large screens the title is moved to the sticky sidebar */}
       <div className="mb-6 lg:hidden">
         <div className="p-6">
-          <h2 className="text-2xl font-bold text-primary-900">{category ? category.name : (categorySlug ? (categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)) : 'Products')}</h2>
-          {category && category.description && <p className="text-neutral-600 mt-2">{category.description}</p>}
-          {!category && festivalTags && <p className="text-neutral-600 mt-2">Browse curated picks</p>}
-        </div>
-      </div>
+          <div className="flex items-center gap-3 mb-3">
+            <Link to="/collections" aria-label="Back to collections" title="Back" className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </Link>
+            <h2 className="text-2xl font-bold text-primary-900">{category ? category.name : (categorySlug ? (categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)) : 'Products')}</h2>
+          </div>
+           {category && category.description && <p className="text-neutral-600 mt-2">{category.description}</p>}
+           {!category && festivalTags && <p className="text-neutral-600 mt-2">Browse curated picks</p>}
+         </div>
+       </div>
 
       {/* Main layout: filters on left, products on right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-4">
-        <aside className="lg:col-span-3">
+        <aside className="hidden lg:block lg:col-span-3">
           <div className="card p-4 sticky top-24">
             {/* Title moved into sidebar for large screens */}
             <div className="hidden lg:block mb-4">
-              <h2 className="text-xl font-bold text-primary-900">{category ? category.name : (categorySlug ? (categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)) : 'Products')}</h2>
-              {category && category.description && <p className="text-neutral-600 mt-1">{category.description}</p>}
-              {!category && festivalTags && <p className="text-neutral-600 mt-1">Browse curated picks</p>}
-            </div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <Link to="/collections" aria-label="Back to collections" title="Back" className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                       <path d="M15 18l-6-6 6-6" />
+                     </svg>
+                   </Link>
+                  <h2 className="text-2xl font-bold text-primary-900">{category ? category.name : (categorySlug ? (categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)) : 'Products')}</h2>
+                </div>
+              </div>
+               {category && category.description && <p className="text-neutral-600 mt-1">{category.description}</p>}
+               {!category && festivalTags && <p className="text-neutral-600 mt-1">Browse curated picks</p>}
+             </div>
 
             <h4 className="font-semibold mb-3">Filters</h4>
             <div className="mb-3">
@@ -202,28 +234,62 @@ export default function CategoryProductsPage() {
         </main>
       </div>
 
-      {/* Mobile filters drawer */}
+      {/* Mobile filters bottom-sheet */}
       {showFilters && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden flex items-end">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowFilters(false)} />
-          <div className="absolute left-0 top-0 h-full w-80 bg-white p-4 overflow-auto">
-            <div className="flex items-center justify-between mb-4">
+          <div className="relative w-full max-h-[80vh] bg-white rounded-t-xl shadow-xl overflow-auto p-4" role="dialog" aria-modal="true">
+            <div className="flex items-center justify-between mb-3">
               <h4 className="font-semibold">Filters</h4>
-              <button className="btn btn-ghost" onClick={() => setShowFilters(false)}>Close</button>
+              <button className="text-sm text-neutral-600" onClick={() => setShowFilters(false)}>Close</button>
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-sm font-medium mb-2">Search</label>
+              <input value={query} onChange={(e) => setQuery(e.target.value)} className="form-input w-full" placeholder="Search products" />
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-sm font-medium mb-2">Sort</label>
+              <select value={sort} onChange={(e) => setSort(e.target.value)} className="form-input w-full">
+                <option value="relevance">Relevance</option>
+                <option value="price_asc">Price: Low → High</option>
+                <option value="price_desc">Price: High → Low</option>
+                <option value="newest">Newest</option>
+              </select>
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-sm font-medium mb-2">Rating</label>
+              <select value={ratingFilter} onChange={(e) => setRatingFilter(Number(e.target.value))} className="form-input w-full">
+                <option value={0}>Any rating</option>
+                <option value={1}>1 star & up</option>
+                <option value={2}>2 stars & up</option>
+                <option value={3}>3 stars & up</option>
+                <option value={4}>4 stars & up</option>
+                <option value={5}>5 stars</option>
+              </select>
+            </div>
+
+            <div className="mb-3">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={onlyBestseller} onChange={(e) => setOnlyBestseller(e.target.checked)} className="form-checkbox" />
+                <span className="text-sm font-medium">Only show bestsellers</span>
+              </label>
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Search</label>
-              <input value={query} onChange={(e) => setQuery(e.target.value)} className="form-input" placeholder="Search products" />
-            </div>
-
-            <div>
               <h5 className="text-sm font-semibold mb-2">Quick links</h5>
               <div className="flex flex-col gap-2">
                 <button className="text-sm text-neutral-700 hover:text-primary-600 text-left" onClick={() => { setQuery(""); setShowFilters(false); }}>All</button>
                 <button className="text-sm text-neutral-700 hover:text-primary-600 text-left" onClick={() => { setQuery("ring"); setShowFilters(false); }}>Rings</button>
                 <button className="text-sm text-neutral-700 hover:text-primary-600 text-left" onClick={() => { setQuery("neck"); setShowFilters(false); }}>Necklaces</button>
               </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={() => { setQuery(""); setSort('relevance'); setRatingFilter(0); setOnlyBestseller(false); setShowFilters(false); }} className="flex-1 px-4 py-2 border rounded">Reset</button>
+              <button onClick={() => setShowFilters(false)} className="flex-1 px-4 py-2 bg-primary-600 text-white rounded">Apply</button>
             </div>
           </div>
         </div>

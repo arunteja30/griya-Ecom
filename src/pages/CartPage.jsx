@@ -22,6 +22,19 @@ export default function CartPage() {
   const cleaned = whatsappNumber.replace(/[^0-9+]/g, '');
 
   const buildWhatsAppMessage = () => {
+    // compute promo and delivery local values to avoid ordering issues
+    const promo = appliedPromo;
+    const promoAmount = promo ? (promo.type === 'percent' ? Math.round((cartTotal * (Number(promo.amount) || 0)) / 100) : Math.round(Number(promo.amount) || 0)) : 0;
+    const discounted = Math.max(0, cartTotal - promoAmount);
+    const minPurchaseLocal = Number(siteSettings?.minPurchaseAmount || 0);
+    const freeShipEnabledLocal = siteSettings?.freeShippingEnabled !== false;
+    const freeShipThresholdLocal = Number(siteSettings?.freeShippingThreshold || 0);
+    const qualifiesFreeShipLocal = freeShipEnabledLocal && freeShipThresholdLocal > 0 && discounted >= freeShipThresholdLocal;
+    const deliveryEnabledLocal = siteSettings?.deliveryEnabled !== false;
+    const deliveryAmtLocal = Number(siteSettings?.deliveryChargeAmount || 0);
+    const deliveryChargeLocal = deliveryEnabledLocal ? (qualifiesFreeShipLocal ? 0 : deliveryAmtLocal) : 0;
+    const finalTotalLocal = Math.max(0, discounted + deliveryChargeLocal);
+
     let lines = [
       `Hello, I would like to place an order from ${siteSettings?.siteName || 'your store'}`,
       "",
@@ -33,7 +46,10 @@ export default function CartPage() {
       lines.push(`${idx + 1}. ${p.name} x ${item.quantity} - ₹${p.price}`);
     });
 
-    lines.push("", `Total: ₹${cartTotal}`);
+    lines.push('', `Subtotal: ₹${cartTotal}`);
+    if (promoAmount > 0) lines.push(`Discount: -₹${promoAmount}`);
+    if (deliveryChargeLocal > 0) lines.push(`Delivery: ₹${deliveryChargeLocal}`);
+    lines.push(`Total: ₹${finalTotalLocal}`);
     if (siteSettings?.address) lines.push(`Deliver to: ${siteSettings.address}`);
 
     return encodeURIComponent(lines.join('\n'));
@@ -64,6 +80,16 @@ export default function CartPage() {
 
   const discountedAmount = computeDiscount(cartTotal, appliedPromo);
   const discountedTotal = Math.max(0, cartTotal - discountedAmount);
+  // Site-level rules
+  const minPurchase = Number(siteSettings?.minPurchaseAmount || 0);
+  const freeShippingEnabled = siteSettings?.freeShippingEnabled !== false;
+  const freeShippingThreshold = Number(siteSettings?.freeShippingThreshold || 0);
+  const qualifiesFreeShipping = freeShippingEnabled && freeShippingThreshold > 0 && discountedTotal >= freeShippingThreshold;
+  const deliveryEnabled = siteSettings?.deliveryEnabled !== false;
+  const deliveryChargeAmount = Number(siteSettings?.deliveryChargeAmount || 0);
+  const deliveryCharge = deliveryEnabled ? (qualifiesFreeShipping ? 0 : deliveryChargeAmount) : 0;
+  const finalTotal = Math.max(0, discountedTotal + deliveryCharge);
+  const canCheckout = discountedTotal >= Math.max(0, minPurchase);
 
   const handleApply = () => {
     setPromoError(null);
@@ -109,9 +135,16 @@ export default function CartPage() {
   const handleClearPromo = () => { setPromoInput(''); setPromoError(null); clearPromo(); showToast('Promo cleared', 'info'); };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-6" style={{ paddingBottom: cartItems.length > 0 ? 'calc(env(safe-area-inset-bottom, 0px) + 96px)' : undefined }}>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Your Cart</h1>
+        <div className="flex items-center gap-3">
+          <Link to="/collections" aria-label="Back to collections" title="Back" className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </Link>
+          <h1 className="text-2xl font-semibold">Your Cart</h1>
+        </div>
         <div className="text-sm text-neutral-600">{cartItems.length} item(s)</div>
       </div>
 
@@ -163,7 +196,7 @@ export default function CartPage() {
 
             <div className="flex items-center justify-between">
               <button onClick={confirmClear} className="text-sm text-red-600">Clear cart</button>
-              <div className="text-lg font-semibold">Total: ₹{cartTotal}</div>
+              <div className="text-lg font-semibold">Subtotal: ₹{cartTotal}</div>
             </div>
           </div>
 
@@ -183,13 +216,32 @@ export default function CartPage() {
                   <div className="text-sm text-green-700 mt-2">Applied: {appliedPromo.code} — Discount: {appliedPromo.type==='percent'?`${appliedPromo.amount}%`:`₹${appliedPromo.amount}`}</div>
                 )}
               </div>
-              <div className="mb-4 font-semibold">Total: ₹{discountedTotal}</div>
+
+              {/* Minimum purchase & free-shipping notices (display above total) */}
+              {minPurchase > 0 && !canCheckout && (
+                <div className="mb-2 text-sm text-red-600">Minimum order ₹{minPurchase} required to checkout. Add ₹{Math.max(0, minPurchase - discountedTotal)} more.</div>
+              )}
+              {minPurchase > 0 && canCheckout && (
+                <div className="mb-2 text-sm text-green-600"></div>
+              )}
+              {freeShippingEnabled && freeShippingThreshold > 0 && !qualifiesFreeShipping && (
+                <div className="mb-2 text-sm text-neutral-500">Add ₹{Math.max(0, freeShippingThreshold - discountedTotal)} more for free shipping</div>
+              )}
+              {freeShippingEnabled && freeShippingThreshold > 0 && qualifiesFreeShipping && (
+                <div className="mb-2 text-sm text-green-600">You are Eligible for free shipping</div>
+              )}
+
+              {deliveryEnabled && deliveryCharge > 0 && (
+                <div className="mb-2 text-sm text-neutral-700">Delivery: ₹{deliveryCharge}</div>
+              )}
+
+              <div className="mb-4 font-semibold">Total: ₹{finalTotal}</div>
               <div className="space-y-2">
                 {siteSettings?.enableWhatsAppCheckout !== false && (
-                  <button onClick={handleCheckout} className="w-full bg-green-600 text-white py-2 rounded">Checkout via WhatsApp</button>
+                  <button onClick={handleCheckout} disabled={!canCheckout} className={`w-full bg-green-600 text-white py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>Checkout via WhatsApp</button>
                 )}
                 {siteSettings?.enableRazorpayCheckout !== false && (
-                  <button onClick={() => navigate('/checkout')} className="w-full bg-primary-500 text-white py-2 rounded">Proceed to Checkout</button>
+                  <button onClick={() => { if (!canCheckout) return; navigate('/checkout'); }} disabled={!canCheckout} className={`w-full bg-primary-500 text-white py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>Proceed to Checkout</button>
                 )}
                 {siteSettings?.enableWhatsAppCheckout === false && siteSettings?.enableRazorpayCheckout === false && (
                   <div className="text-sm text-neutral-500">Online checkout is currently disabled. Please contact support to place an order.</div>
@@ -205,11 +257,20 @@ export default function CartPage() {
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white p-3 border-t flex items-center justify-between z-40">
           <div>
             <div className="text-sm text-neutral-600">Total</div>
-            <div className="font-semibold">₹{discountedTotal}</div>
+            <div className="font-semibold">₹{finalTotal}</div>
+            {deliveryEnabled && deliveryCharge>0 && (
+              <div className="text-xs text-neutral-500">Includes delivery ₹{deliveryCharge}</div>
+            )}
+            {freeShippingEnabled && freeShippingThreshold>0 && !qualifiesFreeShipping && (
+              <div className="text-xs text-neutral-500">Add ₹{Math.max(0, freeShippingThreshold - discountedTotal)} more for free shipping</div>
+            )}
+            {qualifiesFreeShipping && (
+              <div className="text-xs text-green-600">You qualify for free shipping</div>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            {siteSettings?.enableWhatsAppCheckout !== false && <button onClick={handleCheckout} className="bg-green-600 text-white py-2 px-3 rounded">WhatsApp</button>}
-            {siteSettings?.enableRazorpayCheckout !== false && <button onClick={() => navigate('/checkout')} className="bg-primary-500 text-white py-2 px-3 rounded">Checkout</button>}
+            {siteSettings?.enableWhatsAppCheckout !== false && <button onClick={handleCheckout} disabled={!canCheckout} className={`bg-green-600 text-white py-2 px-3 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>WhatsApp</button>}
+            {siteSettings?.enableRazorpayCheckout !== false && <button onClick={() => { if (!canCheckout) return; navigate('/checkout'); }} disabled={!canCheckout} className={`bg-primary-500 text-white py-2 px-3 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>Checkout</button>}
           </div>
         </div>
       )}

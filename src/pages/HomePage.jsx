@@ -169,17 +169,19 @@ export default function HomePage() {
         <BannerCarousel banners={banners} />
       </section>
 
-      {/* Categories Section */}
+      {/* Categories Section - horizontal scrolling */}
       <section className="max-w-7xl mx-auto px-4">
         {categories && categories.length ? (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-gray-800">Shop by Category</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+
+            {/* horizontal scroll container */}
+            <div className="flex gap-4 overflow-x-auto py-3">
               {categories.map((col) => (
                 <Link
                   key={col.id}
                   to={`/collections/${col.slug || col.id}`}
-                  className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100"
+                  className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 w-40 flex-shrink-0"
                 >
                   <div className="relative aspect-square bg-gradient-to-br from-orange-50 to-orange-100">
                     <img
@@ -206,17 +208,24 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* Festival Sections (server configured) */}
+      {/* Festival Sections (server configured) - horizontal product carousels */}
       <section className="max-w-7xl mx-auto px-4 space-y-6">
         {festivalSections && festivalSections.length > 0 && festivalSections.map(s => (
-          <HomeSection
-            key={`fest-${s.key}`}
-            title={s.title}
-            subtitle={<Link to={`/collections/${s.key}`} className="text-sm border-b border-fill border-accent-600">Browse all</Link>}
-            products={s.products}
-            layout="grid"
-            limit={8}
-          />
+          <section key={`fest-${s.key}`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold">{s.title}</h3>
+              <Link to={`/collections/${s.key}`} className="text-sm border-b border-fill border-accent-600">Browse all</Link>
+            </div>
+
+            {/* horizontal product list */}
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {s.products.map(p => (
+                <div key={p.id} className="w-64 flex-shrink-0">
+                  <ProductCard product={p} />
+                </div>
+              ))}
+            </div>
+          </section>
         ))}
       </section>
 

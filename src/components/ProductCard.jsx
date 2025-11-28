@@ -115,13 +115,13 @@ export default function ProductCard({ product, variant = 'normal' }) {
             <div className="text-white text-[10px] ml-2 font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-new, #10B981)' }}>New</div>
           )}
           {isBestseller && (
-            <div className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-bestseller, #F59E0B)' }}>Bestseller</div>
+            <div className="text-white text-[10px] ml-2 font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-bestseller, #F59E0B)' }}>Bestseller</div>
           )}
           {hasFreeShipping && (
-            <div className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-new, #10B981)' }}>Free shipping</div>
+            <div className="text-white text-[10px] ml-2 font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-new, #10B981)' }}>Free shipping</div>
           )}
           {product.discount && (
-            <div className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-discount, #DC2626)' }}>-{product.discount}%</div>
+            <div className="text-white text-[10px] ml-2 font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-discount, #DC2626)' }}>-{product.discount}%</div>
           )}
         </div>
       )}

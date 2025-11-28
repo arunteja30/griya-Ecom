@@ -42,6 +42,7 @@ export function ThemeProvider({ children }) {
       if (pc.badgeNew) root.style.setProperty('--pc-badge-new', pc.badgeNew);
       if (pc.badgeBestseller) root.style.setProperty('--pc-badge-bestseller', pc.badgeBestseller);
       if (pc.badgeDiscount) root.style.setProperty('--pc-badge-discount', pc.badgeDiscount);
+      if (pc.imageBg) root.style.setProperty('--pc-image-bg', pc.imageBg);
     }
 
     // small helper to pick readable text color (black or white) for a background color

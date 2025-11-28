@@ -10,7 +10,7 @@ export default function ProductsAdmin(){
   const [products, setProducts] = useState({});
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({name:'', price:'', slug:'', images:[], tags: []});
+  const [form, setForm] = useState({name:'', price:'', slug:'', images:[], tags: [], longDescription: ''});
   const [categories, setCategories] = useState({});
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryImage, setNewCategoryImage] = useState('');
@@ -21,7 +21,9 @@ export default function ProductsAdmin(){
 
   // track existing gallery image URLs to avoid duplicates
   const [galleryUrls, setGalleryUrls] = useState([]);
- 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategoryId, setFilterCategoryId] = useState('');
+
   useEffect(()=>{
      const r = ref(db, '/gallery');
      return onValue(r, snap => {
@@ -108,6 +110,11 @@ export default function ProductsAdmin(){
         longDescription: form.longDescription || ''
       };
 
+      // remove undefined properties since Firebase Realtime Database cannot store undefined
+      Object.keys(normalized).forEach((k) => {
+        if (normalized[k] === undefined) delete normalized[k];
+      });
+
       if(editing){
         // If editing, write to the exact product key. Use set to replace/ensure values update in place.
         await set(ref(db, `/products/${editing}`), normalized);
@@ -116,7 +123,7 @@ export default function ProductsAdmin(){
         await addImagesToGallery(normalized.images);
        } else {
          await push(ref(db, '/products'), normalized);
-         setForm({name:'', price:'', slug:'', images:[], tags: []});
+         setForm({name:'', price:'', slug:'', images:[], tags: [], longDescription: ''});
          showToast('Product created');
         // add product images to gallery when creating
         await addImagesToGallery(normalized.images);
@@ -147,10 +154,14 @@ export default function ProductsAdmin(){
   };
 
   const addTag = (t) => {
-    const tag = (t || tagInput || '').trim();
-    if (!tag) return;
+    // accept single tag or comma-separated tags, trim and dedupe
+    const raw = (t !== undefined && t !== null) ? String(t) : String(tagInput || '');
+    const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+    if (parts.length === 0) return;
     const next = Array.isArray(form.tags) ? [...form.tags] : [];
-    if (!next.includes(tag)) next.push(tag);
+    for (const part of parts) {
+      if (!next.includes(part)) next.push(part);
+    }
     setForm(f => ({ ...f, tags: next }));
     setTagInput('');
   };
@@ -181,12 +192,35 @@ export default function ProductsAdmin(){
 
   const handleNewProduct = () => {
     setEditing(null);
-    setForm({ name: '', price: '', slug: '', images: [], tags: [] });
+    setForm({ name: '', price: '', slug: '', images: [], tags: [], longDescription: '' });
     // focus the name field if available
     setTimeout(() => { if (nameInputRef.current) nameInputRef.current.focus(); }, 50);
   };
 
   if(loading) return <Loader />;
+
+  // compute filtered product entries based on search and category filter
+  const filteredProductEntries = Object.entries(products).filter(([id, p]) => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const inName = (p.name || '').toLowerCase().includes(q);
+      const inSlug = (p.slug || '').toLowerCase().includes(q);
+      const inTags = (Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',') : [])).join(' ').toLowerCase().includes(q);
+      if (!inName && !inSlug && !inTags) return false;
+    }
+    if (filterCategoryId && p.categoryId !== filterCategoryId) return false;
+    return true;
+  });
+
+  // gather all tags present in the product catalog for quick add
+  const availableTags = (() => {
+    const s = new Set();
+    Object.values(products || {}).forEach((p) => {
+      const tags = Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',').map(t=>t.trim()).filter(Boolean) : []);
+      tags.forEach(t => { if (t) s.add(t); });
+    });
+    return Array.from(s).sort((a,b) => a.localeCompare(b));
+  })();
 
   return (
     <div>
@@ -335,6 +369,7 @@ export default function ProductsAdmin(){
               <label className="flex items-center gap-2 text-gray-700"><input type="checkbox" checked={Boolean(form.bestseller)} onChange={(e)=>setForm(f=>({...f, bestseller: e.target.checked}))} /> Bestseller</label>
               <label className="flex items-center gap-2 text-gray-700"><input type="checkbox" checked={Boolean(form.freeShipping)} onChange={(e)=>setForm(f=>({...f, freeShipping: e.target.checked}))} /> Free Shipping</label>
               <label className="flex items-center gap-2 text-gray-700"><input type="checkbox" checked={Boolean(form.isNew)} onChange={(e)=>setForm(f=>({...f, isNew: e.target.checked}))} /> New</label>
+              <label className="flex items-center gap-2 text-gray-700"><input type="checkbox" checked={Boolean(form.inStock)} onChange={(e)=>setForm(f=>({...f, inStock: e.target.checked}))} /> In stock</label>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
@@ -363,6 +398,23 @@ export default function ProductsAdmin(){
               </div>
             </div>
 
+            {/* description / long description */}
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Description</label>
+              <textarea value={form.longDescription || ''} onChange={(e)=>setForm(f=>({...f, longDescription: e.target.value}))} className="border p-2 w-full h-28 text-gray-800" placeholder="Long description / product details" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Materials</label>
+                <input value={form.materials || ''} onChange={(e)=>setForm(f=>({...f, materials:e.target.value}))} className="border p-2 w-full text-gray-800" placeholder="Materials" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Weight</label>
+                <input value={form.weight || ''} onChange={(e)=>setForm(f=>({...f, weight:e.target.value}))} className="border p-2 w-full text-gray-800" placeholder="Weight" />
+              </div>
+            </div>
+
             <div className="col-span-1 md:col-span-2">
               <label className="block text-sm font-medium mb-1 text-gray-700">Tags</label>
               <div className="flex gap-2 items-center">
@@ -377,12 +429,30 @@ export default function ProductsAdmin(){
                   </span>
                 ))}
               </div>
+               {/* available tags for quick add */}
+               {availableTags.length > 0 && (
+                 <div className="mt-3">
+                   <div className="text-sm font-medium mb-2 text-gray-700">All tags</div>
+                   <div className="flex flex-wrap gap-2">
+                     {availableTags.map(tag => (
+                       <button
+                         key={tag}
+                         type="button"
+                         onClick={() => addTag(tag)}
+                         className={`px-2 py-1 rounded text-sm ${ (form.tags || []).includes(tag) ? 'bg-gray-300 text-gray-700' : 'bg-gray-100 text-gray-800' }`}
+                       >
+                         {tag}
+                       </button>
+                     ))}
+                   </div>
+                 </div>
+               )}
               <div className="text-sm text-neutral-500 mt-1">Tags will be saved as an array on the product object.</div>
             </div>
 
             <div className="flex gap-3 mt-3">
               <button onClick={handleSave} className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700">{editing ? 'Update' : 'Save'}</button>
-              {editing && <button onClick={()=>{ setEditing(null); setForm({name:'', price:'', slug:'', images:[], tags: []}); }} className="px-3 py-2 border rounded">Cancel</button>}
+              {editing && <button onClick={()=>{ setEditing(null); setForm({name:'', price:'', slug:'', images:[], tags: [], longDescription: ''}); }} className="px-3 py-2 border rounded">Cancel</button>}
             </div>
           </div>
         </div>
@@ -390,18 +460,49 @@ export default function ProductsAdmin(){
         {/* Right: product list (displayed first on md+) */}
         <div className="md:order-1">
           <h3 className="text-lg font-medium mb-2">Products</h3>
+          <div className="mb-3 flex gap-2 items-center">
+            <input value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} placeholder="Search by name, slug or tag" className="border p-2 flex-1" />
+            <select value={filterCategoryId} onChange={(e)=>setFilterCategoryId(e.target.value)} className="border p-2">
+              <option value=''>All categories</option>
+              {Object.entries(categories).map(([cid, c]) => (<option key={cid} value={cid}>{c.name}</option>))}
+            </select>
+            <button onClick={()=>{ setSearchQuery(''); setFilterCategoryId(''); }} className="px-3 py-2 border rounded">Clear</button>
+          </div>
+          <div className="text-sm text-neutral-600 mb-2">Showing {filteredProductEntries.length} / {Object.keys(products).length}</div>
           <div className="space-y-2 overflow-y-auto max-h-[65vh]">
-            {Object.entries(products).map(([id, p]) => (
-              <div key={id} className="flex items-center justify-between border p-2 rounded">
-                <div className="text-gray-800">{p.name} - ₹{p.price}</div>
-                <div className="flex gap-2">
-                  <button onClick={() => {
-                    setEditing(id);
-                    setForm({ ...p, tags: Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',').map(s => s.trim()).filter(Boolean) : []) });
-                  } } className="text-blue-600">Edit</button>
-                  <button onClick={() => confirmDelete(id)} className="text-red-600">Delete</button>
-                </div>
-              </div>
+            {filteredProductEntries.map(([id, p]) => (
+               <div key={id} className="flex items-center justify-between border p-2 rounded">
+                 <div className="text-gray-800">{p.name} - ₹{p.price}</div>
+                 <div className="flex gap-2">
+                   <button onClick={(e) => { e.stopPropagation(); setEditing(id); setForm({ ...p, tags: Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',').map(s => s.trim()).filter(Boolean) : []) }); }} className="text-blue-600">Edit</button>
+                   <button onClick={(e) => { e.stopPropagation(); /* create a copy: populate form but clear editing so Save will push a new product */ const copied = {
+                       name: p.name || '',
+                       price: p.price !== undefined ? String(p.price) : '',
+                       originalPrice: p.originalPrice ?? p.mrp ?? '',
+                       slug: '', // clear slug to avoid collision
+                       sku: '',
+                       categoryId: p.categoryId || '',
+                       categoryName: p.categoryName || (p.categoryId ? (categories?.[p.categoryId]?.name || '') : ''),
+                       categorySlug: p.categorySlug || (p.categoryId ? (categories?.[p.categoryId]?.slug || '') : ''),
+                       discount: p.discount !== undefined ? String(p.discount) : '',
+                       images: Array.isArray(p.images) ? p.images : (p.images ? [String(p.images)] : []),
+                       tags: Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',').map(s => s.trim()).filter(Boolean) : []),
+                       bestseller: Boolean(p.bestseller),
+                       freeShipping: Boolean(p.freeShipping),
+                       isNew: Boolean(p.isNew),
+                       avgRating: p.avgRating !== undefined ? p.avgRating : 0,
+                       reviewCount: p.reviewCount !== undefined ? p.reviewCount : 0,
+                       stock: p.stock !== undefined ? String(p.stock) : '',
+                       materials: p.materials || '',
+                       weight: p.weight || '',
+                       dimensions: p.dimensions || '',
+                       manufacturer: p.manufacturer || '',
+                       inStock: p.inStock !== undefined ? Boolean(p.inStock) : false,
+                       longDescription: p.longDescription || ''
+                     }; setEditing(null); setForm(copied); showToast('Product copied — edit and Save to create new'); }} className="text-gray-700">Copy</button>
+                   <button onClick={(e) => { e.stopPropagation(); confirmDelete(id); }} className="text-red-600">Delete</button>
+                 </div>
+               </div>
             ))}
           </div>
         </div>

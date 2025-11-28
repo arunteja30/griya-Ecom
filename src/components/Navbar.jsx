@@ -53,7 +53,7 @@ export default function Navbar() {
               <img
                 src={settings?.logoUrl || "/placeholder.jpg"}
                 alt={settings?.brandName || "Brand"}
-                className="h-12 w-12 object-cover rounded-md shadow-sm"
+                className="h-14 w-14 md:h-12 md:w-12 object-cover rounded-md shadow-sm"
               />
               <div className="hidden sm:block">
                 <div className="font-bold text-lg" style={{ color: 'var(--site-nav-text, var(--primary-900))', fontFamily: 'Playfair Display, serif' }}>
