@@ -35,14 +35,23 @@ export default function Navbar() {
     return sum + qty;
   }, 0);
 
+  const navStyle = {
+    background: settings?.theme?.navBgColor || undefined,
+    color: settings?.theme?.navTextColor || undefined,
+  };
+
+  const primaryColor = settings?.theme?.primaryColor;
+  const accentColor = settings?.theme?.accentColor;
+  const theme = settings?.theme || {};
+  const navItemColor = theme.navItemTextColor || theme.navTextColor || undefined;
+
   return (
     <>
       <header
         className={`w-full top-0 z-50 transition-all duration-500 ${
-          isSticky
-            ? "fixed glass-effect shadow-lg backdrop-blur-xl"
-            : "relative bg-transparent"
+          isSticky ? "fixed glass-effect shadow-lg backdrop-blur-xl" : "relative"
         }`}
+        style={navStyle}
       >
         <div className="section-container">
           <div className="flex items-center justify-between py-4 lg:py-6">
@@ -57,11 +66,14 @@ export default function Navbar() {
                 <div className="absolute inset-0 bg-gradient-to-tr from-accent-500/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
               <div>
-                <div className="font-bold text-lg text-primary-900 font-serif">
+                <div
+                  className="font-bold text-lg font-serif"
+                  style={{ color: theme.titleColor || theme.primaryColor || theme.navTextColor || undefined }}
+                >
                   {settings?.brandName || " "}
                 </div>
                 {settings?.tagline && (
-                  <div className="text-xs text-neutral-500 font-medium">
+                  <div className="text-xs font-medium" style={{ color: theme.navTextColor || theme.navItemTextColor || undefined }}>
                     {settings.tagline}
                   </div>
                 )}
@@ -84,20 +96,26 @@ export default function Navbar() {
                   <Link
                     key={item.id || item.key || item.path}
                     to={item.url || item.path}
-                    className={`nav-link ${
-                      location.pathname === (item.url || item.path)
-                        ? "active text-primary-600"
-                        : ""
-                    }`}
+                    className={`nav-link ${location.pathname === (item.url || item.path) ? 'active' : ''}`}
+                    style={{ color: location.pathname === (item.url || item.path) ? (primaryColor || navItemColor) : navItemColor }}
                   >
                     {item.title || item.label}
                   </Link>
                 ))
               )}
 
+              {/* Always show Categories link */}
+              <Link
+                to="/collections"
+                className={`nav-link ${location.pathname.startsWith('/collections') ? 'active' : ''}`}
+                style={{ color: location.pathname.startsWith('/collections') ? (primaryColor || navItemColor) : navItemColor }}
+              >
+                Categories
+              </Link>
+
               {/* Cart Button */}
               <Link to="/cart" className="relative group">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-50 hover:bg-primary-100 text-primary-700 transition-all duration-200">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-50 hover:bg-primary-100 text-primary-700 transition-all duration-200" style={{ background: theme.primaryColor ? undefined : undefined }}>
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -113,56 +131,13 @@ export default function Navbar() {
                   </svg>
                   <span className="font-medium text-sm">Cart</span>
                   {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-accent-600 text-white text-xs font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1 animate-bounce-in">
+                    <span className="absolute -top-2 -right-2 text-white text-xs font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1 animate-bounce-in" style={{ background: theme.accentColor || accentColor || '#f97316' }}>
                       {cartCount}
                     </span>
                   )}
                 </div>
               </Link>
             </nav>
-
-            {/* Mobile Menu Button */}
-            <div className="lg:hidden flex items-center gap-3">
-              <Link to="/cart" className="relative p-2">
-                <svg
-                  className="w-6 h-6 text-neutral-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6"
-                  />
-                </svg>
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-accent-600 text-white text-xs font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
-              <button
-                onClick={() => setMobileOpen(true)}
-                className="p-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 transition-colors duration-200"
-                aria-label="Open menu"
-              >
-                <svg
-                  className="w-6 h-6 text-neutral-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
       </header>
@@ -178,7 +153,7 @@ export default function Navbar() {
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-neutral-200/50">
-                <span className="font-bold text-lg text-primary-900">Menu</span>
+                <span className="font-bold text-lg" style={{ color: theme.navTextColor || undefined }}>Menu</span>
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="p-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 transition-colors duration-200"
@@ -216,14 +191,24 @@ export default function Navbar() {
                       <Link
                         key={item.id || item.key || item.path}
                         to={item.url || item.path}
-                        className="block px-4 py-3 rounded-xl text-neutral-700 hover:bg-primary-50 hover:text-primary-600 transition-all duration-200 font-medium"
+                        className="block px-4 py-3 rounded-xl hover:bg-primary-50 transition-all duration-200 font-medium"
                         onClick={() => setMobileOpen(false)}
-                        style={{ animationDelay: `${index * 0.1}s` }}
+                        style={{ animationDelay: `${index * 0.1}s`, color: navItemColor }}
                       >
                         {item.title || item.label}
                       </Link>
                     ))
                   )}
+
+                  {/* Mobile Categories Link */}
+                  <Link
+                    to="/collections"
+                    className="block px-4 py-3 rounded-xl hover:bg-primary-50 transition-all duration-200 font-medium"
+                    onClick={() => setMobileOpen(false)}
+                    style={{ color: navItemColor }}
+                  >
+                    Categories
+                  </Link>
 
                   {/* Mobile Cart Link */}
                   <Link
@@ -243,7 +228,10 @@ export default function Navbar() {
 
               {/* Footer */}
               <div className="p-6 border-t border-neutral-200/50">
-                <div className="text-center text-sm text-neutral-500">
+                <div
+                  className="text-center text-sm"
+                  style={{ color: theme.titleColor || theme.primaryColor || theme.navTextColor || undefined }}
+                >
                   {settings?.brandName || "Griya Jewellery"}
                 </div>
               </div>

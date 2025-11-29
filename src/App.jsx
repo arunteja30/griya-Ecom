@@ -27,6 +27,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import SeedSyncAdmin from "./pages/admin/SeedSyncAdmin";
 import BannersAdmin from "./pages/admin/BannersAdmin";
 import HomeConfigAdmin from "./pages/admin/HomeConfigAdmin";
+import ThemeAdmin from "./pages/admin/ThemeAdmin";
 
 export default function App() {
   return (
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/" element={<Layout fullWidth><HomePage /></Layout>} />
         <Route path="/about" element={<Layout><About /></Layout>} />
         <Route path="/groceries" element={<Layout><AllProductsPage /></Layout>} />
+        <Route path="/collections" element={<Layout><CollectionsPage /></Layout>} />
         <Route path="/groceries/:categorySlug" element={<Layout><CategoryProductsPage /></Layout>} />
         <Route path="/category/:categoryId" element={<Layout><CategoryPage /></Layout>} />
 
@@ -57,6 +59,7 @@ export default function App() {
         <Route path="/admin/banners" element={<AdminRoute><AdminLayout><BannersAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/home-config" element={<AdminRoute><AdminLayout><HomeConfigAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/testimonials" element={<AdminRoute><AdminLayout><TestimonialsAdmin /></AdminLayout></AdminRoute>} />
+        <Route path="/admin/theme" element={<AdminRoute><AdminLayout><ThemeAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/orders" element={<AdminRoute><AdminLayout><OrdersAdmin /></AdminLayout></AdminRoute>} />
         <Route path="/admin/seed" element={<AdminRoute><AdminLayout><SeedSyncAdmin /></AdminLayout></AdminRoute>} />
       </Routes>

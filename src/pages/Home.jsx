@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <div>
       {/* Featured Products - keep at top */}
-      <section className="mb-8">
+      <section className="mb-8 bg-red-100 shadow-md rounded p-4">
         <h2 className="text-2xl font-semibold mb-4">Featured Products</h2>
         {productsLoading ? (
           <div>Loading products...</div>

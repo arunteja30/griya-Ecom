@@ -49,22 +49,15 @@
     @apply transition-all duration-200 ease-in-out;
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
+  /* Hide native scrollbars globally while preserving scrolling behavior */
+  /* -ms-overflow-style for IE/Edge, scrollbar-width for Firefox */
+  html, body, #root, * {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
 
-  ::-webkit-scrollbar-track {
-    @apply bg-neutral-100;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-neutral-300 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-neutral-400;
-  }
+  /* WebKit browsers */
+  ::-webkit-scrollbar { display: none; }
 }
 
 @layer components {
@@ -116,6 +109,13 @@
     transition: transform 400ms ease;
   }
   .product-image:hover, .group:hover .product-image { transform: scale(1.06); }
+
+  /* Helper to hide scrollbars while preserving scrolling (for mobile horizontal lists) */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 
   /* Navigation Styles */
   .nav-link { @apply relative px-3 py-1 text-sm font-medium text-neutral-700 hover:text-primary-600 transition-colors duration-200; }

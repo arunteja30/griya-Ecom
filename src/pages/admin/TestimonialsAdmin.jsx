@@ -57,8 +57,14 @@ export default function TestimonialsAdmin(){
     <div>
       <h2 className="text-xl font-semibold mb-4">Testimonials</h2>
       <div className="mb-4 grid grid-cols-2 gap-2">
-        <input value={form.name} onChange={(e)=>setForm(f=>({...f, name:e.target.value}))} className="border p-2" placeholder="Name" />
-        <input value={form.message} onChange={(e)=>setForm(f=>({...f, message:e.target.value}))} className="border p-2" placeholder="Message" />
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Name</label>
+          <input value={form.name} onChange={(e)=>setForm(f=>({...f, name:e.target.value}))} className="border p-2 w-full" placeholder="Name" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Message</label>
+          <input value={form.message} onChange={(e)=>setForm(f=>({...f, message:e.target.value}))} className="border p-2 w-full" placeholder="Message" />
+        </div>
         <button onClick={handleSave} className="col-span-2 bg-primary text-white px-3 py-2 rounded">Save</button>
       </div>
 

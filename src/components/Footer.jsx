@@ -11,9 +11,13 @@ export default function Footer() {
   };
 
   const currentYear = new Date().getFullYear();
+  const footerStyle = {
+    background: settings?.theme?.footerBgColor || undefined,
+    color: settings?.theme?.footerTextColor || undefined,
+  };
 
   return (
-    <footer className="hidden md:block bg-primary-900 text-white">
+    <footer className="hidden md:block" style={footerStyle}>
       <div className="section-container py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           <div>

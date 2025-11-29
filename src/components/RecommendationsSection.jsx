@@ -84,10 +84,13 @@ export default function RecommendationsSection({
           </Link>
         )}
       </div>
-      
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+
+      {/* Horizontal scrolling recommendations */}
+      <div className="flex gap-4 overflow-x-auto pb-2">
         {recommendedProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <div key={product.id} className="w-38 sm:w-46 md:w-40 lg:w-54 flex-shrink-0">
+            <ProductCard product={product} />
+          </div>
         ))}
       </div>
     </section>

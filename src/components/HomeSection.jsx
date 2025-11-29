@@ -5,7 +5,7 @@ export default function HomeSection({ title, subtitle, products = [], limit = 8,
   const list = products.slice(0, limit);
 
   return (
-    <section className="bg-white rounded-lg p-4 shadow-sm">
+    <section className="rounded-lg mt-5">
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
@@ -16,33 +16,14 @@ export default function HomeSection({ title, subtitle, products = [], limit = 8,
         )}
       </div>
 
-      {layout === 'carousel' ? (
-        <div className="flex gap-4 overflow-x-auto pb-2">
-          {list.map(p => (
-            <div key={p.id} className="w-48 flex-shrink-0">
-              <ProductCard product={p} />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <>
-          {/* Mobile: horizontal scroller for grid-like sections */}
-          <div className="flex gap-4 overflow-x-auto pb-2 md:hidden">
-            {list.map(p => (
-              <div key={p.id} className="w-48 flex-shrink-0">
-                <ProductCard product={p} />
-              </div>
-            ))}
+      {/* Always horizontal scrolling list on home screen (compact on mobile) */}
+      <div className="flex gap-3 overflow-x-auto pb-1 no-scrollbar">
+        {list.map(p => (
+          <div key={p.id} className="w-36 sm:w-44 md:w-48 lg:w-56 flex-shrink-0">
+            <ProductCard product={p} />
           </div>
-
-          {/* Desktop: grid layout */}
-          <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-            {list.map(p => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </>
-      )}
+        ))}
+      </div>
     </section>
   );
 }

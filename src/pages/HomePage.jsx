@@ -4,6 +4,7 @@ import Loader from "../components/Loader";
 import { normalizeImageUrl } from "../utils/imageHelpers";
 import { useFirebaseList } from "../hooks/useFirebase";
 import { getCategories } from "../firebaseApi";
+import { useSiteSettings } from '../hooks/useRealtime';
 
 import RecommendationsSection from "../components/RecommendationsSection";
 import HomeSection from "../components/HomeSection";
@@ -11,6 +12,8 @@ import BannerCarousel from "../components/BannerCarousel";
 import { useCart } from '../context/CartContext';
 
 export default function HomePage() {
+  const { data: siteSettings } = useSiteSettings();
+  const appBg = siteSettings?.theme?.appBackground;
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -125,7 +128,7 @@ export default function HomePage() {
         const t = Array.isArray(p.tags) ? p.tags : (String(p.tags).split(',') || []).map(s => s.trim().toLowerCase());
         return t.some(tag => tags.includes(String(tag).toLowerCase()));
       }).slice(0, 8);
-      if (prods.length) sections.push({ key: festKey, title: `${festKey.charAt(0).toUpperCase()+festKey.slice(1)} Picks`, products: prods });
+      if (prods.length) sections.push({ key: festKey, title: `${festKey.charAt(0).toUpperCase()+festKey.slice(1)} `, products: prods });
     });
     return sections;
   }, [productsList, serverFestivals]);
@@ -168,10 +171,33 @@ export default function HomePage() {
     return [...personalized, ...global];
   }, [bannersData, cartItems]);
 
+  // --- Home config driven sections ---
+  const showConfig = (homeConfig && homeConfig.show) ? homeConfig.show : {};
+
+  const getProductsFromConfig = (key) => {
+    const arr = homeConfig && homeConfig[key];
+    if (!arr || !arr.length) return null;
+    const norm = arr.map(x => String(x || '').trim().toLowerCase()).filter(Boolean);
+    if (!norm.length) return null;
+    const matched = productsList.filter(p => {
+      if (!p) return false;
+      if (p.id && norm.includes(String(p.id).toLowerCase())) return true;
+      const tags = Array.isArray(p.tags) ? p.tags.map(t => String(t||'').trim().toLowerCase()) : (String(p.tags||'').split(',').map(s=>s.trim().toLowerCase()));
+      return tags.some(t => norm.includes(t));
+    }).slice(0, 8);
+    return matched.length ? matched : null;
+  };
+
+  const dealsProducts = getProductsFromConfig('deals') || offers;
+  const quickBuysProducts = getProductsFromConfig('quickBuys') || quickBuys;
+  const recommendedProducts = getProductsFromConfig('recommended');
+  const popularProductsFinal = getProductsFromConfig('popular') || popularProducts;
+  const showFestivals = showConfig.festivals !== false; // default true
+
   if (loading) return <Loader />;
 
   return (
-    <main className="space-y-8 pb-8">
+    <main className="space-y-4 pb-6">
 
        {/* Banners */}
       <section>
@@ -179,9 +205,9 @@ export default function HomePage() {
       </section>
      
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-orange-50 via-red-50 to-pink-50">
-        <div className="max-w-7xl mx-auto px-4 py-12">
+      {/* Hero Section (uses theme app background) */}
+     <section style={{ background: appBg || undefined }}>
+        <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center space-y-4">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
               Fresh Groceries Delivered Fast
@@ -201,25 +227,26 @@ export default function HomePage() {
             <div className="text-sm text-gray-600">{error}</div>
           </div>
         ) : categories && categories.length ? (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <h2 className="text-xl font-bold text-gray-800">Shop by Category</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {/* compact grid: smaller cards/images on mobile */}
+            <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
               {categories.map((col) => (
                 <Link
                   key={col.id}
                   to={`/category/${col.slug || col.id}`}
-                  className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100"
+                  className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100"
                 >
                   <div className="relative aspect-square bg-gradient-to-br from-orange-50 to-orange-100">
                     <img
                       src={normalizeImageUrl(col?.image || col?.imageUrl || '/placeholder.jpg')}
                       alt={col?.title || col?.name || col.id}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/8 transition-colors duration-200" />
                   </div>
-                  <div className="p-3 text-center">
-                    <div className="font-medium text-gray-800 text-sm group-hover:text-orange-600 transition-colors">
+                  <div className="p-2 text-center">
+                    <div className="font-medium text-gray-800 text-xs group-hover:text-orange-600 transition-colors line-clamp-2">
                       {col?.title || col?.name || col.id}
                     </div>
                   </div>
@@ -238,13 +265,14 @@ export default function HomePage() {
      
 
       {/* Dynamic Home Sections */}
-      <section className="max-w-7xl mx-auto px-4 space-y-6">
+      <section className="max-w-7xl mx-auto px-4 space-y-4">
         {timeBasedProducts && timeBasedProducts.length > 0 && (
           <HomeSection
             title={timeOfDay === 'morning' ? 'Good Morning' : timeOfDay === 'afternoon' ? 'Good Afternoon' : 'Good Evening'}
             subtitle="Handpicked for this time"
             products={timeBasedProducts}
             layout="carousel"
+            seeAllLink="/groceries"
             limit={8}
           />
         )}
@@ -255,44 +283,70 @@ export default function HomePage() {
             subtitle={`Best for ${dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1)}`}
             products={dayBasedProducts}
             layout="carousel"
-            limit={8}
-          />
-        )}
+            seeAllLink="/groceries"
+             limit={8}
+           />
+         )}
 
-        {/* render festival sections configured on server */}
-        {festivalSections && festivalSections.length > 0 && festivalSections.map(s => (
-          <HomeSection key={`fest-${s.key}`} title={s.title} subtitle="Festive essentials" products={s.products} layout="grid" limit={8} />
-        ))}
+         {/* render festival sections configured on server (respect admin toggle) */}
+         {showFestivals && festivalSections && festivalSections.length > 0 && festivalSections.map(s => (
+           <HomeSection
+             key={`fest-${s.key}`}
+             title={s.title}
+             subtitle="Festive essentials"
+             products={s.products}
+             layout="grid"
+             limit={8}
+             seeAllLink={`/category/${encodeURIComponent(s.key)}`}
+           />
+         ))}
 
-        {popularProducts && popularProducts.length > 0 && (
-          <HomeSection
-            title="Popular near you"
-            products={popularProducts}
-            layout="carousel"
-            limit={8}
-          />
-        )}
+         {/* Popular (configurable) */}
+         {showConfig.popular !== false && popularProductsFinal && popularProductsFinal.length > 0 && (
+           <HomeSection
+             title="Popular near you"
+             products={popularProductsFinal}
+             layout="carousel"
+             seeAllLink="/groceries"
+             limit={8}
+           />
+         )}
 
-        {offers && offers.length > 0 && (
-          <HomeSection
-            title="Deals & Offers"
-            products={offers}
-            layout="grid"
-            limit={8}
-          />
-        )}
+         {/* Deals (configurable) */}
+         {showConfig.deals !== false && dealsProducts && dealsProducts.length > 0 && (
+           <HomeSection
+             title="Deals & Offers"
+             products={dealsProducts}
+             layout="grid"
+             seeAllLink="/category/Deals"
+             limit={8}
+           />
+         )}
 
-        <RecommendationsSection title="Recommended for You" limit={8} />
+         {/* Recommended: prefer admin-provided list, else use RecommendationsSection */}
+         {showConfig.recommended !== false && (recommendedProducts && recommendedProducts.length > 0 ? (
+           <HomeSection
+             title="Recommended for You"
+             products={recommendedProducts}
+             layout="carousel"
+             seeAllLink="/groceries"
+             limit={8}
+           />
+         ) : (
+           <RecommendationsSection title="Recommended for You" limit={8} />
+         ))}
 
-        {quickBuys && quickBuys.length > 0 && (
-          <HomeSection
-            title="Quick Buys"
-            subtitle="Everyday essentials"
-            products={quickBuys}
-            layout="grid"
-            limit={8}
-          />
-        )}
+         {/* Quick Buys (configurable) */}
+         {showConfig.quickBuys !== false && quickBuysProducts && quickBuysProducts.length > 0 && (
+           <HomeSection
+             title="Quick Buys"
+             subtitle="Everyday essentials"
+             products={quickBuysProducts}
+             layout="grid"
+             seeAllLink="/groceries"
+             limit={8}
+           />
+         )}
       </section>
 
     </main>

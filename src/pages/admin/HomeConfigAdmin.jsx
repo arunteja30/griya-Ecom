@@ -5,7 +5,7 @@ import Loader from '../../components/Loader';
 import { showToast } from '../../components/Toast';
 
 export default function HomeConfigAdmin(){
-  const [config, setConfig] = useState({ days: {}, festivals: {} });
+  const [config, setConfig] = useState({ days: {}, festivals: {}, deals: [], quickBuys: [], recommended: [], popular: [], show: {} });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [opBusy, setOpBusy] = useState(false);
@@ -35,7 +35,9 @@ export default function HomeConfigAdmin(){
   useEffect(()=>{
     const r = ref(db, '/homeConfig');
     return onValue(r, snap => {
-      setConfig(snap.val() || { days: {}, festivals: {} });
+      const defaults = { days: {}, festivals: {}, deals: [], quickBuys: [], recommended: [], popular: [], show: {} };
+      const raw = snap.val() || {};
+      setConfig({ ...defaults, ...raw });
       setLoading(false);
     }, (e)=>{
       console.error('Failed to read /homeConfig', e);
@@ -103,6 +105,44 @@ export default function HomeConfigAdmin(){
       showToast('Deleted');
     }catch(e){
       console.error('Failed to delete entry', e);
+      showToast('Failed to delete', 'error');
+    }finally{ setOpBusy(false); }
+  };
+
+  // helpers for top-level home config keys like deals, quickBuys, recommended, popular, show
+  const saveTopLevel = async (key) => {
+    if(!key) return;
+    setOpBusy(true);
+    try{
+      const bufKey = `top.${key}`;
+      let value = config?.[key] !== undefined ? config[key] : null;
+      if(buffers[bufKey] !== undefined){
+        const parsed = String(buffers[bufKey] || '').split(',').map(s=>s.trim()).filter(Boolean);
+        value = parsed;
+        updateField(key, parsed);
+        setBuffers(b => { const c = {...b}; delete c[bufKey]; return c; });
+      }
+      await set(ref(db, `/homeConfig/${key}`), value);
+      showToast('Saved');
+    }catch(e){
+      console.error('Failed to save top-level entry', e);
+      showToast('Failed to save', 'error');
+    }finally{ setOpBusy(false); }
+  };
+
+  const deleteTopLevel = async (key) => {
+    if(!confirm(`Delete /homeConfig/${key} ?`)) return;
+    setOpBusy(true);
+    try{
+      await set(ref(db, `/homeConfig/${key}`), null);
+      setConfig(c => {
+        const copy = JSON.parse(JSON.stringify(c || { days:{}, festivals:{} }));
+        if(copy[key] !== undefined) delete copy[key];
+        return copy;
+      });
+      showToast('Deleted');
+    }catch(e){
+      console.error('Failed to delete top-level entry', e);
       showToast('Failed to delete', 'error');
     }finally{ setOpBusy(false); }
   };
@@ -185,20 +225,23 @@ export default function HomeConfigAdmin(){
             return (
             <div id={`homeconfig-day-${d}`} key={d} className="flex items-center gap-3">
               <div className="w-40 text-sm font-medium">{d.charAt(0).toUpperCase()+d.slice(1)}</div>
-              <input
-                value={buffers[keyName] !== undefined ? buffers[keyName] : (Array.isArray(vals) ? vals.join(',') : '')}
-                onChange={(e)=>{
-                  const raw = e.target.value;
-                  setBuffers(b => ({ ...b, [keyName]: raw }));
-                }}
-                onBlur={(e)=>{
-                  const raw = buffers[keyName] !== undefined ? buffers[keyName] : e.target.value;
-                  const arr = String(raw || '').split(',').map(s=>s.trim()).filter(Boolean);
-                  updateField(`days.${d}`, arr);
-                  // clear buffer to fall back to config value
-                  setBuffers(b => { const c = {...b}; delete c[keyName]; return c; });
-                }}
-                className="flex-1 border rounded px-3 py-2" />
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
+                <input
+                  value={buffers[keyName] !== undefined ? buffers[keyName] : (Array.isArray(vals) ? vals.join(',') : '')}
+                  onChange={(e)=>{
+                    const raw = e.target.value;
+                    setBuffers(b => ({ ...b, [keyName]: raw }));
+                  }}
+                  onBlur={(e)=>{
+                    const raw = buffers[keyName] !== undefined ? buffers[keyName] : e.target.value;
+                    const arr = String(raw || '').split(',').map(s=>s.trim()).filter(Boolean);
+                    updateField(`days.${d}`, arr);
+                    // clear buffer to fall back to config value
+                    setBuffers(b => { const c = {...b}; delete c[keyName]; return c; });
+                  }}
+                  className="flex-1 border rounded px-3 py-2" />
+              </div>
               <div className="flex gap-2">
                 <button onClick={()=>saveEntry('days', d)} disabled={opBusy} className="px-3 py-1 bg-blue-600 text-white rounded">Save</button>
                 <button onClick={()=>deleteEntry('days', d)} disabled={opBusy} className="px-3 py-1 bg-red-500 text-white rounded">Delete</button>
@@ -234,19 +277,22 @@ export default function HomeConfigAdmin(){
             return (
             <div id={`homeconfig-fest-${f}`} key={f} className="flex items-center gap-3">
               <div className="w-40 text-sm font-medium">{f.charAt(0).toUpperCase()+f.slice(1)}</div>
-              <input
-                value={buffers[keyName] !== undefined ? buffers[keyName] : (Array.isArray(vals) ? vals.join(',') : '')}
-                onChange={(e)=>{
-                  const raw = e.target.value;
-                  setBuffers(b => ({ ...b, [keyName]: raw }));
-                }}
-                onBlur={(e)=>{
-                  const raw = buffers[keyName] !== undefined ? buffers[keyName] : e.target.value;
-                  const arr = String(raw || '').split(',').map(s=>s.trim()).filter(Boolean);
-                  updateField(`festivals.${f}`, arr);
-                  setBuffers(b => { const c = {...b}; delete c[keyName]; return c; });
-                }}
-                className="flex-1 border rounded px-3 py-2" />
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700">Tags (comma-separated)</label>
+                <input
+                  value={buffers[keyName] !== undefined ? buffers[keyName] : (Array.isArray(vals) ? vals.join(',') : '')}
+                  onChange={(e)=>{
+                    const raw = e.target.value;
+                    setBuffers(b => ({ ...b, [keyName]: raw }));
+                  }}
+                  onBlur={(e)=>{
+                    const raw = buffers[keyName] !== undefined ? buffers[keyName] : e.target.value;
+                    const arr = String(raw || '').split(',').map(s=>s.trim()).filter(Boolean);
+                    updateField(`festivals.${f}`, arr);
+                    setBuffers(b => { const c = {...b}; delete c[keyName]; return c; });
+                  }}
+                  className="flex-1 border rounded px-3 py-2" />
+              </div>
               <div className="flex gap-2">
                 <button onClick={()=>saveEntry('festivals', f)} disabled={opBusy} className="px-3 py-1 bg-blue-600 text-white rounded">Save</button>
                 <button onClick={()=>deleteEntry('festivals', f)} disabled={opBusy} className="px-3 py-1 bg-red-500 text-white rounded">Delete</button>
@@ -256,9 +302,71 @@ export default function HomeConfigAdmin(){
         </div>
       </div>
 
+      {/* Home sections: show toggles */}
+      <div className="mb-6">
+        <h3 className="font-medium mb-2">Home sections (toggles)</h3>
+        <p className="text-sm text-gray-600 mb-2">Enable or disable sections on the homepage.</p>
+        <div className="flex gap-3 flex-wrap items-center">
+          {['deals','quickBuys','recommended','popular','festivals'].map(k => (
+            <label key={`show-${k}`} className="inline-flex items-center gap-2 px-3 py-2 bg-white border rounded">
+              <input
+                type="checkbox"
+                checked={Boolean(config.show && config.show[k])}
+                onChange={(e)=>{
+                  const val = !!e.target.checked;
+                  // update local state immediately
+                  updateField(`show.${k}`, val);
+                  // persist immediately so HomePage reacts without requiring Save
+                  setOpBusy(true);
+                  set(ref(db, `/homeConfig/show/${k}`), val).then(()=>{
+                    showToast('Saved');
+                  }).catch(err=>{
+                    console.error('Failed to save show toggle', err);
+                    showToast('Failed to save', 'error');
+                  }).finally(()=> setOpBusy(false));
+                }}
+              />
+               <span className="text-sm">{k}</span>
+             </label>
+           ))}
+         </div>
+       </div>
+
+      {/* Top-level lists */}
+      {['deals','quickBuys','recommended','popular'].map(key => {
+        const vals = config?.[key] || [];
+        const bufKey = `top.${key}`;
+        return (
+          <div key={`top-${key}`} className="mb-6">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium mb-2">{key.charAt(0).toUpperCase()+key.slice(1)}</h3>
+              <div className="flex gap-2">
+                <button onClick={()=> saveTopLevel(key)} disabled={opBusy} className="px-3 py-1 bg-blue-600 text-white rounded">Save</button>
+                <button onClick={()=> deleteTopLevel(key)} disabled={opBusy} className="px-3 py-1 bg-red-500 text-white rounded">Delete</button>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-2">Comma-separated tags or product IDs used for the <strong>{key}</strong> section.</p>
+            <div className="flex items-center gap-3">
+              <input
+                className="flex-1 border rounded px-3 py-2"
+                value={buffers[bufKey] !== undefined ? buffers[bufKey] : (Array.isArray(vals) ? vals.join(',') : '')}
+                onChange={(e)=> setBuffers(b => ({ ...b, [bufKey]: e.target.value }))}
+                onBlur={()=> {
+                  const raw = buffers[bufKey] !== undefined ? buffers[bufKey] : (Array.isArray(vals) ? vals.join(',') : '');
+                  const arr = String(raw || '').split(',').map(s=>s.trim()).filter(Boolean);
+                  updateField(key, arr);
+                  setBuffers(b => { const c = {...b}; delete c[bufKey]; return c; });
+                }}
+              />
+              <button onClick={()=> saveTopLevel(key)} className="px-3 py-1 bg-green-600 text-white rounded">Save</button>
+            </div>
+          </div>
+        );
+      })}
+
       <div className="flex gap-3">
         <button onClick={save} disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
-        <button onClick={()=>{ setConfig({ days:{}, festivals:{} }); showToast('Reset locally'); }} className="px-4 py-2 bg-gray-100 rounded">Reset</button>
+        <button onClick={()=>{ setConfig({ days:{}, festivals:{}, deals: [], quickBuys: [], recommended: [], popular: [], show: {} }); showToast('Reset locally'); }} className="px-4 py-2 bg-gray-100 rounded">Reset</button>
       </div>
     </div>
   );

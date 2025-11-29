@@ -58,8 +58,13 @@ export default function GalleryAdmin(){
     <div>
       <h2 className="text-xl font-semibold mb-4">Gallery</h2>
       <div className="mb-4 flex gap-2">
-        <input value={url} onChange={(e)=>setUrl(e.target.value)} className="border p-2" placeholder="Image URL" />
-        <button onClick={handleSave} className="bg-primary text-white px-3 py-1 rounded">Save</button>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Image URL</label>
+          <input value={url} onChange={(e)=>setUrl(e.target.value)} className="border p-2" placeholder="Image URL" />
+        </div>
+        <div className="flex items-end">
+          <button onClick={handleSave} className="bg-primary text-white px-3 py-1 rounded">Save</button>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2">

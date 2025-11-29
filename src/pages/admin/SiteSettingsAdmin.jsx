@@ -51,9 +51,18 @@ export default function SiteSettingsAdmin() {
     <div className="max-w-3xl bg-white p-6 rounded shadow">
       <h2 className="text-lg font-semibold mb-4">Site Settings</h2>
       <div className="grid grid-cols-1 gap-3">
-        <input value={form.brandName||''} onChange={(e)=>setForm({...form, brandName: e.target.value})} className="border p-2" placeholder="Brand Name" />
-        <input value={form.tagline||''} onChange={(e)=>setForm({...form, tagline: e.target.value})} className="border p-2" placeholder="Tagline" />
-        <input value={form.logoUrl||''} onChange={(e)=>setForm({...form, logoUrl: e.target.value})} className="border p-2" placeholder="Logo URL" />
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Brand name</label>
+          <input value={form.brandName||''} onChange={(e)=>setForm({...form, brandName: e.target.value})} className="border p-2" placeholder="Brand Name" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Tagline</label>
+          <input value={form.tagline||''} onChange={(e)=>setForm({...form, tagline: e.target.value})} className="border p-2" placeholder="Tagline" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Logo URL</label>
+          <input value={form.logoUrl||''} onChange={(e)=>setForm({...form, logoUrl: e.target.value})} className="border p-2" placeholder="Logo URL" />
+        </div>
         {/* Top banner settings */}
         <div className="grid grid-cols-1 gap-2">
           <label className="text-sm">Top banner message</label>
@@ -78,20 +87,44 @@ export default function SiteSettingsAdmin() {
             Show top banner
           </label>
         </div>
-        <input value={form.whatsapp||''} onChange={(e)=>setForm({...form, whatsapp: e.target.value})} className="border p-2" placeholder="WhatsApp number" />
-        <input value={form.instagram||''} onChange={(e)=>setForm({...form, instagram: e.target.value})} className="border p-2" placeholder="Instagram URL" />
-        <input value={form.address||''} onChange={(e)=>setForm({...form, address: e.target.value})} className="border p-2" placeholder="Address" />
-        <input value={form.footerText||''} onChange={(e)=>setForm({...form, footerText: e.target.value})} className="border p-2" placeholder="Footer text" />
+        <div>
+          <label className="block text-sm font-medium text-gray-700">WhatsApp number</label>
+          <input value={form.whatsapp||''} onChange={(e)=>setForm({...form, whatsapp: e.target.value})} className="border p-2" placeholder="WhatsApp number" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Instagram URL</label>
+          <input value={form.instagram||''} onChange={(e)=>setForm({...form, instagram: e.target.value})} className="border p-2" placeholder="Instagram URL" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Address</label>
+          <input value={form.address||''} onChange={(e)=>setForm({...form, address: e.target.value})} className="border p-2" placeholder="Address" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Footer text</label>
+          <input value={form.footerText||''} onChange={(e)=>setForm({...form, footerText: e.target.value})} className="border p-2" placeholder="Footer text" />
+        </div>
+
         {/* Fees (flat INR amounts) */}
         <div className="grid grid-cols-3 gap-2">
-          <input value={form.platformFee ?? ''} onChange={(e)=>setForm({...form, platformFee: e.target.value})} className="border p-2" placeholder="Platform fee (₹)" />
-          <input value={form.surgeFee ?? ''} onChange={(e)=>setForm({...form, surgeFee: e.target.value})} className="border p-2" placeholder="Surge fee (₹)" />
-          <input value={form.otherFee ?? ''} onChange={(e)=>setForm({...form, otherFee: e.target.value})} className="border p-2" placeholder="Other fee (₹)" />
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Platform fee (₹)</label>
+            <input value={form.platformFee ?? ''} onChange={(e)=>setForm({...form, platformFee: e.target.value})} className="border p-2" placeholder="Platform fee (₹)" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Surge fee (₹)</label>
+            <input value={form.surgeFee ?? ''} onChange={(e)=>setForm({...form, surgeFee: e.target.value})} className="border p-2" placeholder="Surge fee (₹)" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Other fee (₹)</label>
+            <input value={form.otherFee ?? ''} onChange={(e)=>setForm({...form, otherFee: e.target.value})} className="border p-2" placeholder="Other fee (₹)" />
+          </div>
         </div>
         <div className="mt-2">
+          <label className="block text-sm font-medium text-gray-700">Delivery fee (₹)</label>
           <input value={form.deliveryFee ?? ''} onChange={(e)=>setForm({...form, deliveryFee: e.target.value})} className="border p-2 w-full" placeholder="Delivery fee (₹)" />
         </div>
         <div className="mt-2">
+          <label className="block text-sm font-medium text-gray-700">Free delivery minimum (₹)</label>
           <input value={form.freeDeliveryMin ?? ''} onChange={(e)=>setForm({...form, freeDeliveryMin: e.target.value})} className="border p-2 w-full" placeholder="Free delivery minimum (₹)" />
         </div>
       </div>

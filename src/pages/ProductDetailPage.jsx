@@ -53,16 +53,16 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-8">
-      {/* Product Details */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Product Images */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* Product Details: use a two-column layout that fills available vertical space */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch min-h-[70vh]">
+        {/* Product Images (left) */}
+        <div className="flex flex-col gap-4 h-full">
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 flex-1 flex items-stretch">
             <img
               src={normalizeImageUrl(product.images?.[selectedImage]) || '/placeholder.jpg'}
               alt={product.name}
-              className="w-full aspect-square object-cover cursor-zoom-in hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover cursor-zoom-in hover:scale-105 transition-transform duration-300"
               onClick={() => setLightboxOpen(true)}
             />
           </div>
@@ -88,8 +88,8 @@ export default function ProductDetailPage() {
           )}
         </div>
 
-        {/* Product Info */}
-        <div className="space-y-6">
+        {/* Product Info (right) */}
+        <div className="flex flex-col space-y-6 h-full">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 leading-tight">
               {product.name}
@@ -108,7 +108,7 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          <div className="space-y-2">
+          <div>
             <div className="flex items-baseline gap-3">
               <span className="text-2xl lg:text-3xl font-bold text-gray-800">
                 {formatPrice(product.price)}
@@ -127,14 +127,26 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          {product.description && (
-            <div className="prose prose-sm text-gray-700">
-              <p>{product.description}</p>
-            </div>
-          )}
+          {/* Product description: support HTML, arrays, and multiple fallback field names */}
+          {(() => {
+            const desc = product.description || product.longDescription || product.details || product.body || product.desc;
+            const html = product.descriptionHtml || product.longDescriptionHtml;
+            if (!desc && !html) return null;
+            return (
+              <div className="prose prose-sm text-gray-700">
+                {html ? (
+                  <div dangerouslySetInnerHTML={{ __html: html }} />
+                ) : Array.isArray(desc) ? (
+                  desc.map((d, i) => <p key={i}>{d}</p>)
+                ) : (
+                  <p>{desc}</p>
+                )}
+              </div>
+            );
+          })()}
 
-          {/* Add to Cart Section */}
-          <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+          {/* Add to Cart Section: pinned to bottom of the column */}
+          <div className="bg-gray-50 rounded-xl p-6 space-y-4 mt-auto">
             <div className="flex flex-col sm:flex-row items-center sm:items-stretch gap-4">
               <div className="flex items-center bg-white rounded-full border border-gray-200 px-1">
                 <button 
@@ -180,7 +192,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
-
+     
       {/* Recommendations */}
       <RecommendationsSection 
         title="You May Also Like"

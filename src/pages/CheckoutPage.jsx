@@ -18,6 +18,11 @@ export default function CheckoutPage() {
   const MIN_ORDER = 350; // minimum order amount in INR
 
   const { data: siteSettings } = useFirebaseObject('/siteSettings');
+  const theme = siteSettings?.theme || {};
+  const cardStyle = { background: theme.cardBgColor || undefined, color: theme.cardTextColor || undefined, border: `1px solid ${theme.cardBorderColor || '#efefef'}` };
+  const primaryBtnBg = theme.cardButtonPrimaryBg || theme.primaryColor;
+  const accentBtnBg = theme.cardButtonAccentBg || theme.accentColor;
+  const focusRing = theme.accentColor || '#fb923c';
 
   // fees fetched from site settings (flat INR amounts). Defaults to 0
   const platformFee = Number(siteSettings?.platformFee || 0);
@@ -182,7 +187,7 @@ export default function CheckoutPage() {
           <p className="text-gray-600">Thank you {placedOrder.address.name}, your order is confirmed</p>
         </div>
         
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 max-w-2xl mx-auto">
+        <div className="rounded-xl p-6 shadow-sm max-w-2xl mx-auto" style={cardStyle}>
           <div className="space-y-4">
             <div className="flex justify-between items-center pb-4 border-b">
               <span className="text-gray-600">Order ID</span>
@@ -224,7 +229,7 @@ export default function CheckoutPage() {
         {/* Delivery Information */}
         <div className="lg:col-span-2">
           <h1 className="text-2xl font-bold text-gray-800 mb-6">Checkout</h1>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="rounded-xl p-6 shadow-sm" style={cardStyle}>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
@@ -306,8 +311,8 @@ export default function CheckoutPage() {
         
         {/* Order Summary */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 sticky top-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Order Summary</h2>
+          <div className="rounded-xl p-6 shadow-sm sticky top-6" style={cardStyle}>
+            <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
             <div className="space-y-3 mb-6">
               <div className="flex justify-between text-gray-600">
                 <span>Items ({cartItems.length})</span>
@@ -360,7 +365,8 @@ export default function CheckoutPage() {
               <button 
                 onClick={placeOrder} 
                 disabled={loading || !(cartItems && cartItems.length > 0) || (cartTotal || 0) < MIN_ORDER} 
-                className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
+                className="w-full disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
+                style={{ background: primaryBtnBg, opacity: (cartTotal || 0) < MIN_ORDER ? 0.6 : 1 }}
               >
                 {loading ? 'Processing...' : 'Place Order'}
               </button>

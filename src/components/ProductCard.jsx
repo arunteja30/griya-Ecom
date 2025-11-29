@@ -4,6 +4,7 @@ import { CartContext } from "../context/CartContext";
 import { showToast } from "./Toast";
 import { normalizeImageUrl } from '../utils/imageHelpers';
 import BottomSheet from './BottomSheet';
+import { useSiteSettings } from '../hooks/useRealtime';
 
 export default function ProductCard({ product }) {
   const { addToCart } = useContext(CartContext);
@@ -63,9 +64,25 @@ export default function ProductCard({ product }) {
     }).format(price);
   };
 
+  const { data: settings } = useSiteSettings();
+  const theme = settings?.theme || {};
+  const cardStyle = {
+    background: theme.productCardBgColor || undefined,
+    color: theme.cardTextColor || undefined,
+    borderColor: theme.cardBorderColor || undefined,
+  };
+  const primaryBtnBg = theme.cardButtonPrimaryBg || theme.primaryColor;
+  const primaryBtnText = theme.cardButtonPrimaryTextColor || '#ffffff';
+  const accentBtnBg = theme.cardButtonAccentBg || theme.accentColor;
+  const accentBtnText = theme.cardButtonAccentTextColor || '#ffffff';
+  const badgeBg = theme.cardBadgeBgColor || '#16a34a';
+  const itemTextColor = theme.cardTextColor || undefined;
+  const priceColor = theme.accentColor || theme.primaryColor || undefined;
+
   return (
     <div 
-      className="relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 group border border-gray-200"
+      className="relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 group"
+      style={{ background: cardStyle.background, color: cardStyle.color, border: `1px solid ${cardStyle.borderColor || 'transparent'}` }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -79,7 +96,7 @@ export default function ProductCard({ product }) {
         
         {/* Discount Badge - Top Left Corner with rounded corners */}
         {product.discount && product.discount > 0 && product.inStock && (
-          <div className="absolute top-2 left-0 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-md">
+          <div className="absolute top-2 left-0 text-white text-xs font-bold px-2 py-1 rounded-md" style={{ background: badgeBg }}>
             {product.discount}% OFF
           </div>
         )}
@@ -121,9 +138,10 @@ export default function ProductCard({ product }) {
             }
             }}
             disabled={isLoading || !product.inStock}
-            className={`absolute top-0 right-0 w-8 h-8 bg-white border-2 border-blue-500 rounded-full flex items-center justify-center text-blue-500 font-bold text-lg transition-all duration-200 ${
-            isLoading || !product.inStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-500 hover:text-white active:scale-95'
+            className={`absolute top-0 right-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-200 ${
+            isLoading || !product.inStock ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'
             }`}
+            style={{ background: primaryBtnBg, color: primaryBtnText }}
           >
             {isLoading ? '•••' : '+'}
           </button>
@@ -142,14 +160,14 @@ export default function ProductCard({ product }) {
       <div className="px-3 pt-2">
        {/* Product Name */}
         <Link to={`/product/${product.slug}`} className="block">
-          <h3 className="text-sm font-semibold text-gray-900 leading-tight line-clamp-2 mb-1 hover:text-blue-600 transition-colors">
+          <h3 className="text-sm font-semibold leading-tight line-clamp-2 mb-1 transition-colors" style={{ color: itemTextColor }}>
             {product.name}
           </h3>
         </Link>
       </div>
 
       <div className="px-3 pt-0.5">
-        <span className="text-xs text-gray-500 line-clamp-2 top-0 left-0 font-medium">
+        <span className="text-xs line-clamp-2 top-0 left-0 font-medium text-gray-500">
           {product.description ? `${product.description} ` : ' '}
         </span>
       </div>
@@ -177,11 +195,11 @@ export default function ProductCard({ product }) {
           {/* Price Section */}
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-2">
-            <span className="text-base font-bold text-gray-900">
+            <span className="text-base font-bold" style={{ color: priceColor }}>
               {selectedVariant ? formatPrice(selectedVariant.price) : `₹${product.price}`}
             </span>
             {product.originalPrice && product.originalPrice > (selectedVariant ? selectedVariant.price : product.price) && (
-              <span className="text-sm text-gray-400 line-through">
+              <span className="text-sm line-through" style={{ color: itemTextColor, opacity: 0.7 }}>
                 ₹{product.originalPrice}
               </span>
             )}
@@ -236,11 +254,13 @@ export default function ProductCard({ product }) {
               handleAddToCart();
             }
           }}
-                className="px-3 py-1 bg-blue-600 text-white rounded">Select</button>
+                className="px-3 py-1 rounded"
+                style={{ background: accentBtnBg, color: accentBtnText }}
+                >Select</button>
               </div>
             </div>
           )) : (
-            <div className="text-sm text-gray-500">No variants available</div>
+            <div className="text-sm" style={{ color: itemTextColor }}>No variants available</div>
           )}
         </div>
       </BottomSheet>

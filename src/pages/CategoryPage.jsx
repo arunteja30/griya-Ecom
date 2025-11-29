@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getProductsByCategory, getCategories } from '../firebaseApi';
 import ProductCard from '../components/ProductCard';
 import Loader from '../components/Loader';
@@ -15,6 +15,9 @@ export default function CategoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categoryName, setCategoryName] = useState(null);
+  const [categoriesMap, setCategoriesMap] = useState({});
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const navigate = useNavigate();
   // filters
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
@@ -29,9 +32,48 @@ export default function CategoryPage() {
       try {
         // resolve categories to find canonical id if a slug was provided
         const cats = await getCategories();
+        // populate categories dropdown map for filters
+        if (mounted && Array.isArray(cats)) {
+          const map = Object.fromEntries((cats || []).map(c => [c.id, c]));
+          setCategoriesMap(map);
+        }
         const found = (cats || []).find((c) => String(c.id) === String(categoryId) || String(c.slug) === String(categoryId));
         const resolvedId = found ? found.id : categoryId;
-        if (mounted) setCategoryName(found ? (found.title || found.name || found.id) : `Category: ${categoryId}`);
+        // set a friendly category name for the UI
+        if (mounted) setCategoryName(found?.name || found?.title || String(categoryId));
+
+        // If this categoryId matches a festival key under /homeConfig/festivals, use that festival's tag list
+        try {
+          const festSnap = await get(ref(db, '/homeConfig/festivals'));
+          if (festSnap.exists()) {
+            const festivals = festSnap.val() || {};
+            const matchKey = Object.keys(festivals).find(k => String(k || '').toLowerCase() === String(categoryId).toLowerCase());
+            if (matchKey) {
+              const tags = Array.isArray(festivals[matchKey]) ? festivals[matchKey] : (String(festivals[matchKey] || '').split(',').map(s => s.trim()).filter(Boolean));
+              if (tags && tags.length) {
+                const tagSet = new Set(tags.map(t => String(t || '').toLowerCase()));
+                const allSnap2 = await get(ref(db, '/products'));
+                const matched = [];
+                if (allSnap2.exists()) {
+                  const all = allSnap2.val();
+                  Object.entries(all).forEach(([k, v]) => {
+                    const p = { id: k, ...v };
+                    const prodTags = p.tags ? (Array.isArray(p.tags) ? p.tags : String(p.tags).split(',').map(s => s.trim())) : [];
+                    const normalized = prodTags.map(t => String(t || '').toLowerCase());
+                    if (normalized.some(t => tagSet.has(t))) matched.push(p);
+                  });
+                }
+                if (mounted) {
+                  setProducts(matched);
+                  setLoading(false);
+                }
+                return;
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Failed reading homeConfig for festival tags', e);
+        }
 
         // Try categoryProducts index first (fast path)
         const idxSnap = await get(ref(db, `/categoryProducts/${resolvedId}`));
@@ -52,8 +94,33 @@ export default function CategoryPage() {
         // Fallback: scan products and match by category fields
         const prods = await getProductsByCategory(categoryId);
         if (mounted) {
-          setProducts(prods || []);
-          setLoading(false);
+          if (prods && prods.length) {
+            setProducts(prods);
+            setLoading(false);
+          } else {
+            // As a last resort, try matching by tags (support arrays or comma-separated strings)
+            try {
+              const allSnap = await get(ref(db, '/products'));
+              const matched = [];
+              if (allSnap.exists()) {
+                const all = allSnap.val();
+                Object.entries(all).forEach(([k, v]) => {
+                  const p = { id: k, ...v };
+                  const tags = p.tags ? (Array.isArray(p.tags) ? p.tags : String(p.tags).split(',').map(s => s.trim())) : [];
+                  const normalizedTags = tags.map(t => String(t || '').toLowerCase());
+                  if (normalizedTags.includes(String(categoryId).toLowerCase()) || normalizedTags.includes((found && found.slug || '').toLowerCase())) {
+                    matched.push(p);
+                  }
+                });
+              }
+              setProducts(matched);
+            } catch (err) {
+              console.error('Failed tag-based lookup', err);
+              setProducts([]);
+            } finally {
+              setLoading(false);
+            }
+          }
         }
       } catch (err) {
         if (!mounted) return;
@@ -110,9 +177,8 @@ export default function CategoryPage() {
   return (
     <div className="py-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">{categoryName || `Category: ${categoryId}`}</h1>
+        <h1 className="text-2xl font-semibold">{categoryName || `${categoryId}`}</h1>
         <div className="flex items-center gap-2">
-          <Link to="/" className="btn btn-ghost">Back to Home</Link>
           <Link to="/groceries" className="btn btn-ghost">Browse Groceries</Link>
         </div>
       </div>
@@ -142,7 +208,10 @@ export default function CategoryPage() {
                 showStockFilter={true}
                 compact={true}
                 vertical={true}
-                showCategoryFilter={false}
+                showCategoryFilter={true}
+                categories={categoriesMap}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={(v)=>{ setSelectedCategory(v); if(v) navigate(`/category/${v}`); }}
               />
             </div>
           </aside>
@@ -162,6 +231,9 @@ export default function CategoryPage() {
                   resultCount={filteredAndSortedProducts.length}
                   searchPlaceholder="Search products..."
                   onClearFilters={() => { setSearchTerm(''); setPriceRange('all'); setFilterInStock(false); setSortBy('name'); }}
+                  categories={categoriesMap}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={(v)=>{ setSelectedCategory(v); if(v) navigate(`/category/${v}`); }}
                 />
               </div>
             </div>
@@ -176,13 +248,81 @@ export default function CategoryPage() {
           </main>
         </div>
       ) : (
-        <div className="card p-8 text-center">
-          <h2 className="text-xl font-semibold mb-2">No products found</h2>
-          <p className="text-neutral-600 mb-4">There are no products in this category yet.</p>
-          <div className="flex justify-center gap-3">
-            <Link to="/" className="btn btn-primary">Back to Home</Link>
-            <Link to="/groceries" className="btn btn-ghost">Browse other groceries</Link>
-          </div>
+        <div className="md:flex md:gap-6">
+          {/* Sidebar filters (visible on desktop) */}
+          <aside className="hidden md:block md:w-72 shrink-0">
+            <div className="sticky top-28">
+              <FilterBar
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+                filterInStock={filterInStock}
+                setFilterInStock={setFilterInStock}
+                resultCount={filteredAndSortedProducts.length}
+                searchPlaceholder="Search products..."
+                onClearFilters={() => { setSearchTerm(''); setPriceRange('all'); setFilterInStock(false); setSortBy('name'); }}
+                showPriceFilter={true}
+                showStockFilter={true}
+                compact={true}
+                vertical={true}
+                showCategoryFilter={true}
+                categories={categoriesMap}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={(v)=>{ setSelectedCategory(v); if(v) navigate(`/category/${v}`); }}
+              />
+            </div>
+          </aside>
+
+          {/* Main: no-results message and mobile filter control */}
+          <main className="flex-1">
+            <div className="mb-4 md:hidden px-4">
+              <MobileFilterButton
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+                filterInStock={filterInStock}
+                setFilterInStock={setFilterInStock}
+                resultCount={filteredAndSortedProducts.length}
+                searchPlaceholder="Search products..."
+                onClearFilters={() => { setSearchTerm(''); setPriceRange('all'); setFilterInStock(false); setSortBy('name'); }}
+                categories={categoriesMap}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={(v)=>{ setSelectedCategory(v); if(v) navigate(`/category/${v}`); }}
+              />
+            </div>
+
+            <div className="card p-8 text-center">
+              <h2 className="text-xl font-semibold mb-2">
+                {(searchTerm || priceRange !== 'all' || filterInStock || sortBy !== 'name') ? 'No products match your filters' : 'No products found'}
+              </h2>
+              <p className="text-neutral-600 mb-6">
+                {(searchTerm || priceRange !== 'all' || filterInStock || sortBy !== 'name') ? 'Try adjusting or clearing filters to see more products.' : 'There are no products in this category yet.'}
+              </p>
+              <div className="flex justify-center gap-3">
+                {(searchTerm || priceRange !== 'all' || filterInStock || sortBy !== 'name') ? (
+                  <>
+                    <button
+                      onClick={() => { setSearchTerm(''); setPriceRange('all'); setFilterInStock(false); setSortBy('name'); }}
+                      className="btn btn-primary"
+                    >
+                      Clear filters
+                    </button>
+                    <Link to="/groceries" className="btn btn-ghost">Browse other groceries</Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/groceries" className="btn btn-ghost">Browse other groceries</Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </main>
         </div>
       )}
     </div>

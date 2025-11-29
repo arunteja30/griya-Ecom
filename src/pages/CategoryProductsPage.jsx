@@ -143,8 +143,21 @@ export default function CategoryProductsPage() {
         {category.description && (
           <p className="text-gray-600 max-w-2xl mx-auto">{category.description}</p>
         )}
-        <div className="text-sm text-gray-500">
-          {filteredAndSortedProducts.length} products available
+        <div className="flex items-center justify-center gap-4">
+          <div className="text-sm text-gray-500">{filteredAndSortedProducts.length} products available</div>
+          {(searchTerm || priceRange !== 'all' || filterInStock || sortBy !== 'name') && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setPriceRange('all');
+                setFilterInStock(false);
+                setSortBy('name');
+              }}
+              className="text-sm px-3 py-1 border rounded bg-white hover:bg-gray-50 transition-colors"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       </div>
 

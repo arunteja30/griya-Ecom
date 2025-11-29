@@ -236,9 +236,9 @@ export default function AllProductsPage() {
 
           {/* Main (filters moved to left on desktop) */}
           <main className="flex-1">
-            <div className="text-center mb-4 sticky top-24 bg-white z-10">
+            <div className="text-center mb-4 sticky top-24 z-10">
               <h1 className="text-2xl font-bold text-gray-800">{selectedCategory ? (categories[selectedCategory]?.name || 'Category') : 'All Products'}</h1>
-              <div className="mt-4 md:hidden">
+              <div className="mt-2 md:hidden">
                 <div className="flex justify-center">
                   <div className="w-full max-w-xl px-4">
                     <input
@@ -254,13 +254,13 @@ export default function AllProductsPage() {
             </div>
 
             {/* Static filter controls: mobile and desktop */}
-            <div className="mb-4 bg-white z-10">
-              <div className="flex items-center justify-center md:justify-start px-4 mb-2 md:hidden">
+            <div className="mb-2 z-10">
+              <div className="flex items-center justify-center md:justify-start px-4  md:hidden">
                 <label className="sr-only">Category</label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full md:w-auto border border-gray-300 rounded-md px-3 py-2 bg-white"
+                  className="w-full md:w-auto border border-gray-300 rounded-md px-3 py-2 "
                 >
                   <option value="">All Categories</option>
                   {Object.entries(categories).map(([cid, c]) => (

@@ -13,173 +13,291 @@ export default function OrdersAdmin(){
   // filters
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('all'); // all | today | last7 | last30 | thisMonth | custom
+  const [customStart, setCustomStart] = useState(''); // yyyy-mm-dd
+  const [customEnd, setCustomEnd] = useState('');
+   const [viewMode, setViewMode] = useState('list');
 
-  const { data: siteSettings } = useFirebaseObject('/siteSettings');
+   const { data: siteSettings } = useFirebaseObject('/siteSettings');
 
-  useEffect(()=>{
-    const r = ref(db, '/orders');
-    return onValue(r, snap=>{
-      setOrders(snap.val() || {});
-      setLoading(false);
-    });
-  },[]);
+   useEffect(()=>{
+     const r = ref(db, '/orders');
+     return onValue(r, snap=>{
+       setOrders(snap.val() || {});
+       setLoading(false);
+     });
+   },[]);
 
-  const updateStatus = async (id, status)=>{
-    try{
-      // Update status in database first
-      await update(ref(db, `/orders/${id}`), { status });
-      showToast('Order updated');
+   const updateStatus = async (id, status)=>{
+     try{
+       // Update status in database first
+       await update(ref(db, `/orders/${id}`), { status });
+       showToast('Order updated');
 
-      // Read fresh order data after update
-      const snap = await get(ref(db, `/orders/${id}`));
-      const o = snap.exists() ? snap.val() : (orders[id] || {});
+       // Read fresh order data after update
+       const snap = await get(ref(db, `/orders/${id}`));
+       const o = snap.exists() ? snap.val() : (orders[id] || {});
 
-      // Send WhatsApp notification for important status changes
-      if(status === 'shipped' || status === 'cancelled'){
-        const customerPhone = o.customer?.phone || o.customer?.contact || o.address?.phone || o.address?.contact || o.phone;
-        const customerName = o.customer?.name || o.address?.name || '';
+       // Send WhatsApp notification for important status changes
+       if(status === 'shipped' || status === 'cancelled'){
+         const customerPhone = o.customer?.phone || o.customer?.contact || o.address?.phone || o.address?.contact || o.phone;
+         const customerName = o.customer?.name || o.address?.name || '';
 
-        if(customerPhone){
-          let cleaned = String(customerPhone).replace(/\D/g, '');
-          // assume Indian numbers when 10 digits
-          if(cleaned.length === 10) cleaned = '91' + cleaned;
-          // drop leading zeros
-          cleaned = cleaned.replace(/^0+/, '');
+         if(customerPhone){
+           let cleaned = String(customerPhone).replace(/\D/g, '');
+           // assume Indian numbers when 10 digits
+           if(cleaned.length === 10) cleaned = '91' + cleaned;
+           // drop leading zeros
+           cleaned = cleaned.replace(/^0+/, '');
 
-          const brand = siteSettings?.brandName || 'Store';
-          const msgLines = [];
-          msgLines.push(`Hello ${customerName || ''},`);
+           const brand = siteSettings?.brandName || 'Store';
+           const msgLines = [];
+           msgLines.push(`Hello ${customerName || ''},`);
 
-          if(status === 'shipped'){
-            msgLines.push(`Your order ${o.orderId || id} from ${brand} has been shipped.`);
-            if(o.tracking) msgLines.push(`Tracking: ${o.tracking}`);
-            const amt = o.amount ?? o.total ?? (o.items ? o.items.reduce((s,it)=>s + ((it.price||0)*(it.quantity||1)), 0) : 0);
-            msgLines.push(`Total: ₹${amt}`);
-            msgLines.push('You can reply to this chat for support. Thank you!');
-          } else {
-            msgLines.push(`We're sorry. Your order ${o.orderId || id} from ${brand} has been cancelled.`);
-            msgLines.push('If you paid, we will initiate a refund. Reply to this chat for assistance.');
-          }
+           if(status === 'shipped'){
+             msgLines.push(`Your order ${o.orderId || id} from ${brand} has been shipped.`);
+             if(o.tracking) msgLines.push(`Tracking: ${o.tracking}`);
+             const amt = o.amount ?? o.total ?? (o.items ? o.items.reduce((s,it)=>s + ((it.price||0)*(it.quantity||1)), 0) : 0);
+             msgLines.push(`Total: ₹${amt}`);
+             msgLines.push('You can reply to this chat for support. Thank you!');
+           } else {
+             msgLines.push(`We're sorry. Your order ${o.orderId || id} from ${brand} has been cancelled.`);
+             msgLines.push('If you paid, we will initiate a refund. Reply to this chat for assistance.');
+           }
 
-          const text = encodeURIComponent(msgLines.join('\n'));
-          const url = `https://wa.me/${cleaned}?text=${text}`;
-          window.open(url, '_blank');
-        } else {
-          showToast('Customer phone not found — cannot open WhatsApp', 'warning');
-        }
-      }
+           const text = encodeURIComponent(msgLines.join('\n'));
+           const url = `https://wa.me/${cleaned}?text=${text}`;
+           window.open(url, '_blank');
+         } else {
+           showToast('Customer phone not found — cannot open WhatsApp', 'warning');
+         }
+       }
 
-    }catch(e){
-      console.error(e);
-      showToast('Failed to update order', 'error');
-    }
-  };
+     }catch(e){
+       console.error(e);
+       showToast('Failed to update order', 'error');
+     }
+   };
 
-  if(loading) return <Loader />;
+   if(loading) return <Loader />;
 
-  // prepare, sort and filter orders for display
-  const itemsSorted = Object.entries(orders).sort((a,b)=>{
-    const da = new Date(a[1].createdAt || 0).getTime();
-    const dbt = new Date(b[1].createdAt || 0).getTime();
-    return dbt - da;
-  });
+   // prepare, sort and filter orders for display
+   const itemsSorted = Object.entries(orders).sort((a,b)=>{
+     const da = new Date(a[1].createdAt || 0).getTime();
+     const dbt = new Date(b[1].createdAt || 0).getTime();
+     return dbt - da;
+   });
 
-  const items = itemsSorted.filter(([id, o]) => {
-    if(statusFilter && (o.status || '') !== statusFilter) return false;
-    if(search){
-      const q = String(search).trim().toLowerCase();
-      const orderIdMatch = String(o.orderId || id).toLowerCase().includes(q);
-      const customerName = String(o.customer?.name || o.address?.name || '').toLowerCase();
-      const customerPhone = String(o.customer?.phone || o.customer?.contact || o.address?.phone || o.address?.contact || '').toLowerCase();
-      const itemsText = (o.items || []).map(it => (it.name || it.title || it.id || it.productId || '')).join(' ').toLowerCase();
-      if(orderIdMatch || customerName.includes(q) || customerPhone.includes(q) || itemsText.includes(q)) return true;
-      return false;
-    }
-    return true;
-  });
+   const isInDateRange = (o) => {
+     if(!dateFilter || dateFilter === 'all') return true;
+     const created = o.createdAt;
+     if(!created) return false;
+     const createdTs = (typeof created === 'number') ? created : (new Date(created)).getTime();
+     if(isNaN(createdTs) || createdTs <= 0) return false;
 
-  const fmt = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n || 0);
+     const now = Date.now();
+     let startTs = 0;
+     let endTs = now;
 
-  return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Orders</h2>
+     if(dateFilter === 'today'){
+       const d = new Date(); d.setHours(0,0,0,0); startTs = d.getTime();
+     } else if(dateFilter === 'last7'){
+       startTs = now - 7 * 24 * 60 * 60 * 1000;
+     } else if(dateFilter === 'last30'){
+       startTs = now - 30 * 24 * 60 * 60 * 1000;
+     } else if(dateFilter === 'thisMonth'){
+       const d = new Date(); d.setDate(1); d.setHours(0,0,0,0); startTs = d.getTime();
+     } else if(dateFilter === 'custom'){
+       if(!customStart && !customEnd) return true;
+       if(customStart){ const s = new Date(customStart); s.setHours(0,0,0,0); startTs = s.getTime(); }
+       if(customEnd){ const e = new Date(customEnd); e.setHours(23,59,59,999); endTs = e.getTime(); }
+     }
 
-      {/* Filters */}
-      <div className="mb-4 flex items-center gap-2">
-        <input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Search order id, customer, phone or item" className="border p-2 rounded w-1/3" />
-        <select value={statusFilter} onChange={(e)=>setStatusFilter(e.target.value)} className="border p-2 rounded">
-          <option value="">All status</option>
-          <option value="pending">pending</option>
-          <option value="paid">paid</option>
-          <option value="shipped">shipped</option>
-          <option value="delivered">delivered</option>
-          <option value="cancelled">cancelled</option>
-        </select>
-        <button onClick={()=>{setSearch(''); setStatusFilter('');}} className="ml-auto text-sm text-neutral-600">Clear</button>
-      </div>
+     return createdTs >= startTs && createdTs <= endTs;
+   };
+
+   const items = itemsSorted.filter(([id, o]) => {
+     if(statusFilter && (o.status || '') !== statusFilter) return false;
+     if(search){
+       const q = String(search).trim().toLowerCase();
+       const orderIdMatch = String(o.orderId || id).toLowerCase().includes(q);
+       const customerName = String(o.customer?.name || o.address?.name || '').toLowerCase();
+       const customerPhone = String(o.customer?.phone || o.customer?.contact || o.address?.phone || o.address?.contact || '').toLowerCase();
+       const itemsText = (o.items || []).map(it => (it.name || it.title || it.id || it.productId || '')).join(' ').toLowerCase();
+       if(orderIdMatch || customerName.includes(q) || customerPhone.includes(q) || itemsText.includes(q)) return true;
+       return false;
+     }
+    // date filter
+    if(!isInDateRange(o)) return false;
+     return true;
+   });
+
+   const fmt = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n || 0);
+
+   return (
+     <div>
+       <h2 className="text-xl font-semibold mb-4">Orders</h2>
+
+       {/* Filters */}
+       <div className="mb-4 flex flex-wrap items-center gap-2">
+         <div>
+           <label className="block text-xs text-gray-600">Search</label>
+           <input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Search order id, customer, phone or item" className="border p-2 rounded w-64" />
+         </div>
+         <div>
+           <label className="block text-xs text-gray-600">Status</label>
+           <select value={statusFilter} onChange={(e)=>setStatusFilter(e.target.value)} className="border p-2 rounded">
+            <option value="">All status</option>
+            <option value="pending">pending</option>
+            <option value="paid">paid</option>
+            <option value="shipped">shipped</option>
+            <option value="delivered">delivered</option>
+            <option value="cancelled">cancelled</option>
+          </select>
+         </div>
+         <div>
+           <label className="block text-xs text-gray-600">Date</label>
+           <select value={dateFilter} onChange={(e)=>setDateFilter(e.target.value)} className="border p-2 rounded">
+             <option value="all">All</option>
+             <option value="today">Today</option>
+             <option value="last7">Last 7 days</option>
+             <option value="last30">Last 30 days</option>
+             <option value="thisMonth">This month</option>
+             <option value="custom">Custom range</option>
+           </select>
+         </div>
+         {dateFilter === 'custom' && (
+           <div className="flex items-center gap-2">
+             <div>
+               <label className="block text-xs text-gray-600">Start</label>
+               <input type="date" value={customStart} onChange={(e)=>setCustomStart(e.target.value)} className="border p-2 rounded" />
+             </div>
+             <div>
+               <label className="block text-xs text-gray-600">End</label>
+               <input type="date" value={customEnd} onChange={(e)=>setCustomEnd(e.target.value)} className="border p-2 rounded" />
+             </div>
+           </div>
+         )}
+        <button onClick={()=>{setSearch(''); setStatusFilter(''); setDateFilter('all'); setCustomStart(''); setCustomEnd('');}} className="ml-auto text-sm text-neutral-600">Clear</button>
+    </div>
 
       {items.length === 0 ? (
         <div className="card p-6 text-center">No orders found</div>
       ) : (
-        <div className="space-y-3">
-          {items.map(([id, o])=> {
-            const customer = o.customer || o.address || {};
-            const shipping = o.shipping || o.address || {};
-            const amount = o.amount ?? o.total ?? (o.items ? o.items.reduce((s,it)=>s + ((it.price||0)*(it.quantity||1)), 0) : 0);
-            const status = o.status || 'pending';
+        <>
+          <div className="mb-3 flex items-center justify-between">
+            <div className="text-sm font-medium">Orders ({items.length})</div>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={()=>setViewMode('list')} className={`px-2 py-1 rounded ${viewMode==='list' ? 'bg-gray-200' : ''}`}>List</button>
+              <button type="button" onClick={()=>setViewMode('grid')} className={`px-2 py-1 rounded ${viewMode==='grid' ? 'bg-gray-200' : ''}`}>Grid</button>
+            </div>
+          </div>
 
-            return (
-              <div key={id} className="border p-4 rounded flex items-start justify-between">
-                <div>
-                  <div className="font-medium">{customer?.name || '—'} • <span className="text-sm text-neutral-500">{customer?.phone || customer?.contact || ''}</span></div>
-                  <div className="text-sm text-neutral-600">Order: {o.orderId || id} • {o.items?.length || 0} item(s)</div>
-                  <div className="text-sm text-neutral-500">{shipping?.city || ''}{shipping?.state ? ', ' + shipping.state : ''} • {shipping?.pincode || ''}</div>
-
-                  {o.items && o.items.length > 0 && (
-                    <div className="mt-2 flex items-center gap-3">
-                      <div className="flex -space-x-2">
-                        {o.items.slice(0,3).map((it, idx) => (
-                          <div key={idx} className="w-10 h-10 rounded overflow-hidden border bg-white">
-                            {it.image ? <img src={it.image} alt={it.name || 'item'} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-xs text-neutral-500">No image</div>}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="text-sm text-neutral-600">
-                        {o.items.slice(0,3).map(it => {
-                          const pid = it.id || it.productId || it.sku || '—';
-                          const name = it.name || it.title || 'Item';
-                          const qty = it.quantity ?? it.qty ?? 1;
-                          return `${name} (${pid}) x${qty}`;
-                        }).join(', ')}{o.items.length > 3 ? ` and ${o.items.length - 3} more` : ''}
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {items.map(([id, o]) => {
+                const customer = o.customer || o.address || {};
+                const shipping = o.shipping || o.address || {};
+                const amount = o.amount ?? o.total ?? (o.items ? o.items.reduce((s,it)=>s + ((it.price||0)*(it.quantity||1)), 0) : 0);
+                const status = o.status || 'pending';
+                return (
+                  <div key={id} className="border p-3 rounded bg-white flex flex-col justify-between">
+                    <div>
+                      <div className="font-medium">{customer?.name || '—'}</div>
+                      <div className="text-sm text-neutral-600">Order: {o.orderId || id} • {o.items?.length || 0} item(s)</div>
+                      <div className="text-sm text-neutral-500">{customer?.phone || customer?.contact || ''}</div>
+                      <div className="mt-2">
+                        <div className="flex -space-x-2">
+                          {o.items?.slice(0,3).map((it, idx) => (
+                            <div key={idx} className="w-10 h-10 rounded overflow-hidden border bg-white">
+                              {it.image ? <img src={it.image} alt={it.name || 'item'} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-xs text-neutral-500">No image</div>}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col items-end gap-2">
-                  <div className="text-lg font-semibold">{fmt(amount)}</div>
-                  <div className={`px-3 py-1 rounded text-sm ${status === 'paid' || status === 'delivered' ? 'bg-green-100 text-green-700' : status === 'shipped' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>{status}</div>
-                  <div className="flex gap-2">
-                    <button onClick={()=>setSelected({ id, data: o })} className="text-sm text-primary-700">View</button>
-
-                    {status === 'shipped' ? (
-                      // when shipped, allow marking as delivered (unless already delivered)
-                      status !== 'delivered' && (
-                        <button onClick={()=>updateStatus(id, 'delivered')} className="text-sm text-blue-700">Mark Delivered</button>
-                      )
-                    ) : (
-                      // otherwise allow marking as shipped
-                      status !== 'shipped' && <button onClick={()=>updateStatus(id, 'shipped')} className="text-sm text-green-700">Mark Shipped</button>
-                    )}
-
-                    {status !== 'paid' && <button onClick={()=>updateStatus(id, 'paid')} className="text-sm text-indigo-700">Mark Paid</button>}
-                    {status !== 'cancelled' && <button onClick={()=>updateStatus(id, 'cancelled')} className="text-sm text-red-600">Cancel</button>}
+                    <div className="mt-3 flex items-center justify-between">
+                      <div>
+                        <div className="text-lg font-semibold">{fmt(amount)}</div>
+                        <div className={`px-2 py-1 rounded text-sm mt-1 ${status === 'paid' || status === 'delivered' ? 'bg-green-100 text-green-700' : status === 'shipped' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>{status}</div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <button onClick={()=>setSelected({ id, data: o })} className="text-sm text-primary-700">View</button>
+                        {status === 'shipped' ? (
+                          status !== 'delivered' && (<button onClick={()=>updateStatus(id, 'delivered')} className="text-sm text-blue-700">Mark Delivered</button>)
+                        ) : (
+                          status !== 'shipped' && (<button onClick={()=>updateStatus(id, 'shipped')} className="text-sm text-green-700">Mark Shipped</button>)
+                        )}
+                        {status !== 'paid' && <button onClick={()=>updateStatus(id, 'paid')} className="text-sm text-indigo-700">Mark Paid</button>}
+                        {status !== 'cancelled' && <button onClick={()=>updateStatus(id, 'cancelled')} className="text-sm text-red-600">Cancel</button>}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {items.map(([id, o])=> {
+                const customer = o.customer || o.address || {};
+                const shipping = o.shipping || o.address || {};
+                const amount = o.amount ?? o.total ?? (o.items ? o.items.reduce((s,it)=>s + ((it.price||0)*(it.quantity||1)), 0) : 0);
+                const status = o.status || 'pending';
+
+                return (
+                  <div key={id} className="border p-4 rounded flex items-start justify-between">
+                    <div>
+                      <div className="font-medium">{customer?.name || '—'} • <span className="text-sm text-neutral-500">{customer?.phone || customer?.contact || ''}</span></div>
+                      <div className="text-sm text-neutral-600">Order: {o.orderId || id} • {o.items?.length || 0} item(s)</div>
+                      <div className="text-sm text-neutral-500">{shipping?.city || ''}{shipping?.state ? ', ' + shipping.state : ''} • {shipping?.pincode || ''}</div>
+
+                      {o.items && o.items.length > 0 && (
+                        <div className="mt-2 flex items-center gap-3">
+                          <div className="flex -space-x-2">
+                            {o.items.slice(0,3).map((it, idx) => (
+                              <div key={idx} className="w-10 h-10 rounded overflow-hidden border bg-white">
+                                {it.image ? <img src={it.image} alt={it.name || 'item'} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-xs text-neutral-500">No image</div>}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="text-sm text-neutral-600">
+                            {o.items.slice(0,3).map(it => {
+                              const pid = it.id || it.productId || it.sku || '—';
+                              const name = it.name || it.title || 'Item';
+                              const qty = it.quantity ?? it.qty ?? 1;
+                              return `${name} (${pid}) x${qty}`;
+                            }).join(', ')}{o.items.length > 3 ? ` and ${o.items.length - 3} more` : ''}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="text-lg font-semibold">{fmt(amount)}</div>
+                      <div className={`px-3 py-1 rounded text-sm ${status === 'paid' || status === 'delivered' ? 'bg-green-100 text-green-700' : status === 'shipped' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>{status}</div>
+                      <div className="flex gap-2">
+                        <button onClick={()=>setSelected({ id, data: o })} className="text-sm text-primary-700">View</button>
+
+                        {status === 'shipped' ? (
+                          // when shipped, allow marking as delivered (unless already delivered)
+                          status !== 'delivered' && (
+                            <button onClick={()=>updateStatus(id, 'delivered')} className="text-sm text-blue-700">Mark Delivered</button>
+                          )
+                        ) : (
+                          // otherwise allow marking as shipped
+                          status !== 'shipped' && <button onClick={()=>updateStatus(id, 'shipped')} className="text-sm text-green-700">Mark Shipped</button>
+                        )}
+
+                        {status !== 'paid' && <button onClick={()=>updateStatus(id, 'paid')} className="text-sm text-indigo-700">Mark Paid</button>}
+                        {status !== 'cancelled' && <button onClick={()=>updateStatus(id, 'cancelled')} className="text-sm text-red-600">Cancel</button>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
       <Modal isOpen={!!selected} hideActions onClose={()=>setSelected(null)} title={selected ? `Order ${selected.id}` : ''}>
