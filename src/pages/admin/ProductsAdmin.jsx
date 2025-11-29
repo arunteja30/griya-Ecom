@@ -10,6 +10,7 @@ export default function ProductsAdmin(){
   const [products, setProducts] = useState({});
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
   const [form, setForm] = useState({name:'', price:'', slug:'', images:[], tags: [], longDescription: ''});
   const [categories, setCategories] = useState({});
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -468,43 +469,79 @@ export default function ProductsAdmin(){
             </select>
             <button onClick={()=>{ setSearchQuery(''); setFilterCategoryId(''); }} className="px-3 py-2 border rounded">Clear</button>
           </div>
-          <div className="text-sm text-neutral-600 mb-2">Showing {filteredProductEntries.length} / {Object.keys(products).length}</div>
-          <div className="space-y-2 overflow-y-auto max-h-[65vh]">
-            {filteredProductEntries.map(([id, p]) => (
-               <div key={id} className="flex items-center justify-between border p-2 rounded">
-                 <div className="text-gray-800">{p.name} - ₹{p.price}</div>
-                 <div className="flex gap-2">
-                   <button onClick={(e) => { e.stopPropagation(); setEditing(id); setForm({ ...p, tags: Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',').map(s => s.trim()).filter(Boolean) : []) }); }} className="text-blue-600">Edit</button>
-                   <button onClick={(e) => { e.stopPropagation(); /* create a copy: populate form but clear editing so Save will push a new product */ const copied = {
-                       name: p.name || '',
-                       price: p.price !== undefined ? String(p.price) : '',
-                       originalPrice: p.originalPrice ?? p.mrp ?? '',
-                       slug: '', // clear slug to avoid collision
-                       sku: '',
-                       categoryId: p.categoryId || '',
-                       categoryName: p.categoryName || (p.categoryId ? (categories?.[p.categoryId]?.name || '') : ''),
-                       categorySlug: p.categorySlug || (p.categoryId ? (categories?.[p.categoryId]?.slug || '') : ''),
-                       discount: p.discount !== undefined ? String(p.discount) : '',
-                       images: Array.isArray(p.images) ? p.images : (p.images ? [String(p.images)] : []),
-                       tags: Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',').map(s => s.trim()).filter(Boolean) : []),
-                       bestseller: Boolean(p.bestseller),
-                       freeShipping: Boolean(p.freeShipping),
-                       isNew: Boolean(p.isNew),
-                       avgRating: p.avgRating !== undefined ? p.avgRating : 0,
-                       reviewCount: p.reviewCount !== undefined ? p.reviewCount : 0,
-                       stock: p.stock !== undefined ? String(p.stock) : '',
-                       materials: p.materials || '',
-                       weight: p.weight || '',
-                       dimensions: p.dimensions || '',
-                       manufacturer: p.manufacturer || '',
-                       inStock: p.inStock !== undefined ? Boolean(p.inStock) : false,
-                       longDescription: p.longDescription || ''
-                     }; setEditing(null); setForm(copied); showToast('Product copied — edit and Save to create new'); }} className="text-gray-700">Copy</button>
-                   <button onClick={(e) => { e.stopPropagation(); confirmDelete(id); }} className="text-red-600">Delete</button>
-                 </div>
-               </div>
-            ))}
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm text-neutral-600">Showing {filteredProductEntries.length} / {Object.keys(products).length}</div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setViewMode('list')} className={`px-2 py-1 rounded ${viewMode === 'list' ? 'bg-primary-600 text-white' : 'bg-gray-100'}`}>List</button>
+              <button onClick={() => setViewMode('grid')} className={`px-2 py-1 rounded ${viewMode === 'grid' ? 'bg-primary-600 text-white' : 'bg-gray-100'}`}>Grid</button>
+            </div>
           </div>
+
+          {viewMode === 'list' ? (
+            <div className="space-y-2 overflow-y-auto max-h-[65vh]">
+              {filteredProductEntries.map(([id, p]) => (
+                 <div key={id} className="flex items-center justify-between border p-2 rounded">
+                   <div className="text-gray-800">{p.name} - ₹{p.price}</div>
+                   <div className="flex gap-2">
+                     <button onClick={(e) => { e.stopPropagation(); setEditing(id); setForm({ ...p, tags: Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',').map(s => s.trim()).filter(Boolean) : []) }); }} className="text-blue-600">Edit</button>
+                     <button onClick={(e) => { e.stopPropagation(); const copied = {
+                         name: p.name || '',
+                         price: p.price !== undefined ? String(p.price) : '',
+                         originalPrice: p.originalPrice ?? p.mrp ?? '',
+                         slug: '', sku: '', categoryId: p.categoryId || '',
+                         categoryName: p.categoryName || (p.categoryId ? (categories?.[p.categoryId]?.name || '') : ''),
+                         categorySlug: p.categorySlug || (p.categoryId ? (categories?.[p.categoryId]?.slug || '') : ''),
+                         discount: p.discount !== undefined ? String(p.discount) : '',
+                         images: Array.isArray(p.images) ? p.images : (p.images ? [String(p.images)] : []),
+                         tags: Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',').map(s => s.trim()).filter(Boolean) : []),
+                         bestseller: Boolean(p.bestseller),
+                         freeShipping: Boolean(p.freeShipping),
+                         isNew: Boolean(p.isNew),
+                         avgRating: p.avgRating !== undefined ? p.avgRating : 0,
+                         reviewCount: p.reviewCount !== undefined ? p.reviewCount : 0,
+                         stock: p.stock !== undefined ? String(p.stock) : '',
+                         materials: p.materials || '',
+                         weight: p.weight || '',
+                         dimensions: p.dimensions || '',
+                         manufacturer: p.manufacturer || '',
+                         inStock: p.inStock !== undefined ? Boolean(p.inStock) : false,
+                         longDescription: p.longDescription || ''
+                       }; setEditing(null); setForm(copied); showToast('Product copied — edit and Save to create new'); }} className="text-gray-700">Copy</button>
+                     <button onClick={(e) => { e.stopPropagation(); confirmDelete(id); }} className="text-red-600">Delete</button>
+                   </div>
+                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 overflow-auto max-h-[65vh]">
+              {filteredProductEntries.map(([id, p]) => (
+                <div key={id} className="border rounded p-3 bg-white flex flex-col justify-between h-full">
+                  <div>
+                    <div className="w-full h-40 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                      {Array.isArray(p.images) && p.images[0] ? (
+                        <img src={p.images[0]} alt={p.name} className="w-full h-full object-contain" />
+                      ) : (p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-contain" /> : <div className="text-xs text-neutral-500">No image</div>)}
+                    </div>
+                    <div className="mt-3">
+                      <div className="font-medium text-gray-800">{p.name}</div>
+                      <div className="text-sm text-neutral-600">₹{p.price} • {p.categoryName || ''}</div>
+                      {p.tags && p.tags.length > 0 && <div className="mt-2 text-sm text-neutral-500">{(Array.isArray(p.tags) ? p.tags : String(p.tags).split(',')).slice(0,3).join(', ')}{(Array.isArray(p.tags) ? p.tags.length : String(p.tags).split(',').length) > 3 ? '...' : ''}</div>}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex gap-2">
+                      <button onClick={()=>{ setEditing(id); setForm({ ...p, tags: Array.isArray(p.tags) ? p.tags : (p.tags ? String(p.tags).split(',').map(s=>s.trim()).filter(Boolean) : []) }); }} className="text-sm text-blue-600">Edit</button>
+                      <button onClick={()=>{ const copied = { ...p, slug: '', images: Array.isArray(p.images) ? p.images : (p.images ? [String(p.images)] : []) }; setEditing(null); setForm(copied); showToast('Product copied — edit and Save to create new'); }} className="text-sm text-gray-700">Copy</button>
+                    </div>
+                    <div>
+                      <button onClick={()=>confirmDelete(id)} className="text-sm text-red-600">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

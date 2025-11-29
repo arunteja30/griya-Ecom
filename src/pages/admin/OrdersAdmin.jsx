@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { db } from '../../firebase';
-import { ref, onValue, update, get } from 'firebase/database';
+import { ref, onValue, update, get, remove } from 'firebase/database';
 import Loader from '../../components/Loader';
 import Modal from '../../components/Modal';
 import { showToast } from '../../components/Toast';
@@ -10,9 +10,32 @@ export default function OrdersAdmin(){
   const [orders, setOrders] = useState({});
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  const [deleteCandidate, setDeleteCandidate] = useState(null);
   // filters
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+
+  // helper to parse createdAt which may be ISO string or numeric timestamp
+  const parseTs = (val) => {
+    if (!val && val !== 0) return null;
+    const num = Number(val);
+    if (!isNaN(num) && num > 0) return num;
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) return d.getTime();
+    return null;
+  };
+
+  // compute orders in the last 7 days for quick stats
+  const last7Count = useMemo(() => {
+    const now = Date.now();
+    const sevenAgo = now - 7 * 24 * 60 * 60 * 1000;
+    return Object.values(orders || {}).filter(o => {
+      const ts = parseTs(o?.createdAt);
+      return ts && ts >= sevenAgo;
+    }).length;
+  }, [orders]);
 
   const { data: siteSettings } = useFirebaseObject('/siteSettings');
 
@@ -75,6 +98,20 @@ export default function OrdersAdmin(){
     }
   };
 
+  const deleteOrder = async (id) => {
+    try {
+      if (!id) return;
+      await remove(ref(db, `/orders/${id}`));
+      showToast('Order deleted', 'success');
+      // close any open modals related to this order
+      if (selected && selected.id === id) setSelected(null);
+      setDeleteCandidate(null);
+    } catch (e) {
+      console.error('Failed to delete order', e);
+      showToast('Failed to delete order', 'error');
+    }
+  };
+
   if(loading) return <Loader />;
 
   // prepare, sort and filter orders for display
@@ -85,7 +122,18 @@ export default function OrdersAdmin(){
   });
 
   const items = itemsSorted.filter(([id, o]) => {
+    // status
     if(statusFilter && (o.status || '') !== statusFilter) return false;
+
+    // date range filter
+    if(fromDate || toDate){
+      const ts = parseTs(o?.createdAt);
+      if(!ts) return false;
+      const fromTs = fromDate ? new Date(fromDate).setHours(0,0,0,0) : -Infinity;
+      const toTs = toDate ? new Date(toDate).setHours(23,59,59,999) : Infinity;
+      if(ts < fromTs || ts > toTs) return false;
+    }
+
     if(search){
       const q = String(search).trim().toLowerCase();
       const orderIdMatch = String(o.orderId || id).toLowerCase().includes(q);
@@ -102,7 +150,7 @@ export default function OrdersAdmin(){
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Orders</h2>
+      <h2 className="text-xl font-semibold mb-4">Orders <span className="text-sm text-neutral-500">(Last 7 days: {last7Count})</span></h2>
 
       {/* Filters */}
       <div className="mb-4 flex items-center gap-2">
@@ -115,13 +163,27 @@ export default function OrdersAdmin(){
           <option value="delivered">delivered</option>
           <option value="cancelled">cancelled</option>
         </select>
-        <button onClick={()=>{setSearch(''); setStatusFilter('');}} className="ml-auto text-sm text-neutral-600">Clear</button>
+
+        {/* Date range filter */}
+        <div className="flex items-center gap-2">
+          <input type="date" value={fromDate} onChange={(e)=>setFromDate(e.target.value)} className="border p-2 rounded" />
+          <input type="date" value={toDate} onChange={(e)=>setToDate(e.target.value)} className="border p-2 rounded" />
+          <button onClick={()=>{
+            // set to last 7 days
+            const to = new Date();
+            const from = new Date(); from.setDate(from.getDate() - 6);
+            setFromDate(from.toISOString().slice(0,10));
+            setToDate(to.toISOString().slice(0,10));
+          }} className="border p-2 rounded text-sm">Last 7 days</button>
+        </div>
+
+        <button onClick={()=>{setSearch(''); setStatusFilter(''); setFromDate(''); setToDate('');}} className="ml-auto text-sm text-neutral-600">Clear</button>
       </div>
 
       {items.length === 0 ? (
         <div className="card p-6 text-center">No orders found</div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {items.map(([id, o])=> {
             const customer = o.customer || o.address || {};
             const shipping = o.shipping || o.address || {};
@@ -129,14 +191,25 @@ export default function OrdersAdmin(){
             const status = o.status || 'pending';
 
             return (
-              <div key={id} className="border p-4 rounded flex items-start justify-between">
+              <div key={id} className="border p-4 rounded flex flex-col justify-between h-full bg-white shadow-sm">
                 <div>
-                  <div className="font-medium">{customer?.name || '—'} • <span className="text-sm text-neutral-500">{customer?.phone || customer?.contact || ''}</span></div>
-                  <div className="text-sm text-neutral-600">Order: {o.orderId || id} • {o.items?.length || 0} item(s)</div>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="font-medium">{customer?.name || '—'}</div>
+                      <div className="text-sm text-neutral-500">{customer?.phone || customer?.contact || ''}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-semibold">{fmt(amount)}</div>
+                      <div className={`px-2 py-1 rounded text-sm mt-2 ${status === 'paid' || status === 'delivered' ? 'bg-green-100 text-green-700' : status === 'shipped' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>{status}</div>
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-neutral-600 mt-2">Order: {o.orderId || id} • {o.items?.length || 0} item(s)</div>
                   <div className="text-sm text-neutral-500">{shipping?.city || ''}{shipping?.state ? ', ' + shipping.state : ''} • {shipping?.pincode || ''}</div>
+                  <div className="text-sm text-neutral-400 mt-1">{o.createdAt ? new Date(parseTs(o.createdAt)).toLocaleString() : '—'}</div>
 
                   {o.items && o.items.length > 0 && (
-                    <div className="mt-2 flex items-center gap-3">
+                    <div className="mt-3 flex items-center gap-3">
                       <div className="flex -space-x-2">
                         {o.items.slice(0,3).map((it, idx) => (
                           <div key={idx} className="w-10 h-10 rounded overflow-hidden border bg-white">
@@ -156,24 +229,21 @@ export default function OrdersAdmin(){
                   )}
                 </div>
 
-                <div className="flex flex-col items-end gap-2">
-                  <div className="text-lg font-semibold">{fmt(amount)}</div>
-                  <div className={`px-3 py-1 rounded text-sm ${status === 'paid' || status === 'delivered' ? 'bg-green-100 text-green-700' : status === 'shipped' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>{status}</div>
+                <div className="mt-4 flex items-center justify-between gap-2">
                   <div className="flex gap-2">
                     <button onClick={()=>setSelected({ id, data: o })} className="text-sm text-primary-700">View</button>
 
                     {status === 'shipped' ? (
-                      // when shipped, allow marking as delivered (unless already delivered)
                       status !== 'delivered' && (
                         <button onClick={()=>updateStatus(id, 'delivered')} className="text-sm text-blue-700">Mark Delivered</button>
                       )
                     ) : (
-                      // otherwise allow marking as shipped
                       status !== 'shipped' && <button onClick={()=>updateStatus(id, 'shipped')} className="text-sm text-green-700">Mark Shipped</button>
                     )}
 
                     {status !== 'paid' && <button onClick={()=>updateStatus(id, 'paid')} className="text-sm text-indigo-700">Mark Paid</button>}
                     {status !== 'cancelled' && <button onClick={()=>updateStatus(id, 'cancelled')} className="text-sm text-red-600">Cancel</button>}
+                    <button onClick={()=>setDeleteCandidate({ id, data: o })} className="text-sm text-red-600">Delete</button>
                   </div>
                 </div>
               </div>
@@ -222,6 +292,19 @@ export default function OrdersAdmin(){
 
             <div className="mt-4 flex justify-end gap-2">
               <button onClick={()=>setSelected(null)} className="px-4 py-2">Close</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Delete confirmation modal */}
+      <Modal isOpen={!!deleteCandidate} onClose={()=>setDeleteCandidate(null)} title="Delete Order" hideActions>
+        {deleteCandidate && (
+          <div>
+            <p>Are you sure you want to permanently delete order <strong>{deleteCandidate?.data?.orderId || deleteCandidate?.id}</strong> ? This action cannot be undone.</p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button onClick={()=>setDeleteCandidate(null)} className="px-4 py-2">Cancel</button>
+              <button onClick={async ()=>{ await deleteOrder(deleteCandidate.id); }} className="px-4 py-2 bg-red-600 text-white rounded">Delete</button>
             </div>
           </div>
         )}
