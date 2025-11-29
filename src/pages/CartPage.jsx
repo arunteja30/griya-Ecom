@@ -145,7 +145,7 @@ export default function CartPage() {
           </Link>
           <h1 className="text-2xl font-semibold">Your Cart</h1>
         </div>
-        <div className="text-sm text-neutral-600">{cartItems.length} item(s)</div>
+      <div className="text-sm text-neutral-600">{cartItems.length} item(s)</div>
       </div>
 
       {cartItems.length === 0 ? (
@@ -237,15 +237,11 @@ export default function CartPage() {
 
               <div className="mb-4 font-semibold">Total: ₹{finalTotal}</div>
               <div className="space-y-2">
-                {siteSettings?.enableWhatsAppCheckout !== false && (
-                  <button onClick={handleCheckout} disabled={!canCheckout} className={`w-full bg-green-600 text-white py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>Checkout via WhatsApp</button>
-                )}
+                
                 {siteSettings?.enableRazorpayCheckout !== false && (
                   <button onClick={() => { if (!canCheckout) return; navigate('/checkout'); }} disabled={!canCheckout} className={`w-full bg-primary-500 text-white py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>Proceed to Checkout</button>
                 )}
-                {siteSettings?.enableWhatsAppCheckout === false && siteSettings?.enableRazorpayCheckout === false && (
-                  <div className="text-sm text-neutral-500">Online checkout is currently disabled. Please contact support to place an order.</div>
-                )}
+                
               </div>
             </div>
           </aside>

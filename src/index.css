@@ -408,3 +408,15 @@ html::-webkit-scrollbar:horizontal, body::-webkit-scrollbar:horizontal {
     .mobile-products-scroll::-webkit-scrollbar { width: 0; }
   }
 }
+
+@media print {
+  /* Hide interactive UI elements when printing receipts */
+  .no-print { display: none !important; }
+  /* Ensure printed page has white background and readable colors */
+  body, html, #root { background: #ffffff !important; color: #000000 !important; }
+
+  /* Print only the proforma invoice if present; hide everything else to avoid full-screen capture */
+  body * { visibility: hidden; }
+  .print-proforma, .print-proforma * { visibility: visible; }
+  .print-proforma { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; background: #ffffff; color: #000000; }
+}

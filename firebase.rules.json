@@ -29,9 +29,16 @@
       ".write": "auth != null && auth.token.isAdmin === true"
     },
 
+    "verifications": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["paymentId"]
+    },
+
     "orders": {
-      ".read": "auth != null && (auth.token.isAdmin === true || data.child('customerId').val() === auth.uid)",
-      ".write": "auth != null"
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["paymentId", "orderId"]
     },
 
     ".read": false,

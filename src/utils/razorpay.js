@@ -11,104 +11,68 @@ export function loadRazorpayScript() {
 }
 
 export async function openRazorpayCheckout({ key, amountINR, name, description, prefill = {}, orderId, onSuccess, onFailure }) {
-  await loadRazorpayScript();
+  // Ensure SDK is loaded (propagate load errors)
+  await loadRazorpayScript().catch(err => {
+    console.error('Razorpay script failed to load', err);
+    throw err;
+  });
 
-  // Defensive cleanup for leftover Razorpay UI elements
-  const cleanupRazorpayUi = () => {
-    try {
-      // remove overlay elements and checkout iframe if present
-      const selectors = ['.razorpay-overlay', 'iframe[id^="razorpay"]', '#razorpay-checkout-frame'];
-      selectors.forEach((sel) => {
-        document.querySelectorAll(sel).forEach(el => el.remove());
-      });
-      // restore body scrolling if it was disabled
-      try { document.body.style.overflow = ''; } catch (e) { /* ignore */ }
-    } catch (e) { /* ignore cleanup errors */ }
-  };
+  if (!window.Razorpay) throw new Error('Razorpay SDK not available');
+
+  // Normalize and validate amount (INR -> paise). Ensure at least 1 paise.
+  const amountPaise = Math.max(1, Math.round(Number(amountINR ?? 0) * 100));
 
   const options = {
     key,
-    amount: String(Math.round(amountINR * 100)), // INR -> paise
+    amount: String(amountPaise),
     currency: 'INR',
     name: name || 'Store',
     description: description || 'Order Payment',
-    image: '',
-    handler: function (response) {
-      // ensure checkout UI is closed on success
-      try { if (typeof rzp !== 'undefined' && rzp && typeof rzp.close === 'function') rzp.close(); } catch (e) { }
-      cleanupRazorpayUi();
-      if (onSuccess) onSuccess(response);
-    },
-    prefill: prefill,
-    theme: {
-      color: '#2874F0'
-    }
+    ...(orderId ? { order_id: orderId } : {}),
+    handler: (response) => onSuccess?.(response),
+    prefill,
+    theme: { color: '#2874F0' }
   };
 
-  if (orderId) options.order_id = orderId;
-
-  const rzp = new window.Razorpay(options);
-  rzp.on('payment.failed', function (response) {
-    // Ensure checkout UI is closed and UI cleaned up before invoking failure handler
-    try { if (typeof rzp.close === 'function') rzp.close(); } catch (e) { /* ignore */ }
-    cleanupRazorpayUi();
-    if (onFailure) onFailure(response);
-  });
-  // Open checkout
-  rzp.open();
+  try {
+    const rzp = new window.Razorpay(options);
+    if (typeof rzp.on === 'function') {
+      rzp.on('payment.failed', (response) => {
+        onFailure?.(response);
+        rzp.close();
+      });
+    }
+    rzp.open();
+    return rzp;
+  } catch (err) {
+    console.error('Failed to open Razorpay checkout', err);
+    throw err;
+  }
 }
 
-export async function createOrderOnServer(amountInput, notes = {}) {
-  // Determine API base (support both VITE_API_BASE and VITE_RAZORPAY_SERVER_URL)
-  const apiBase = (import.meta.env.VITE_API_BASE || import.meta.env.VITE_RAZORPAY_SERVER_URL || 'http://localhost:4000').replace(/\/$/, '');
-
-  // If no API base configured and environment omitted, still allow quick local testing by returning public key
-  if (!apiBase) {
-    return { key: import.meta.env.VITE_RAZORPAY_KEY };
+export async function createOrderOnServer(amountPaise) {
+  const base = import.meta.env.VITE_API_BASE || '';
+  // If no API base is configured, return a fallback allowing client-side testing
+  if (!base) {
+    return { key: import.meta.env.VITE_RAZORPAY_KEY || null };
   }
 
-  // Normalize input: accept number (assumed INR by default) or object { amount, unit }
-  let amount = null;
-  let unit = null; // 'inr' or 'paise'
+  try {
+    const res = await fetch(base + '/api/razorpay/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: amountPaise })
+    });
 
-  if (amountInput != null && typeof amountInput === 'object' && !Array.isArray(amountInput)) {
-    if (amountInput.amount == null) throw new Error('Invalid amount object');
-    amount = Number(amountInput.amount);
-    unit = String(amountInput.unit || '').toLowerCase();
-  } else {
-    amount = Number(amountInput);
-  }
-
-  if (!isFinite(amount) || amount <= 0) throw new Error('Invalid amount');
-
-  // Convert to paise
-  let amountPaise;
-  if (unit === 'paise' || unit === 'p') {
-    amountPaise = Math.round(amount);
-  } else if (unit === 'inr' || unit === 'rs' || unit === '₹') {
-    amountPaise = Math.round(amount * 100);
-  } else {
-    // Heuristic: if integer and looks large (>=1000) assume paise, else treat as INR
-    if (Number.isInteger(amount) && amount >= 1000) {
-      amountPaise = Math.round(amount);
-    } else {
-      amountPaise = Math.round(amount * 100);
+    if (!res.ok) {
+      const txt = await res.text().catch(() => '');
+      console.warn('createOrderOnServer: server responded with non-OK:', res.status, txt);
+      return { key: import.meta.env.VITE_RAZORPAY_KEY || null };
     }
+
+    return await res.json();
+  } catch (err) {
+    console.warn('createOrderOnServer: request failed, falling back to client key', err);
+    return { key: import.meta.env.VITE_RAZORPAY_KEY || null };
   }
-
-  console.log('[razorpay] createOrderOnServer: amountInput=', amountInput, 'normalized paise=', amountPaise);
-
-  const payload = { amount: amountPaise, notes };
-  const res = await fetch(`${apiBase}/api/razorpay/create-order`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (!res.ok) {
-    const txt = await res.text().catch(() => '');
-    throw new Error('Failed to create order: ' + (txt || res.status));
-  }
-
-  return res.json();
 }
