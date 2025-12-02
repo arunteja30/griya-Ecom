@@ -137,19 +137,19 @@ export default function CartPage() {
 
   return (
     <div className="space-y-2 mt-6" style={{ paddingBottom: cartItems.length > 0 ? 'calc(env(safe-area-inset-bottom, 0px) + 96px)' : undefined }}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="mt-2 flex items-center justify-between">
+        <div className="mt-6 flex items-center gap-3">
         
           <h1 className="text-2xl font-semibold">Your Cart</h1>
         </div>
-      <div className="text-sm text-neutral-600">{cartItems.length} item(s)</div>
+      <div className="mt-6 text-sm text-neutral-600">{cartItems.length} item(s)</div>
       </div>
 
       {cartItems.length === 0 ? (
         <div className="card p-8 text-center">
           <h2 className="text-xl font-semibold mb-2">Your cart is empty</h2>
           <p className="text-neutral-600 mb-6">Explore our collections and add items you love.</p>
-          <a href="/collections" className="btn btn-secondary">Browse Collections</a>
+          <Link to="/collections" className="btn btn-secondary">Browse Collections</Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
