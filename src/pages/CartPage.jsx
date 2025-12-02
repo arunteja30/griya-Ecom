@@ -136,24 +136,20 @@ export default function CartPage() {
   const handleClearPromo = () => { setPromoInput(''); setPromoError(null); clearPromo(); showToast('Promo cleared', 'info'); };
 
   return (
-    <div className="space-y-6 mt-6" style={{ paddingBottom: cartItems.length > 0 ? 'calc(env(safe-area-inset-bottom, 0px) + 96px)' : undefined }}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link to="/collections" aria-label="Back to collections" title="Back" className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </Link>
+    <div className="space-y-2 mt-6" style={{ paddingBottom: cartItems.length > 0 ? 'calc(env(safe-area-inset-bottom, 0px) + 96px)' : undefined }}>
+      <div className="mt-2 flex items-center justify-between">
+        <div className="mt-6 flex items-center gap-3">
+        
           <h1 className="text-2xl font-semibold">Your Cart</h1>
         </div>
-      <div className="text-sm text-neutral-600">{cartItems.length} item(s)</div>
+      <div className="mt-6 text-sm text-neutral-600">{cartItems.length} item(s)</div>
       </div>
 
       {cartItems.length === 0 ? (
         <div className="card p-8 text-center">
           <h2 className="text-xl font-semibold mb-2">Your cart is empty</h2>
           <p className="text-neutral-600 mb-6">Explore our collections and add items you love.</p>
-          <a href="/collections" className="btn btn-secondary">Browse Collections</a>
+          <Link to="/collections" className="btn btn-secondary">Browse Collections</Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -266,11 +262,7 @@ export default function CartPage() {
             )}
           </div>
           <div className="flex items-center gap-2 w-[48%]">
-            {siteSettings?.enableWhatsAppCheckout !== false && (
-              <button onClick={handleCheckout} disabled={!canCheckout} className={`flex-1 bg-green-600 text-white py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>
-                WhatsApp
-              </button>
-            )}
+         
             {siteSettings?.enableRazorpayCheckout !== false && (
               <button onClick={() => { if (!canCheckout) return; navigate('/checkout'); }} disabled={!canCheckout} className={`flex-1 btn btn-primary text-dark py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>
                 Checkout
