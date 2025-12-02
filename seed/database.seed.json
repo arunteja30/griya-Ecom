@@ -1,507 +1,968 @@
 {
-  "siteSettings": {
-    "brandName": "Griya Jewellery",
-    "tagline": "Timeless elegance, crafted with care",
-    "bannerVisible": false,
-    "logoUrl": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
-    "whatsapp": "+919812345678",
-    "instagram": "https://instagram.com/griya_jewellery",
-    "address": "123, Jewelry Lane, Mumbai, India",
-    "footerText": "© 2025 Griya Jewellery. All rights reserved."
-  },
-
-  "navigation": {
-    "header": [
-      { "id": "home", "title": "Home", "url": "/", "order": 1 },
-      { "id": "collections", "title": "Collections", "url": "/collections", "order": 2 },
-      { "id": "about", "title": "About", "url": "/about", "order": 3 },
-      { "id": "contact", "title": "Contact", "url": "/contact", "order": 4 },
-      { "id": "track", "title": "Track Order", "url": "/track-order", "order": 5 }
-    ],
-    "footer": [
-      { "id": "privacy", "title": "Privacy Policy", "url": "/privacy", "order": 1 }
-    ]
-  },
-
-  "home": {
-    "layout": ["hero","carouselPromo","newArrivals","bestSellers","trending"],
-    "activeFestivals": ["diwali"],
-    "hero": {
-      "title": "Discover Handcrafted Elegance",
-      "subtitle": "Ethically sourced gemstones, masterfully crafted",
-      "buttonText": "Shop Now",
-      "buttonUrl": "/collections",
-      "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
-    },
-    "sections": {
-      "carouselPromo": {
-        "id": "carouselPromo",
-        "title": "Festive Collection",
-        "type": "carousel",
-        "images": [
-          {
-            "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
-            "title": "Celebrate Diwali with Timeless Pieces",
-            "subtitle": "Handcrafted jewellery inspired by tradition and modern elegance.",
-            "buttonText": "Shop Diwali",
-            "buttonUrl": "/collections/diwali"
-          },
-          {
-            "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
-            "title": "Gifts That Last Generations",
-            "subtitle": "Discover curated collections perfect for gifting this festive season.",
-            "buttonText": "View Gifts",
-            "buttonUrl": "/collections/gifts"
-          }
-        ],
-        "order": 0,
-        "visibility": { "type": "festival", "festivals": ["diwali"] }
-      },
-
-      "newArrivals": {
-        "id": "newArrivals",
-        "title": "New Arrivals",
-        "type": "productList",
-        "productIds": ["prod_001", "prod_005", "prod_010"],
-        "order": 1,
-        "visibility": { "type": "time", "start": "2025-11-01T00:00:00.000Z", "end": "2025-12-31T23:59:59.000Z" }
-      },
-
-      "bestSellers": {
-        "id": "bestSellers",
-        "title": "Best Sellers",
-        "type": "productList",
-        "productIds": ["prod_002", "prod_003", "prod_007"],
-        "order": 2,
-        "visibility": { "type": "always" }
-      },
-
-      "trending": {
-        "id": "trending",
-        "title": "Trending Collections",
-        "type": "collectionList",
-        "collectionIds": ["cat_gold", "cat_pearls"],
-        "order": 3,
-        "visibility": { "type": "always" }
-      }
-    }
-  },
-
   "about": {
-    "hero": {
-      "title": "About Griya Jewellery",
-      "subtitle": "Crafting heirlooms with care and conscience",
-      "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+    "contact": {
+      "address": "123, Jewelry Lane, Mumbai, India",
+      "email": "hello@griya-jewellery.example",
+      "phone": "+91 9812345678"
     },
     "content": [
       "Griya Jewellery began with a simple belief: jewellery should tell a story. We design and craft pieces that celebrate life's special moments — from everyday elegance to once-in-a-lifetime celebrations.",
       "All our pieces are ethically sourced and handcrafted by skilled artisans using traditional techniques combined with contemporary design. We prioritise responsibly sourced gemstones and metals to reduce environmental impact.",
       "Each collection is curated with an eye for detail, quality, and timelessness so that every piece can be loved for generations."
     ],
-    "mission": "To create timeless jewellery that connects people to moments and memories while using responsible practices.",
-    "vision": "To be a trusted jewellery house known for craftsmanship, transparency, and beautiful design.",
-    "values": ["Craftsmanship", "Transparency", "Sustainability", "Customer Delight"],
-    "team": {
-      "m1": {
-        "name": "Anita Rao",
-        "role": "Founder & Head Designer",
-        "photo": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
-        "bio": "Anita trained in traditional jewellery techniques and leads our design team with a focus on timeless aesthetics."
-      },
-      "m2": {
-        "name": "Ravi Sharma",
-        "role": "Master Goldsmith",
-        "photo": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
-        "bio": "Ravi heads production and ensures every piece meets our strict quality standards."
-      }
-    },
-    "contact": {
-      "phone": "+91 9812345678",
-      "email": "hello@griya-jewellery.example",
-      "address": "123, Jewelry Lane, Mumbai, India"
+    "hero": {
+      "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
+      "subtitle": "Crafting heirlooms with care and conscience",
+      "title": "About Griya Jewellery"
     },
     "history": [
-      { "year": 2015, "event": "Griya Jewellery founded in Mumbai." },
-      { "year": 2018, "event": "Launched first full collection of ethically-sourced gemstone jewellery." },
-      { "year": 2022, "event": "Opened flagship studio and expanded artisan team." }
+      {
+        "event": "Griya Jewellery founded in Mumbai.",
+        "year": 2015
+      },
+      {
+        "event": "Launched first full collection of ethically-sourced gemstone jewellery.",
+        "year": 2018
+      },
+      {
+        "event": "Opened flagship studio and expanded artisan team.",
+        "year": 2022
+      }
+    ],
+    "mission": "To create timeless jewellery that connects people to moments and memories while using responsible practices.",
+    "team": {
+      "m1": {
+        "bio": "Anita trained in traditional jewellery techniques and leads our design team with a focus on timeless aesthetics.",
+        "name": "Anita Rao",
+        "photo": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
+        "role": "Founder & Head Designer"
+      },
+      "m2": {
+        "bio": "Ravi heads production and ensures every piece meets our strict quality standards.",
+        "name": "Ravi Sharma",
+        "photo": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
+        "role": "Master Goldsmith"
+      }
+    },
+    "values": [
+      "Craftsmanship",
+      "Transparency",
+      "Sustainability",
+      "Customer Delight"
+    ],
+    "vision": "To be a trusted jewellery house known for craftsmanship, transparency, and beautiful design."
+  },
+  "banners": {
+    "b-1764331158976": {
+      "body": "Find the perfect gift for the special women in your life. Shop our exclusive collection of elegant jewellery.",
+      "ctaLabel": "Shop",
+      "endDate": "2025-11-29T12:10:00.000Z",
+      "heading": "Sparkle this Christmas ✨",
+      "id": "b-1764331158976",
+      "image": "https://www.silverchic.com.au/cdn/shop/articles/shutterstock_2066168429_2_4288x.jpg?v=1694152990",
+      "link": "/collections/black-friday",
+      "startDate": "2025-11-28T12:10:00.000Z"
+    },
+    "b-1764332145025": {
+      "body": "Find the perfect gift for the special women in your life. Shop our exclusive collection of elegant jewellery",
+      "ctaLabel": "Let Go",
+      "endDate": "2025-12-31T12:15:00.000Z",
+      "heading": "Sparkle this Christmas ✨",
+      "id": "b-1764332145025",
+      "image": "https://s3-ap-southeast-2.amazonaws.com/assets1.brilliyond.com.au/images/Christmas-jewellery-giving.png",
+      "link": "/collections/christmas",
+      "startDate": "2025-11-28T12:14:00.000Z"
+    }
+  },
+  "categories": {
+    "cat_bracelet": {
+      "description": "Elegance on Her Wrist, Delicate, refined, and designed to enhance every look",
+      "image": "https://liorajewels.in/cdn/shop/files/0Z7A2681_edit.jpg?v=1702272817",
+      "name": "Bracelets",
+      "slug": "Bracelets",
+      "sortOrder": 2
+    },
+    "cat_earrings": {
+      "description": "Elegant earrings designed to add charm to every look. Perfect for daily wear, parties, and special moments.",
+      "image": "https://smarsjewelry.com/cdn/shop/files/2346.1.jpg?v=1762772704",
+      "name": "Earrings",
+      "slug": "earrings",
+      "sortOrder": 3
+    },
+    "cat_hair_acc": {
+      "description": "Trendy clips, bands, and pins designed to add flair to every hairstyle.",
+      "image": "https://static.vecteezy.com/system/resources/thumbnails/004/957/842/small/hair-accessories-frame-vector.jpg",
+      "name": "Hair Accessories",
+      "slug": "hair-accessories"
+    },
+    "cat_necklace": {
+      "description": "Beautiful necklaces crafted to add elegance and shine to every outfit.",
+      "image": "https://m.media-amazon.com/images/I/61xUQIASFkL._AC_UY1100_.jpg",
+      "name": "Necklaces Sets",
+      "slug": "necklaces",
+      "sortOrder": 4
+    }
+  },
+  "gallery": {
+    "-Of4mmUEdHSYRWM9LTOn": {
+      "url": "https://lh3.googleusercontent.com/d/1X2Pyq2xr314QWLLsU7H_eRqjk2IP1dMY=w1000"
+    },
+    "-Of4mmV5_oxGkF1OgdYd": {
+      "url": "https://lh3.googleusercontent.com/d/18W9_srAWa0m302RV6nq4kJl5YDHlydKv=w1000"
+    },
+    "-Of4mmVy6YSd_N83SHVO": {
+      "url": "https://lh3.googleusercontent.com/d/1jP2ruoUWEEsQbWKuYXjkOyA6ouZcDp3w=w1000"
+    },
+    "-Of4q9RFYqRwgwwV_00g": {
+      "url": "https://lh3.googleusercontent.com/d/1F1f9818mfWazTNUr-zYu6_-DM7vzHjmi=w1000"
+    },
+    "-Of4u-q3EBHvPG7Vy4mO": {
+      "url": "https://lh3.googleusercontent.com/d/1NIPeLLw4ciP7ysnVGlGQsfv7VFeQSmRa=w1000"
+    },
+    "img_1": {
+      "caption": "Handcrafted studio shot",
+      "order": 1,
+      "url": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+    },
+    "img_2": {
+      "caption": "Behind the scenes",
+      "order": 2,
+      "url": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+    }
+  },
+  "home": {
+    "activeFestivals": [
+      "diwali"
+    ],
+    "hero": {
+      "buttonText": "Shop Now",
+      "buttonUrl": "/collections",
+      "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
+      "subtitle": "Ethically sourced gemstones, masterfully crafted",
+      "title": "Discover Handcrafted Elegance"
+    },
+    "layout": [
+      "hero",
+      "carouselPromo",
+      "newArrivals",
+      "bestSellers",
+      "trending"
+    ],
+    "sections": {
+      "bestSellers": {
+        "id": "bestSellers",
+        "order": 2,
+        "productIds": [
+          "prod_002",
+          "prod_003",
+          "prod_007"
+        ],
+        "title": "Best Sellers",
+        "type": "productList"
+      },
+      "carouselPromo": {
+        "id": "carouselPromo",
+        "images": [
+          {
+            "buttonText": "Shop Diwali",
+            "buttonUrl": "/collections/diwali",
+            "image": "https://drive.google.com/file/d/11Vw7JjlLac0NlTfu4aWS3DwxC9Mq_AVJ/view?usp=sharing",
+            "subtitle": "Handcrafted jewellery inspired by tradition and modern elegance.",
+            "title": "Celebrate Diwali with Timeless Pieces"
+          },
+          {
+            "buttonText": "View Gifts",
+            "buttonUrl": "/collections/gifts",
+            "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
+            "subtitle": "Discover curated collections perfect for gifting this festive season.",
+            "title": "Gifts That Last Generations"
+          }
+        ],
+        "order": 0,
+        "title": "Festive Collection",
+        "type": "carousel"
+      },
+      "newArrivals": {
+        "id": "newArrivals",
+        "order": 1,
+        "productIds": [
+          "prod_001",
+          "prod_005",
+          "prod_010"
+        ],
+        "title": "New Arrivals",
+        "type": "productList",
+        "visibility": {
+          "type": "always"
+        }
+      },
+      "shop-by-category": {
+        "title": "Shop by category",
+        "type": "grid",
+        "visibility": {
+          "type": "always"
+        }
+      },
+      "trending": {
+        "collectionIds": [
+          "cat_gold",
+          "cat_pearls"
+        ],
+        "id": "trending",
+        "order": 3,
+        "title": "Trending Collections",
+        "type": "collectionList",
+        "visibility": {
+          "type": "always"
+        }
+      }
+    }
+  },
+  "homeConfig": {
+    "festivals": {
+      "black-friday": [
+        "new",
+        "new arrival",
+        "traditional",
+        "new",
+        "arrival",
+        "bracelets",
+        "bracelet",
+        "christmas",
+        "casual",
+        "stylish"
+      ]
+    }
+  },
+  "homeSections": {
+    "sec1": {
+      "enabled": true,
+      "position": 1,
+      "title": "Top Picks",
+      "type": "banners"
+    },
+    "sec2": {
+      "enabled": true,
+      "position": 2,
+      "title": "Trending Earrings",
+      "type": "featured_products"
+    },
+    "sec3": {
+      "enabled": true,
+      "position": 3,
+      "title": "About Us",
+      "type": "about"
+    },
+    "sec4": {
+      "config": {
+        "backgroundColor": "#fee2e2",
+        "text": "Festive Sale - Up to 50% OFF on Earrings",
+        "textColor": "#b91c1c"
+      },
+      "enabled": true,
+      "position": 4,
+      "title": "Festive Offer",
+      "type": "promo_strip"
+    },
+    "sec5": {
+      "config": {
+        "items": [
+          {
+            "categorySlug": "earrings",
+            "imageUrl": "https://example.com/earrings.jpg",
+            "label": "Earrings"
+          },
+          {
+            "categorySlug": "necklaces",
+            "imageUrl": "https://example.com/necklaces.jpg",
+            "label": "Necklaces"
+          }
+        ]
+      },
+      "enabled": true,
+      "position": 5,
+      "title": "Shop by Category",
+      "type": "category_grid"
+    },
+    "sec6": {
+      "config": {
+        "tags": [
+          "trending",
+          "festive",
+          "new"
+        ]
+      },
+      "enabled": true,
+      "position": 6,
+      "title": "Best Sellers",
+      "type": "product_carousel_tags"
+    }
+  },
+  "navigation": {
+    "footer": [
+      {
+        "id": "privacy",
+        "order": 1,
+        "title": "Privacy Policy",
+        "url": "/privacy"
+      }
+    ],
+    "header": [
+      {
+        "id": "home",
+        "order": 1,
+        "title": "Home",
+        "url": "/"
+      },
+      {
+        "id": "collections",
+        "order": 2,
+        "title": "Collections",
+        "url": "/collections"
+      },
+      {
+        "id": "about",
+        "order": 3,
+        "title": "About",
+        "url": "/about"
+      },
+      {
+        "id": "contact",
+        "order": 4,
+        "title": "Contact",
+        "url": "/contact"
+      }
     ]
   },
-
-  "categories": {
-    "cat_gold": {
-      "id": "cat_gold",
-      "name": "Gold Jewellery",
-      "slug": "gold-jewellery",
-      "thumbnail": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
-      "description": "Elegant gold pieces for every occasion.",
-      "sortOrder": 1
+  "offers": [
+    null,
+    {
+      "active": true,
+      "code": "FESTIVAL50",
+      "description": "Up to 50% off on all jewelry",
+      "discount": 50,
+      "id": 1,
+      "image": "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=400",
+      "minOrderValue": 500,
+      "title": "Festival Special",
+      "validUntil": "2024-12-31"
     },
-    "cat_pearls": {
-      "id": "cat_pearls",
-      "name": "Pearl Collection",
-      "slug": "pearls",
-      "thumbnail": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
-      "description": "Classic pearl necklaces and earrings.",
-      "sortOrder": 2
+    {
+      "active": true,
+      "code": "FREESHIP",
+      "description": "Free shipping on orders above ₹499",
+      "discount": 0,
+      "id": 2,
+      "image": "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400",
+      "minOrderValue": 499,
+      "title": "Free Shipping",
+      "validUntil": "2025-12-31"
+    }
+  ],
+  "orders": {
+    "-OfB4LURKbzj166jWiq2": {
+      "amount": 988,
+      "createdAt": "2025-11-28T20:09:06.202Z",
+      "currency": "INR",
+      "customer": {
+        "email": "arun@mail.com",
+        "name": "arunteja",
+        "phone": "9700567735"
+      },
+      "delivery": {
+        "charge": 70
+      },
+      "items": [
+        {
+          "description": "No description available",
+          "id": "-Of4jLm6_nOIjbtQaROP",
+          "image": "https://drive.google.com/file/d/1X2Pyq2xr314QWLLsU7H_eRqjk2IP1dMY/view",
+          "name": "Lotus Jhumka Earrings",
+          "price": 180,
+          "quantity": 6
+        }
+      ],
+      "orderId": "order_RlHpSPRbx6fEKS",
+      "paymentId": "pay_RlHpnsLlKn9rep",
+      "promo": {
+        "code": "GRIYA15",
+        "discount": 162,
+        "key": "-Of2woGMFvswHDy0tvqF"
+      },
+      "shipping": {
+        "city": "hyderbad",
+        "line1": "ameerpet hyd",
+        "pincode": "500045",
+        "state": "Telangana"
+      },
+      "signature": "45308e1ebe9321e094e6a6f661e9dc0db3ce57052786e27ad9a6bbb13784e219",
+      "status": "paid"
+    },
+    "-OfDkbvLSlO-p8BSyNYj": {
+      "amount": 270,
+      "createdAt": "2025-11-29T08:37:24.269Z",
+      "currency": "INR",
+      "customer": {
+        "email": "arun@mail.com",
+        "name": "arunteja",
+        "phone": "8789988787"
+      },
+      "delivery": {
+        "charge": 70
+      },
+      "items": [
+        {
+          "description": "No description available",
+          "id": "bracelet-shaped",
+          "image": "",
+          "name": "Stylish shaped women bracelet",
+          "price": 200,
+          "quantity": 1
+        }
+      ],
+      "orderId": "order_1764405444269",
+      "payment": {
+        "razorpayPaymentId": "pay_RlUaIj81jQjNco"
+      },
+      "shipping": {
+        "city": "hyd",
+        "line1": "hyd",
+        "pincode": "500587",
+        "state": "Arunachal Pradesh"
+      },
+      "status": "paid"
+    },
+    "-OfETQs7xynyjOKIh00g": {
+      "amount": 430,
+      "createdAt": "2025-11-29T11:57:33.526Z",
+      "currency": "INR",
+      "customer": {
+        "email": "vellpulaharika@gmail.com",
+        "name": "Harika",
+        "phone": "+918171687828"
+      },
+      "delivery": {
+        "charge": 70
+      },
+      "items": [
+        {
+          "description": "",
+          "id": "-Of4jLm6_nOIjbtQaROP",
+          "image": "https://drive.google.com/file/d/1X2Pyq2xr314QWLLsU7H_eRqjk2IP1dMY/view",
+          "name": "Lotus Jhumka Earrings",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "orderId": "order_1764417453526",
+      "payment": {
+        "razorpayPaymentId": "pay_RlXzjRsGpTnnWj"
+      },
+      "shipping": {
+        "city": "Hyderabad",
+        "line1": "Hyderabad",
+        "pincode": "500045",
+        "state": "Telangana"
+      },
+      "status": "paid"
+    },
+    "-OfE_0X5wPLW1Brp0zyj": {
+      "amount": 630,
+      "createdAt": "2025-11-29T12:26:20.698Z",
+      "currency": "INR",
+      "customer": {
+        "email": "abkrishnarjun@gmail.com",
+        "name": "krishnarjun Bathula",
+        "phone": "+918919943553"
+      },
+      "delivery": {
+        "charge": 70
+      },
+      "items": [
+        {
+          "description": "",
+          "id": "-Of4jLm6_nOIjbtQaROP",
+          "image": "https://drive.google.com/file/d/1X2Pyq2xr314QWLLsU7H_eRqjk2IP1dMY/view",
+          "name": "Lotus Jhumka Earrings",
+          "price": 180,
+          "quantity": 2
+        },
+        {
+          "description": "",
+          "id": "-OfAA4NaFcN69-oVcift",
+          "image": "",
+          "name": "Stylish shaped women bracelet",
+          "price": 200,
+          "quantity": 1
+        }
+      ],
+      "orderId": "order_1764419180698",
+      "payment": {
+        "razorpayPaymentId": "pay_RlYU0ZW1S0LMf7"
+      },
+      "shipping": {
+        "city": "Hyderabad",
+        "line1": "Gandhinagar",
+        "pincode": "500088",
+        "state": "Telangana"
+      },
+      "status": "shipped"
     }
   },
-
   "products": {
-    "prod_001": {
-      "id": "prod_001",
-      "name": "Rose Gold Cocktail Ring",
-      "slug": "rose-gold-cocktail-ring",
-      "description": "18K rose gold ring set with a lab-grown ruby.",
-      "longDescription": "A statement cocktail ring crafted in 18K rose gold and set with a brilliant lab-grown ruby. Hand-polished finish and subtle filigree on the shoulders create a vintage-inspired silhouette suitable for special occasions.",
-      "materials": "18K Rose Gold, Lab-grown Ruby",
-      "weight": "6.5 g",
-      "dimensions": "Ring face 14mm x 12mm",
-      "manufacturer": "Griya Jewellery Studio",
-      "price": 45000,
-      "mrp": 50000,
-      "originalPrice": 50000,
+    "-Of4jLm6_nOIjbtQaROP": {
+      "avgRating": 5,
+      "bestseller": true,
+      "categoryId": "cat_earrings",
+      "categoryName": "Earrings",
+      "categorySlug": "earrings",
+      "dimensions": "1.5 inch",
       "discount": 10,
-      "images": [
-        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
-        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
-      ],
-      "categoryId": "cat_gold",
-      "tags": ["ring", "rose-gold", "ruby"],
-      "isFeatured": true,
-      "isNewArrival": true,
-      "isNew": true,
-      "bestseller": false,
-      "freeShipping": true,
-      "sku": "RG-001",
-      "inStock": true,
-      "stock": 12,
-      "reviewCount": 2,
-      "avgRating": 4.5,
-      "reviews": [
-        { "name": "Asha P.", "rating": 5, "comment": "Absolutely stunning piece — excellent finish and fits beautifully.", "date": "2025-05-03" },
-        { "name": "Sunita K.", "rating": 4, "comment": "Lovely ring, shipped quickly.", "date": "2025-06-12" }
-      ]
-    },
-
-    "prod_002": {
-      "id": "prod_002",
-      "name": "Classic Pearl Necklace",
-      "slug": "classic-pearl-necklace",
-      "description": "Hand strung cultured pearls with sterling clasp.",
-      "longDescription": "An elegant strand of hand-strung cultured pearls finished with a sterling silver clasp. Perfect for both formal occasions and everyday refinement.",
-      "materials": "Cultured Pearls, Sterling Silver Clasp",
-      "weight": "45 g",
-      "dimensions": "Length 18 inches",
-      "manufacturer": "Griya Jewellery Studio",
-      "price": 32000,
-      "mrp": 35000,
-      "originalPrice": 35000,
-      "discount": 8,
-      "images": [
-        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
-      ],
-      "categoryId": "cat_pearls",
-      "tags": ["necklace", "pearls"],
-      "isFeatured": true,
-      "isNewArrival": false,
-      "isNew": false,
-      "bestseller": true,
-      "freeShipping": true,
-      "sku": "PN-002",
-      "inStock": true,
-      "stock": 6,
-      "reviewCount": 1,
-      "avgRating": 5,
-      "reviews": [
-        { "name": "Rohan M.", "rating": 5, "comment": "Beautiful pearls, very happy with the quality.", "date": "2025-04-22" }
-      ]
-    },
-
-    "prod_003": {
-      "id": "prod_003",
-      "name": "Filigree Gold Earrings",
-      "slug": "filigree-gold-earrings",
-      "description": "Intricate filigree work in 22K gold.",
-      "longDescription": "Delicate filigree earrings hand-finished in 22K gold. Lightweight and comfortable for extended wear while retaining classic goldsmithing detail.",
-      "materials": "22K Gold",
-      "weight": "4.2 g (pair)",
-      "dimensions": "Drop 28mm",
-      "manufacturer": "Griya Jewellery Studio",
-      "price": 22000,
-      "mrp": 24000,
-      "originalPrice": 24000,
-      "discount": 8,
-      "images": [
-        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
-      ],
-      "categoryId": "cat_gold",
-      "tags": ["earrings", "gold"],
-      "isFeatured": true,
-      "isNewArrival": false,
-      "isNew": false,
-      "bestseller": true,
-      "freeShipping": true,
-      "sku": "GE-003",
-      "inStock": true,
-      "stock": 8,
-      "reviewCount": 1,
-      "avgRating": 5,
-      "reviews": [
-        { "name": "Meera S.", "rating": 5, "comment": "Exquisite craftsmanship — received many compliments.", "date": "2025-02-10" }
-      ]
-    },
-
-    "prod_004": {
-      "id": "prod_004",
-      "name": "Gold Tennis Bracelet",
-      "slug": "gold-tennis-bracelet",
-      "description": "Sleek 18K gold bracelet with polished finish.",
-      "longDescription": "A modern take on the classic tennis bracelet, crafted in 18K gold with a smooth polished finish. Ideal as a gift or a personal treat.",
-      "materials": "18K Gold",
-      "weight": "10 g",
-      "dimensions": "Length 7 inches",
-      "manufacturer": "Griya Jewellery Studio",
-      "price": 38000,
-      "mrp": 40000,
-      "originalPrice": 40000,
-      "discount": 5,
-      "images": [
-        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
-      ],
-      "categoryId": "cat_gold",
-      "tags": ["bracelet", "gold"],
-      "isFeatured": false,
-      "isNewArrival": false,
-      "isNew": false,
-      "bestseller": false,
       "freeShipping": false,
-      "sku": "GB-004",
+      "images": [
+        "https://drive.google.com/file/d/1X2Pyq2xr314QWLLsU7H_eRqjk2IP1dMY/view",
+        "https://drive.google.com/file/d/18W9_srAWa0m302RV6nq4kJl5YDHlydKv/view",
+        "https://lh3.googleusercontent.com/d/1jP2ruoUWEEsQbWKuYXjkOyA6ouZcDp3w=w1000"
+      ],
       "inStock": true,
+      "isNew": true,
+      "longDescription": "Beautiful Lotus Design Jhumkas with red & green enamel finish and elegant golden beads. Perfect for daily wear, festive looks, gifting, and traditional outfits.\nPremium quality • Lightweight • Eye-catching design ✨\n\nWhy you’ll love it:\n✔ Elegant lotus motif\n✔ Traditional gold-finish jhumka\n✔ Comfortable & durable\n✔ Suits sarees, lehengas, kurtis & long gowns\n✔ Perfect for gifting 🎁",
+      "manufacturer": "Griya",
+      "materials": "bronze material",
+      "name": "Lotus Jhumka Earrings",
+      "originalPrice": 200,
+      "price": 180,
+      "reviewCount": 21,
+      "sku": "Ear-001",
+      "slug": "Lotus Jhumka Earrings",
       "stock": 5,
-      "reviewCount": 0,
-      "avgRating": 0,
-      "reviews": []
-    },
-
-    "prod_005": {
-      "id": "prod_005",
-      "name": "Delicate Gold Pendant",
-      "slug": "delicate-gold-pendant",
-      "description": "Minimalist gold pendant perfect for everyday wear.",
-      "longDescription": "A subtle and elegant gold pendant designed for everyday versatility. Pairs beautifully with chains of varying lengths.",
-      "materials": "18K Gold",
-      "weight": "2.8 g",
-      "dimensions": "Pendant 10mm",
-      "manufacturer": "Griya Jewellery Studio",
-      "price": 12000,
-      "mrp": 13000,
-      "originalPrice": 13000,
-      "discount": 7,
-      "images": [
-        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+      "tags": [
+        "earrings",
+        "new",
+        "ethnic",
+        "traditional",
+        "trending",
+        "festive",
+        "new arrival"
       ],
-      "categoryId": "cat_gold",
-      "tags": ["pendant", "gold"],
-      "isFeatured": true,
-      "isNewArrival": true,
-      "isNew": true,
+      "weight": "14 grames"
+    },
+    "-Of4pefHyyLI8JZCs4O_": {
+      "avgRating": 4.1,
       "bestseller": false,
+      "categoryId": "cat_earrings",
+      "categoryName": "Earrings",
+      "categorySlug": "earrings",
+      "dimensions": "1 inch",
+      "discount": 10,
       "freeShipping": false,
-      "sku": "GP-005",
-      "inStock": true,
-      "stock": 20,
-      "reviewCount": 1,
-      "avgRating": 5,
-      "reviews": [
-        { "name": "Priya R.", "rating": 5, "comment": "Lovely pendant for daily wear — delicate and well-made.", "date": "2025-07-01" }
-      ]
-    },
-
-    "prod_007": {
-      "id": "prod_007",
-      "name": "Pearl Stud Earrings",
-      "slug": "pearl-stud-earrings",
-      "description": "Classic pearl studs set in gold.",
-      "longDescription": "Timeless pearl studs set in a gold cup — an essential wardrobe staple that complements both casual and formal looks.",
-      "materials": "Cultured Pearls, 14K Gold",
-      "weight": "1.8 g (pair)",
-      "dimensions": "Diameter 7mm",
-      "manufacturer": "Griya Jewellery Studio",
-      "price": 8000,
-      "mrp": 9000,
-      "originalPrice": 9000,
-      "discount": 11,
       "images": [
-        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
+        "https://drive.google.com/file/d/1F1f9818mfWazTNUr-zYu6_-DM7vzHjmi/view",
+        "https://lh3.googleusercontent.com/d/1NIPeLLw4ciP7ysnVGlGQsfv7VFeQSmRa=w1000"
       ],
-      "categoryId": "cat_pearls",
-      "tags": ["earrings", "pearls"],
-      "isFeatured": false,
-      "isNewArrival": false,
-      "isNew": false,
+      "inStock": true,
+      "isNew": true,
+      "longDescription": "Beautiful Blue Oxidised Jhumkas with sparkling stone work and stylish beads.\nPerfect for party wear, college wear, ethnic outfits & gift purposes.\nLightweight • Premium finishing • Super elegant look ✨\n\nFeatures:\n✔ Stunning blue stone detailing\n✔ Oxidised silver finish\n✔ Comfortable for full-day wear\n✔ Matches sarees, kurtis, gowns & western fusion outfits\n✔ Budget-friendly luxury look 😍",
+      "manufacturer": "",
+      "materials": "bronze oxidized",
+      "name": "Premium Blue Oxidised Jhumka",
+      "originalPrice": 200,
+      "price": 180,
+      "reviewCount": 45,
+      "sku": "",
+      "slug": "Premium Blue Oxidised Jhumka",
+      "stock": 2,
+      "tags": [
+        "trending",
+        "new",
+        "festive",
+        "ethnic",
+        "blue",
+        "ear rings",
+        "earrings"
+      ],
+      "weight": "12 Grams"
+    },
+    "-OfAA4NaFcN69-oVcift": {
+      "avgRating": 4.1,
       "bestseller": true,
+      "categoryId": "cat_bracelet",
+      "categoryName": "Bracelets",
+      "categorySlug": "Bracelets",
+      "dimensions": "",
+      "discount": 20,
       "freeShipping": false,
-      "sku": "PS-007",
       "inStock": true,
-      "stock": 15,
-      "reviewCount": 1,
-      "avgRating": 5,
-      "reviews": [
-        { "name": "Nikhil S.", "rating": 5, "comment": "Perfect size and good luster.", "date": "2025-09-02" }
-      ]
-    },
-
-    "prod_010": {
-      "id": "prod_010",
-      "name": "Sapphire Cocktail Ring",
-      "slug": "sapphire-cocktail-ring",
-      "description": "Deep blue sapphire set in 18K white gold.",
-      "longDescription": "A striking cocktail ring featuring a deep blue sapphire set into 18K white gold. Ideal for evening events and celebrations.",
-      "materials": "18K White Gold, Sapphire",
-      "weight": "7.2 g",
-      "dimensions": "Ring face 15mm x 13mm",
-      "manufacturer": "Griya Jewellery Studio",
-      "price": 55000,
-      "mrp": 60000,
-      "originalPrice": 60000,
-      "discount": 8,
-      "images": [
-        "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
-      ],
-      "categoryId": "cat_gold",
-      "tags": ["ring", "sapphire"],
-      "isFeatured": false,
-      "isNewArrival": true,
       "isNew": true,
+      "longDescription": "",
+      "manufacturer": "",
+      "materials": "metal",
+      "name": "Stylish shaped women bracelet",
+      "originalPrice": 250,
+      "price": 200,
+      "reviewCount": 40,
+      "sku": "",
+      "slug": "bracelet-shaped",
+      "stock": 2,
+      "tags": [
+        "new, arrival, bracelets, bracelet, christmas,casual,stylish",
+        "flowers",
+        "hair",
+        "new",
+        "arrival",
+        "christmas",
+        "accessories",
+        "flower",
+        "bracelets",
+        "bracelet",
+        "casual",
+        "stylish",
+        "combo",
+        "daily",
+        "wear",
+        "essential",
+        "trending",
+        "festive",
+        "ethnic",
+        "traditional"
+      ],
+      "weight": "20 grams"
+    },
+    "-OfABEyj25VOpxj6qcBv": {
+      "avgRating": 4,
       "bestseller": false,
-      "freeShipping": true,
-      "sku": "SR-010",
+      "categoryId": "cat_hair_acc",
+      "categoryName": "Hair Accessories",
+      "categorySlug": "hair-accessories",
+      "dimensions": "",
+      "discount": 20,
+      "freeShipping": false,
       "inStock": true,
-      "stock": 4,
-      "reviewCount": 1,
-      "avgRating": 5,
-      "reviews": [
-        { "name": "Anil P.", "rating": 5, "comment": "Stunning color and weight — looks expensive.", "date": "2025-08-15" }
-      ]
+      "isNew": false,
+      "longDescription": "",
+      "manufacturer": "",
+      "materials": "Artificial flowers",
+      "name": "Floral hair veene for traditional look",
+      "originalPrice": 250,
+      "price": 200,
+      "reviewCount": 15,
+      "sku": "",
+      "slug": "hair-vein",
+      "stock": 1,
+      "tags": [
+        "flowers",
+        "hair",
+        "new",
+        "arrival",
+        "christmas",
+        "accessories",
+        "flower",
+        "combo",
+        "daily",
+        "wear",
+        "essential",
+        "stylish",
+        "ethnic",
+        "new arrival",
+        "bracelets",
+        "bracelet",
+        "casual"
+      ],
+      "weight": "100 grams"
+    },
+    "-OfACaF4gpEbsl29bbr0": {
+      "avgRating": 4,
+      "bestseller": false,
+      "categoryId": "cat_hair_acc",
+      "categoryName": "Hair Accessories",
+      "categorySlug": "hair-accessories",
+      "dimensions": "",
+      "discount": 20,
+      "freeShipping": false,
+      "inStock": true,
+      "isNew": false,
+      "longDescription": "",
+      "manufacturer": "",
+      "materials": "Artificial flowers",
+      "name": "Red Floral hair veene for traditional look",
+      "originalPrice": 250,
+      "price": 200,
+      "reviewCount": 15,
+      "sku": "",
+      "slug": "Red-floral-vein",
+      "stock": 1,
+      "tags": [
+        "flowers, hair, new, arrival,christmas, accessories, flower"
+      ],
+      "weight": "100 grams"
+    },
+    "-OfACuWfGPAkm2zNPGK1": {
+      "avgRating": 4,
+      "bestseller": false,
+      "categoryId": "cat_hair_acc",
+      "categoryName": "Hair Accessories",
+      "categorySlug": "hair-accessories",
+      "dimensions": "",
+      "discount": 20,
+      "freeShipping": false,
+      "inStock": true,
+      "isNew": false,
+      "longDescription": "",
+      "manufacturer": "",
+      "materials": "Artificial flowers",
+      "name": "White and Gold Floral hair veene for traditional look",
+      "originalPrice": 250,
+      "price": 200,
+      "reviewCount": 15,
+      "sku": "",
+      "slug": "White-floral-vien",
+      "stock": 1,
+      "tags": [
+        "flowers, hair, new, arrival,christmas, accessories, flower"
+      ],
+      "weight": "100 grams"
+    },
+    "-OfADgjt4CA4Mi1kopIW": {
+      "avgRating": 4,
+      "bestseller": true,
+      "categoryId": "cat_hair_acc",
+      "categoryName": "Hair Accessories",
+      "categorySlug": "hair-accessories",
+      "dimensions": "",
+      "discount": 25,
+      "freeShipping": false,
+      "inStock": true,
+      "isNew": true,
+      "longDescription": "Elevate your everyday style with this trendy and durable hair clips combo, designed for effortless hold and all-day comfort. Made from high-quality plastic, each clip offers a strong grip without tugging or slipping, making them perfect for casual looks, workdays, or special outings. With a mix of stylish shapes and vibrant colors, this combo adds a fun, fashionable touch to any hairstyle. Ideal for all hair types and great for daily use.",
+      "manufacturer": "",
+      "materials": "Strong Plastic",
+      "name": "Clips combo of 5",
+      "originalPrice": 200,
+      "price": 150,
+      "reviewCount": 23,
+      "sku": "",
+      "slug": "hair-clips-combo",
+      "stock": 12,
+      "tags": [
+        "combo,new, hair,daily, wear, essential,stylish,christmas,",
+        "combo",
+        "new",
+        "hair",
+        "daily",
+        "wear",
+        "essential",
+        "stylish",
+        "christmas",
+        "flowers",
+        "arrival",
+        "accessories",
+        "flower",
+        "trending",
+        "festive",
+        "bracelets",
+        "bracelet",
+        "casual",
+        "ear rings"
+      ],
+      "weight": "20 grams"
+    },
+    "-OfAF9YI1r0JBcvgR5P7": {
+      "avgRating": 4,
+      "bestseller": true,
+      "categoryId": "cat_hair_acc",
+      "categoryName": "Hair Accessories",
+      "categorySlug": "hair-accessories",
+      "dimensions": "",
+      "discount": 33,
+      "freeShipping": false,
+      "inStock": true,
+      "isNew": false,
+      "longDescription": "Keep your hair perfectly in place with these small 1-inch cloth elastic hair bands, packed in a convenient box for easy storage and everyday use. Made from soft, stretchable fabric, these bands are gentle on hair while offering a secure, comfortable hold. Ideal for ponytails, braids, and quick styling, they’re perfect for kids and adults alike.\nThis economical, trending combo gives you plenty of durable bands that won’t snag or break easily—making it a smart choice for daily wear, school, workouts, or travel.",
+      "manufacturer": "",
+      "materials": "Cloth elastic",
+      "name": "Small Hair bands pack",
+      "originalPrice": 180,
+      "price": 120,
+      "reviewCount": 22,
+      "sku": "",
+      "slug": "hair-bands-box",
+      "stock": 2,
+      "tags": [
+        "hair, accessories, trending, new, daily, festive,"
+      ],
+      "weight": "30 grams"
+    },
+    "-OfALOpJUweUDSazCwC3": {
+      "avgRating": 3.8,
+      "bestseller": true,
+      "categoryId": "cat_necklace",
+      "categoryName": "Necklaces Sets",
+      "categorySlug": "necklaces",
+      "dimensions": "",
+      "discount": 17,
+      "freeShipping": false,
+      "inStock": true,
+      "isNew": false,
+      "longDescription": "Enhance your ethnic look with this beautifully crafted traditional necklace and earrings combo set. Designed with intricate detailing and rich, classic elements, this set adds a touch of heritage elegance to any outfit. The necklace sits gracefully on the neckline while the matching earrings complete the look with refined charm.\nPerfect for weddings, festivals, family functions, or gifting, this jewellery set brings together timeless beauty and flawless craftsmanship—making every moment feel special.",
+      "manufacturer": "",
+      "materials": "bronze metal ",
+      "name": "Traditional Necklace with Matching Earrings",
+      "originalPrice": 600,
+      "price": 500,
+      "reviewCount": 33,
+      "sku": "",
+      "slug": "necklace-set",
+      "stock": 2,
+      "tags": [
+        "combo",
+        "essential",
+        "ethnic",
+        "festive",
+        "new arrival",
+        "stylish",
+        "traditional",
+        "casual",
+        "christmas",
+        "necklace",
+        "necklace set",
+        "neck"
+      ],
+      "weight": "100 grams"
     }
   },
-
-  "gallery": {
-    "img_1": { "url": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp", "caption": "Handcrafted studio shot", "order": 1 },
-    "img_2": { "url": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp", "caption": "Behind the scenes", "order": 2 }
+  "promoCodes": {
+    "-Of2woGMFvswHDy0tvqF": {
+      "_key": "-Of2woGMFvswHDy0tvqF",
+      "active": true,
+      "amount": 15,
+      "code": "GRIYA15",
+      "maxUses": 5,
+      "type": "percent",
+      "used": 3
+    }
   },
-
-  "testimonials": {
-    "t1": {
-      "name": "Asha Patel",
-      "message": "Beautiful work, excellent craftsmanship. Fast delivery!",
+  "reviews": {
+    "1": {
+      "comment": "Absolutely beautiful earrings! Perfect for my wedding functions.",
+      "customerName": "Priya Sharma",
+      "date": "2024-11-01",
+      "helpful": 12,
+      "id": 1,
+      "productId": 1,
       "rating": 5,
-      "photo": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
-      "date": "2025-03-12"
+      "verified": true
     },
-    "t2": {
-      "name": "Rohan Mehta",
-      "message": "Lovely designs and superb customer support.",
+    "2": {
+      "comment": "Amazing quality kundan work. Received so many compliments!",
+      "customerName": "Meera Patel",
+      "date": "2024-10-28",
+      "helpful": 8,
+      "id": 2,
+      "productId": 2,
+      "rating": 5,
+      "verified": true
+    },
+    "3": {
+      "comment": "Good quality and fast delivery. Highly recommended.",
+      "createdAt": "2025-11-28T13:15:41.069Z",
+      "customerName": "Anita Kumar",
+      "date": "2024-10-25",
+      "enabled": true,
+      "helpful": 5,
+      "id": 3,
+      "message": "Super quality and finish.Loved the product.",
+      "name": "Anjali",
+      "productId": "-Of4jLm6_nOIjbtQaROP",
+      "rating": 4,
+      "verified": true
+    },
+    "-Of9bDrK8wwijCrliVL5": {
+      "createdAt": "2025-11-28T13:17:53.438Z",
+      "enabled": true,
+      "message": "Super quality and finish",
+      "name": "Sarika",
+      "productId": "-Of4jLm6_nOIjbtQaROP",
       "rating": 5
     }
   },
-
-
-  "orders": {
-      "order_id_123": {
-        "orderId": "order_xyz",
-        "paymentId": "pay_abc",
-        "signature": "signature_hash",
-        "amount": 25000,
-        "currency": "INR",
-        "status": "paid",
-        "createdAt": "2025-11-23T10:30:00.000Z",
-        "customer": {
-          "name": "John Doe",
-          "email": "john@example.com",
-          "phone": "9876543210"
-        },
-        "shipping": {
-          "line1": "123 Main Street",
-          "city": "Mumbai",
-          "state": "Maharashtra",
-          "pincode": "400001"
-        },
-        "items": [
-          {
-            "id": "prod_001",
-            "name": "Rose Gold Cocktail Ring",
-            "price": 45000,
-            "quantity": 1,
-            "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
-          }
-        ]
+  "siteSettings": {
+    "address": "123, Jewelry Lane, Mumbai, India",
+    "bannerText": "test",
+    "bannerVisible": false,
+    "brandName": "Griya Jewellery",
+    "defaultProductImage": "https://lh3.googleusercontent.com/d/11Vw7JjlLac0NlTfu4aWS3DwxC9Mq_AVJ=w1000",
+    "deliveryChargeAmount": "70",
+    "enableRazorpayCheckout": true,
+    "enableWhatsAppCheckout": false,
+    "footerText": "© 2025 Griya Jewellery. All rights reserved.",
+    "freeShippingThreshold": "1200",
+    "instagram": "https://instagram.com/griya_jewellery",
+    "logoUrl": "https://lh3.googleusercontent.com/d/11Vw7JjlLac0NlTfu4aWS3DwxC9Mq_AVJ=w1000",
+    "minPurchaseAmount": "100",
+    "tagline": "Shine Everyday !",
+    "theme": {
+      "accent": "#D4AF37",
+      "primary": "#1a1d20",
+      "buttonBg": "#D4AF37",
+      "footerBg": "#0f1112",
+      "navBg": "#1a1d20",
+      "productCard": {
+        "badgeBestseller": "#D4AF37",
+        "cardBg": "#fffaf2",
+        "name": "#1a1d20",
+        "star": "#D4AF37"
       },
-      "order_demo_001": {
-        "orderId": "ORDER_ABC123",
-        "paymentId": null,
-        "signature": null,
-        "amount": 57000,
-        "currency": "INR",
-        "status": "shipped",
-        "createdAt": "2025-11-26T09:00:00.000Z",
-        "customer": {
-          "name": "Test Customer",
-          "email": "test.customer@example.com",
-          "phone": "9123456780"
-        },
-        "shipping": {
-          "line1": "45, Jewelry Street",
-          "city": "Mumbai",
-          "state": "Maharashtra",
-          "pincode": "400002"
-        },
-        "tracking": {
-          "carrier": "DemoCourier",
-          "trackingNumber": "DC123456789IN"
-        },
-        "items": [
-          {
-            "id": "prod_001",
-            "name": "Rose Gold Cocktail Ring",
-            "price": 45000,
-            "quantity": 1,
-            "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
-          },
-          {
-            "id": "prod_005",
-            "name": "Delicate Gold Pendant",
-            "price": 12000,
-            "quantity": 1,
-            "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp"
-          }
-        ]
-      },
-      "ord_001": {
-        "orderId": "ORD20251127-001",
-        "amount": 18000,
-        "currency": "INR",
-        "status": "paid",
-        "createdAt": "2025-11-27T00:00:00.000Z",
-        "promo": { "key": "promo_10", "code": "GIRIYA10", "discount": 2000 },
-        "customer": { "name": "Sangeeta Rao", "email": "sangeeta@example.com", "phone": "+919876543210" },
-        "shipping": { "line1": "12 MG Road", "city": "Mumbai", "state": "Maharashtra", "pincode": "400001", "cost": 0 },
-        "items": [
-          { "id": "prod_005", "name": "Delicate Gold Pendant", "price": 12000, "quantity": 1, "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp" },
-          { "id": "prod_007", "name": "Pearl Stud Earrings", "price": 8000, "quantity": 1, "image": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp" }
-        ],
-        "totalBreakdown": { "subtotal": 20000, "discount": 2000, "shipping": 0, "total": 18000 }
-      }
+      "siteBg": "#fffaf6"
+    },
+    "whatsapp": "+918341223637"
   },
-  
-  "promoCodes": {
-    "promo_10": {
-      "code": "GIRIYA10",
-      "type": "percent",
-      "amount": 10,
-      "used": 0,
-      "maxUses": 100,
-      "active": true
+  "socialLinks": {
+    "facebook": "https://facebook.com/griyajewelry",
+    "instagram": "https://instagram.com/griya_jewelry",
+    "twitter": "https://twitter.com/griya_jewelry",
+    "whatsapp": "https://wa.me/919876543210",
+    "youtube": "https://youtube.com/@griyajewelry"
+  },
+  "storeInfo": {
+    "address": {
+      "city": "Hyderabad",
+      "country": "India",
+      "pincode": "500001",
+      "state": "Telangana",
+      "street": "123 Jewelry Street"
+    },
+    "businessHours": {
+      "friday": "10:00 AM - 8:00 PM",
+      "monday": "10:00 AM - 8:00 PM",
+      "saturday": "10:00 AM - 9:00 PM",
+      "sunday": "11:00 AM - 7:00 PM",
+      "thursday": "10:00 AM - 8:00 PM",
+      "tuesday": "10:00 AM - 8:00 PM",
+      "wednesday": "10:00 AM - 8:00 PM"
+    },
+    "description": "Premium imitation jewelry from Hyderabad",
+    "email": "info@griyajewelry.com",
+    "name": "Griya Jewelry",
+    "phone": "+91 9876543210",
+    "policies": {
+      "returns": "7-day return policy",
+      "shipping": "Free shipping on orders above ₹499",
+      "warranty": "6 months warranty on all products"
+    },
+    "tagline": "Shine Every Day"
+  },
+  "testimonials": {
+    "t1": {
+      "date": "2025-03-12",
+      "message": "Beautiful work, excellent craftsmanship. Fast delivery!",
+      "name": "Asha Patel",
+      "photo": "https://fujiframe.com/assets/images/_3000x2000_fit_center-center_85_none/10085/xhs2-fuji-70-300-Amazilia-Hummingbird.webp",
+      "rating": 5
+    },
+    "t2": {
+      "message": "Lovely designs and superb customer support.",
+      "name": "Rohan Mehta",
+      "rating": 5
     }
   }
 }

@@ -164,7 +164,7 @@ export default function CollectionsPage() {
           {/* Grid */}
           <main className="lg:col-span-9">
             <div className="mobile-products-scroll">
-              <div className="mt-4 sm:mt-10 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+              <div className="mt-0 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {visibleItems.map((c) => (
                   <Link
                     key={c.id}

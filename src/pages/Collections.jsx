@@ -1,7 +1,7 @@
 import React from "react";
 import { useCategories } from "../hooks/useRealtime";
 import { Link } from "react-router-dom";
-import UniversalImage from "react-universal-image";
+import UniversalImage from "../components/UniversalImage";
 
 export default function Collections() {
   const { data: categories, loading } = useCategories();
@@ -19,7 +19,7 @@ export default function Collections() {
       {loading ? (
         <div>Loading collections...</div>
       ) : categories ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-0">
           {Object.entries(categories).map(([id, cat]) => (
             <Link to={`/collections/${id}`} key={id} className="block border rounded overflow-hidden">
               <UniversalImage src={cat.image || '/placeholder.jpg'} alt={cat.title} className="w-full h-40 object-cover" fallback={'/placeholder.jpg'} />
