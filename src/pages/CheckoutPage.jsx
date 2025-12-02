@@ -307,15 +307,19 @@ export default function CheckoutPage() {
             }
 
             clearCart();
+            // clear any previous payment failure state so the success screen is shown
+            setPaymentFailed(null);
+            setError(null);
             setPlacedOrder(orderData);
-             setLoading(false);
-             showToast('Payment successful, order placed', 'success');
+            setLoading(false);
+            showToast('Payment successful, order placed', 'success');
           } catch (e) {
             console.error('onSuccess handler error', e);
             setLoading(false);
             showToast('Payment succeeded but an error occurred', 'warning');
           }
         },
+       
         onFailure: async (failureResp) => {
           // Handle payment failure: record failure and show a dedicated screen
           try {
@@ -410,39 +414,39 @@ export default function CheckoutPage() {
     const items = Array.isArray(placedOrder?.items) ? placedOrder.items : [];
 
     return (
-      <div className="max-w-3xl mx-auto py-8">
-        <div className="mb-4">
-          <button onClick={() => { setPaymentFailed(null); navigate('/cart'); }} className="text-sm text-gray-500 hover:text-gray-700 no-print flex items-center gap-2">
+      <div className="max-w-3xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
+        <div className="mb-4 sm:mb-6">
+          <button onClick={() => { setPaymentFailed(null); navigate('/cart'); }} className="text-sm text-gray-500 hover:text-gray-700 no-print flex items-center gap-2 p-2 -ml-2 rounded-lg hover:bg-gray-100 transition-colors">
             <span aria-hidden>←</span>
             <span>Back to cart</span>
           </button>
         </div>
 
-        <div className="text-center mb-6">
-          <div className="text-6xl mb-4">❌</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Payment Failed</h1>
-          <p className="text-lg font-semibold text-red-700">{paymentFailed?.message || 'Payment failed. Please try again.'}</p>
-          <p className="text-sm text-neutral-500 mt-2">If this continues, try another payment method or contact support.</p>
+        <div className="text-center mb-6 sm:mb-8 px-4">
+          <div className="text-5xl sm:text-6xl mb-4">❌</div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Payment Failed</h1>
+          <p className="text-base sm:text-lg font-semibold text-red-700">{paymentFailed?.message || 'Payment failed. Please try again.'}</p>
+          <p className="text-xs sm:text-sm text-neutral-500 mt-2">If this continues, try another payment method or contact support.</p>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 max-w-2xl mx-auto">
+        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 max-w-2xl mx-auto">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Status</span>
-              <span className="text-xl font-bold text-red-600">{statusDisplay}</span>
+              <span className="text-sm sm:text-base text-gray-600">Status</span>
+              <span className="text-lg sm:text-xl font-bold text-red-600">{statusDisplay}</span>
             </div>
             <div className="pt-4 border-t">
-              <div className="text-sm text-gray-600 mb-2">Delivery / Contact</div>
-              <div className="text-gray-800">
+              <div className="text-xs sm:text-sm text-gray-600 mb-2">Delivery / Contact</div>
+              <div className="text-sm sm:text-base text-gray-800">
                 {shipping.line1 && <div>{shipping.line1}</div>}
                 {shipping.city || shipping.pincode ? <div>{shipping.city} - {shipping.pincode}</div> : null}
-                <div className="text-sm text-gray-600 mt-1">📞 {contactPhone}</div>
+                <div className="text-xs sm:text-sm text-gray-600 mt-1">📞 {contactPhone}</div>
               </div>
             </div>
           </div>
-          <div className="flex gap-3 mt-6 pt-6 border-t">
-            <button onClick={async () => { setPaymentFailed(null); setFieldErrors({}); try { await proceedToPay(); } catch (e) {} }} className="flex-1 btn btn-primary">Retry Payment</button>
-            <button onClick={() => { setPaymentFailed(null); navigate('/cart'); }} className="flex-1 border border-gray-300 text-gray-700 py-3 rounded">Back to Cart</button>
+          <div className="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t">
+            <button onClick={async () => { setPaymentFailed(null); setFieldErrors({}); try { await proceedToPay(); } catch (e) {} }} className="w-full sm:flex-1 btn btn-primary py-3 text-sm sm:text-base">Retry Payment</button>
+            <button onClick={() => { setPaymentFailed(null); navigate('/cart'); }} className="w-full sm:flex-1 border border-gray-300 text-gray-700 py-3 rounded text-sm sm:text-base hover:bg-gray-50 transition-colors">Back to Cart</button>
           </div>
         </div>
       </div>
@@ -453,51 +457,51 @@ export default function CheckoutPage() {
     // Paid / confirmed
     if (placedOrder.status === 'paid') {
       return (
-        <div className="max-w-3xl mx-auto py-8">
-          <div className="mb-4">
-            <button onClick={() => navigate('/cart')} className="text-sm text-gray-500 hover:text-gray-700 no-print flex items-center gap-2">
+        <div className="max-w-3xl mx-auto py-4 px-4 sm:py-8 sm:px-6">
+          <div className="mb-4 sm:mb-6">
+            <button onClick={() => navigate('/cart')} className="text-sm text-gray-500 hover:text-gray-700 no-print flex items-center gap-2 p-2 -ml-2 rounded-lg hover:bg-gray-100 transition-colors">
               <span aria-hidden>←</span>
               <span>Back to cart</span>
             </button>
           </div>
-          <div className="text-center mb-8">
-            <div className="text-6xl mb-4">✅</div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">Order Confirmed</h1>
-            <p className="text-gray-600">Thank you {placedOrder.customer?.name || 'Customer'}. Your order has been placed.</p>
+          <div className="text-center mb-6 sm:mb-8 px-4">
+            <div className="text-5xl sm:text-6xl mb-4">✅</div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Order Confirmed</h1>
+            <p className="text-sm sm:text-base text-gray-600">Thank you {placedOrder.customer?.name || 'Customer'}. Your order has been placed.</p>
           </div>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 max-w-2xl mx-auto">
+          <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 max-w-2xl mx-auto">
             <div className="space-y-4">
               <div className="flex justify-between items-center pb-4 border-b">
-                <span className="text-gray-600">Order ID</span>
-                <span className="font-mono text-sm bg-gray-100 px-3 py-1 rounded">{placedOrder._id || placedOrder.orderId}</span>
+                <span className="text-sm sm:text-base text-gray-600">Order ID</span>
+                <span className="font-mono text-xs sm:text-sm bg-gray-100 px-3 py-1 rounded">{placedOrder._id || placedOrder.orderId}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Amount</span>
-                <span className="text-xl font-bold text-gray-800">₹{placedOrder.amount}</span>
+                <span className="text-sm sm:text-base text-gray-600">Amount</span>
+                <span className="text-lg sm:text-xl font-bold text-gray-800">₹{placedOrder.amount}</span>
               </div>
 
               <div className="pt-4 border-t">
-                <div className="text-sm text-gray-600 mb-2">Delivery Address</div>
-                <div className="text-gray-800">
+                <div className="text-xs sm:text-sm text-gray-600 mb-2">Delivery Address</div>
+                <div className="text-sm sm:text-base text-gray-800">
                   <div className="font-medium">{placedOrder.shipping?.line1 ? placedOrder.customer?.name : ''}</div>
                   <div>{placedOrder.shipping?.line1}</div>
                   <div>{placedOrder.shipping?.city} - {placedOrder.shipping?.pincode}</div>
-                  <div className="text-sm text-gray-600 mt-1">📞 {placedOrder.customer?.phone}</div>
+                  <div className="text-xs sm:text-sm text-gray-600 mt-1">📞 {placedOrder.customer?.phone}</div>
                 </div>
               </div>
 
               <div className="pt-4 border-t">
-                <div className="text-sm text-gray-600 mb-2">Items</div>
+                <div className="text-xs sm:text-sm text-gray-600 mb-2">Items</div>
                 <div className="divide-y divide-gray-100">
                   {(Array.isArray(placedOrder.items) ? placedOrder.items : []).map((it, idx) => (
-                    <div key={idx} className="py-3 flex items-center justify-between">
-                      <div>
-                        <div className="font-medium text-gray-800">{it?.name || 'Item'}</div>
-                        {it?.description && <div className="text-xs text-gray-500">Description: {it.description}</div>}
+                    <div key={idx} className="py-3 flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm sm:text-base text-gray-800 truncate">{it?.name || 'Item'}</div>
+                        {it?.description && <div className="text-xs text-gray-500 line-clamp-1">Description: {it.description}</div>}
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-600">Qty: {it?.quantity ?? 1}</div>
-                        <div className="font-semibold">₹{new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format((Number(it?.price || 0) * (it?.quantity || 1)))}</div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-xs sm:text-sm text-gray-600">Qty: {it?.quantity ?? 1}</div>
+                        <div className="font-semibold text-sm sm:text-base">₹{new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format((Number(it?.price || 0) * (it?.quantity || 1)))}</div>
                       </div>
                     </div>
                   ))}
