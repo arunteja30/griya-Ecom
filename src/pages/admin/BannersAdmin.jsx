@@ -4,6 +4,7 @@ import { ref, onValue, set } from 'firebase/database';
 import Loader from '../../components/Loader';
 import { showToast } from '../../components/Toast';
 import { normalizeImageUrl } from '../../utils/imageHelpers';
+import UniversalImage from '../../components/UniversalImage';
 
 // helper: convert ISO or other date string to value usable by <input type="datetime-local">
 function formatForInput(iso) {
@@ -126,7 +127,7 @@ export default function BannersAdmin(){
           <input value={newBanner.image} onChange={(e)=>setNewBanner(n=>({...n,image:e.target.value}))} className="w-full border p-2" />
           <div className="mt-2">
             <div className="w-full bg-gray-50 rounded overflow-hidden border">
-              <img src={normalizeImageUrl(newBanner.image)||newBanner.image||'/placeholder.jpg'} alt="preview" className="w-full h-40 object-cover" />
+              <UniversalImage src={normalizeImageUrl(newBanner.image)||newBanner.image||'/placeholder.jpg'} alt="preview" className="w-full h-40 object-cover" />
             </div>
           </div>
         </div>
@@ -162,7 +163,7 @@ export default function BannersAdmin(){
             <div className="flex flex-col md:flex-row gap-4">
               <div className="w-full md:w-56 flex-shrink-0">
                 <div className="h-40 bg-gray-50 rounded overflow-hidden border">
-                  <img src={normalizeImageUrl(b.image)||b.image||'/placeholder.jpg'} alt={b.heading||''} className="w-full h-full object-cover" />
+                  <UniversalImage src={normalizeImageUrl(b.image)||b.image||'/placeholder.jpg'} alt={b.heading||''} className="w-full h-full object-cover" />
                 </div>
                 <div className="mt-2 text-xs text-gray-500">ID: {b.id}</div>
               </div>

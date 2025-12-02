@@ -53,7 +53,19 @@ export default function Home() {
       <section>
         <h2 className="text-2xl font-semibold mb-4">About</h2>
         <div className="prose max-w-none">
-          {siteContent?.about || 'About text not configured in database.'}
+          {siteContent && siteContent.about ? (
+            <div>
+              {siteContent.about.title && <h3>{siteContent.about.title}</h3>}
+              {siteContent.about.subtitle && <p className="text-sm text-neutral-600">{siteContent.about.subtitle}</p>}
+              {Array.isArray(siteContent.about.content) ? (
+                siteContent.about.content.map((p, i) => <p key={i}>{p}</p>)
+              ) : typeof siteContent.about.content === 'string' ? (
+                <p>{siteContent.about.content}</p>
+              ) : null}
+            </div>
+          ) : (
+            'About text not configured in database.'
+          )}
         </div>
       </section>
     </div>

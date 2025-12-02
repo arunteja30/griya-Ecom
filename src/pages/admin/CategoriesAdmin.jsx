@@ -4,6 +4,7 @@ import { ref, onValue, push, update, remove, set } from 'firebase/database';
 import Loader from '../../components/Loader';
 import Modal from '../../components/Modal';
 import { showToast } from '../../components/Toast';
+import UniversalImage from '../../components/UniversalImage';
 
 export default function CategoriesAdmin(){
   const [categories, setCategories] = useState({});
@@ -136,7 +137,7 @@ export default function CategoriesAdmin(){
         {Object.entries(categories).map(([id, cat])=> (
           <div key={id} className="flex items-center justify-between border p-2 rounded">
             <div className="flex items-center gap-3">
-              {cat.image ? <img src={cat.image} alt={cat.name} className="w-10 h-10 object-cover rounded" /> : null}
+              {cat.image ? <UniversalImage src={cat.image} alt={cat.name} className="w-10 h-10 object-cover rounded" /> : null}
               <div>
                 <div className="font-medium">{cat.name}</div>
                 <div className="text-sm text-neutral-600">{cat.slug}</div>

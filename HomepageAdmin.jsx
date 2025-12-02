@@ -3,6 +3,7 @@ import { db } from '../../firebase';
 import { ref, onValue, set } from 'firebase/database';
 import Loader from '../../components/Loader';
 import { showToast } from '../../components/Toast';
+import UniversalImage from '../../components/UniversalImage';
 
 export default function HomepageAdmin(){
   const [config, setConfig] = useState({ festivals: {} });
@@ -265,7 +266,7 @@ export default function HomepageAdmin(){
               <div className="mt-2">
                 <div className="text-xs text-gray-500 mb-1">Preview</div>
                 <div className="w-full bg-gray-50 rounded overflow-hidden border">
-                  <img src={newBanner.image || '/placeholder.jpg'} alt={newBanner.heading || 'preview'} className="w-full h-40 object-cover" />
+                  <UniversalImage src={newBanner.image || '/placeholder.jpg'} alt={newBanner.heading || 'preview'} className="w-full h-40 object-cover" />
                 </div>
               </div>
             </div>
@@ -299,7 +300,7 @@ export default function HomepageAdmin(){
             <div key={b.id || `ban-${idx}`} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-2 border rounded">
               <div className="md:col-span-3">
                 <div className="w-full bg-gray-50 rounded overflow-hidden border">
-                  <img src={b.image || '/placeholder.jpg'} alt={b.heading || b.title || ''} className="w-full h-28 object-cover" />
+                  <UniversalImage src={b.image || '/placeholder.jpg'} alt={b.heading || b.title || ''} className="w-full h-28 object-cover" />
                 </div>
               </div>
               <div className="md:col-span-6">

@@ -251,8 +251,8 @@ export default function CartPage() {
 
       {/* Mobile bottom bar (only when cart has items) */}
       {cartItems.length > 0 && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white p-3 border-t flex items-center justify-between z-40">
-          <div>
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white p-3 border-t flex items-center z-40">
+          <div className="flex-1 pr-3">
             <div className="text-sm text-neutral-600">Total</div>
             <div className="font-semibold">₹{finalTotal}</div>
             {deliveryEnabled && deliveryCharge>0 && (
@@ -265,9 +265,17 @@ export default function CartPage() {
               <div className="text-xs text-green-600">You qualify for free shipping</div>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            {siteSettings?.enableWhatsAppCheckout !== false && <button onClick={handleCheckout} disabled={!canCheckout} className={`bg-green-600 text-white py-2 px-3 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>WhatsApp</button>}
-            {siteSettings?.enableRazorpayCheckout !== false && <button onClick={() => { if (!canCheckout) return; navigate('/checkout'); }} disabled={!canCheckout} className={`bg-primary-500 text-white py-2 px-3 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>Checkout</button>}
+          <div className="flex items-center gap-2 w-[48%]">
+            {siteSettings?.enableWhatsAppCheckout !== false && (
+              <button onClick={handleCheckout} disabled={!canCheckout} className={`flex-1 bg-green-600 text-white py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>
+                WhatsApp
+              </button>
+            )}
+            {siteSettings?.enableRazorpayCheckout !== false && (
+              <button onClick={() => { if (!canCheckout) return; navigate('/checkout'); }} disabled={!canCheckout} className={`flex-1 btn btn-primary text-dark py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>
+                Checkout
+              </button>
+            )}
           </div>
         </div>
       )}

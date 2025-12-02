@@ -4,6 +4,7 @@ import Loader from "../components/Loader";
 import { normalizeImageUrl } from "../utils/imageHelpers";
 import { useFirebaseList } from "../hooks/useFirebase";
 import ProductCard from "../components/ProductCard";
+import UniversalImage from '../components/UniversalImage';
 
 // Lightweight local BannerCarousel fallback
 function BannerCarousel({ banners }) {
@@ -57,7 +58,7 @@ function BannerCarousel({ banners }) {
     >
       {/* Main Banner Image */}
       <div className="relative overflow-hidden bg-gradient-to-br from-neutral-100 to-neutral-50">
-        <img 
+        <UniversalImage
           src={normalizeImageUrl(item.image) || item.image || '/placeholder.jpg'} 
           alt={item.heading || ''} 
           className="w-full h-72 md:h-96 lg:h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" 
@@ -174,6 +175,7 @@ export default function HomePage() {
   const { data: bannersData } = useFirebaseList('/banners');
   const { data: categoriesData } = useFirebaseList('/categories');
   const { data: homeConfig } = useFirebaseList('/homeConfig');
+  const { data: homeData } = useFirebaseList('/home');
 
   useEffect(() => {
     if (categoriesData) {
@@ -221,6 +223,8 @@ export default function HomePage() {
 
   const banners = React.useMemo(() => {
     const global = [];
+
+    // 1) banners from /banners path
     if (bannersData) {
       if (Array.isArray(bannersData)) {
         global.push(...bannersData.map((b, i) => ({ id: b.id || `b-${i}`, ...b })));
@@ -228,8 +232,35 @@ export default function HomePage() {
         Object.entries(bannersData).forEach(([id, b]) => global.push({ id, ...b }));
       }
     }
+
+    // 2) carousel images defined in /home.sections.carouselPromo.images (CMS-driven)
+    try {
+      const promo = homeData && homeData.sections && (homeData.sections.carouselPromo || homeData.sections.carouselpromo || homeData.sections.carousel);
+      const imgs = promo && promo.images ? promo.images : (homeData && homeData.carouselPromo ? homeData.carouselPromo.images : null);
+      if (Array.isArray(imgs)) {
+        imgs.forEach((it, i) => {
+          // each item may be a string URL or an object with image/title/buttonText/buttonUrl
+          if (!it) return;
+          if (typeof it === 'string') {
+            global.push({ id: `home-carousel-${i}`, image: it });
+          } else {
+            global.push({
+              id: `home-carousel-${i}`,
+              image: it.image || it.imageUrl || it.src || it.url,
+              heading: it.title || it.heading,
+              body: it.subtitle || it.body,
+              ctaLabel: it.buttonText || it.ctaLabel || it.cta || undefined,
+              link: it.buttonUrl || it.buttonUrl || it.ctaLink || undefined
+            });
+          }
+        });
+      }
+    } catch (e) {
+      // ignore malformed home data
+    }
+
     return global;
-  }, [bannersData]);
+  }, [bannersData, homeData]);
 
   if (loading) return <Loader />;
 
@@ -275,7 +306,7 @@ export default function HomePage() {
                   style={{ borderTop: '1px solid rgba(212, 175, 55, 0.2)' }}
                 >
                   <div className="relative aspect-square bg-gradient-to-br from-neutral-50 via-white to-neutral-50 overflow-hidden">
-                    <img
+                    <UniversalImage
                       src={normalizeImageUrl(col?.image || col?.imageUrl || '/placeholder.jpg')}
                       alt={col?.title || col?.name || col.id}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"

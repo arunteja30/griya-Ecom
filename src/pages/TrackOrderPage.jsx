@@ -3,6 +3,7 @@ import { useFirebaseList } from '../hooks/useFirebase';
 import Loader from '../components/Loader';
 import SectionTitle from '../components/SectionTitle';
 import { showToast } from '../components/Toast';
+import UniversalImage from '../components/UniversalImage';
 
 export default function TrackOrderPage() {
   const { data: ordersRaw, loading } = useFirebaseList('/orders');
@@ -160,7 +161,7 @@ export default function TrackOrderPage() {
                             {(result.items || []).map((it, i) => (
                                 <div key={i} className="flex items-center gap-3">
                                     <div className="w-16 h-16 bg-neutral-100 rounded overflow-hidden flex-shrink-0">
-                                        {it.image ? <img src={it.image} alt={it.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400">No image</div>}
+                                        {it.image ? <UniversalImage src={it.image} alt={it.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xs text-neutral-400">No image</div>}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="font-medium truncate">{it.name || it.title || 'Item'}</div>

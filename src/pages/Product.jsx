@@ -1,6 +1,7 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useProductById, useSiteSettings } from "../hooks/useRealtime";
+import UniversalImage from '../components/UniversalImage';
 
 export default function Product() {
   const { id } = useParams();
@@ -13,14 +14,10 @@ export default function Product() {
   return (
     <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
-        <img
-          src={
-            product.images?.[0] ||
-            siteSettings?.defaultProductImage ||
-            "/placeholder.jpg"
-          }
+        <UniversalImage
+          src={product.images && product.images[0] ? product.images[0] : '/placeholder.jpg'}
           alt={product.name}
-          className="w-full h-96 object-cover rounded-lg"
+          className="w-full h-full object-cover"
         />
       </div>
       <div>

@@ -5,6 +5,7 @@ import Loader from '../../components/Loader';
 import Modal from '../../components/Modal';
 import { showToast } from '../../components/Toast';
 import { normalizeImageUrl } from '../../utils/imageHelpers';
+import UniversalImage from '../../components/UniversalImage';
 
 export default function ProductsAdmin(){
   const [products, setProducts] = useState({});
@@ -255,7 +256,7 @@ export default function ProductsAdmin(){
             <div className="mt-3">
               <div className="text-sm text-neutral-600 mb-1">Preview</div>
               <div className="w-48 h-32 bg-neutral-100 border flex items-center justify-center">
-                <img src={convertedDriveLink} alt="preview" className="max-w-full max-h-full object-contain" />
+                <UniversalImage src={convertedDriveLink} alt="preview" className="max-w-full max-h-full object-contain" />
               </div>
             </div>
           </div>
@@ -324,7 +325,7 @@ export default function ProductsAdmin(){
               </select>
               {form.categoryId && categories?.[form.categoryId]?.image ? (
                 <div className="mt-2">
-                  <img src={categories[form.categoryId].image} alt={categories[form.categoryId].name} className="w-24 h-16 object-cover rounded" />
+                  <UniversalImage src={categories[form.categoryId].image} alt={categories[form.categoryId].name} className="w-24 h-16 object-cover rounded" />
                 </div>
               ) : null}
 
@@ -519,8 +520,8 @@ export default function ProductsAdmin(){
                   <div>
                     <div className="w-full h-40 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
                       {Array.isArray(p.images) && p.images[0] ? (
-                        <img src={p.images[0]} alt={p.name} className="w-full h-full object-contain" />
-                      ) : (p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-contain" /> : <div className="text-xs text-neutral-500">No image</div>)}
+                        <UniversalImage src={p.images[0]} alt={p.name} className="w-full h-full object-contain" />
+                      ) : (p.image ? <UniversalImage src={p.image} alt={p.name} className="w-full h-full object-contain" /> : <div className="text-xs text-neutral-500">No image</div>)}
                     </div>
                     <div className="mt-3">
                       <div className="font-medium text-gray-800">{p.name}</div>

@@ -5,6 +5,7 @@ import Loader from '../../components/Loader';
 import Modal from '../../components/Modal';
 import { showToast } from '../../components/Toast';
 import { useFirebaseObject } from '../../hooks/useFirebase';
+import UniversalImage from '../../components/UniversalImage';
 
 export default function OrdersAdmin(){
   const [orders, setOrders] = useState({});
@@ -213,7 +214,7 @@ export default function OrdersAdmin(){
                       <div className="flex -space-x-2">
                         {o.items.slice(0,3).map((it, idx) => (
                           <div key={idx} className="w-10 h-10 rounded overflow-hidden border bg-white">
-                            {it.image ? <img src={it.image} alt={it.name || 'item'} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-xs text-neutral-500">No image</div>}
+                            {it.image ? <UniversalImage src={it.image} alt={it.name || 'item'} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-xs text-neutral-500">No image</div>}
                           </div>
                         ))}
                       </div>
@@ -271,7 +272,7 @@ export default function OrdersAdmin(){
               <div className="space-y-2">
                 {(selected.data.items || []).map((it, idx)=> (
                   <div key={idx} className="flex items-center gap-3">
-                    {it.image && <img src={it.image} alt="" className="w-12 h-12 object-cover rounded" />}
+                    {it.image && <UniversalImage src={it.image} alt="" className="w-12 h-12 object-cover rounded" />}
                     <div>
                       <div className="font-medium">{it.name}</div>
                       <div className="text-sm text-neutral-500">Product #: {it.id || it.productId || it.sku || '—'}</div>

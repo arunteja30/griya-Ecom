@@ -219,8 +219,8 @@ export default function CategoryProductsPage() {
 
         <main className="lg:col-span-9">
           {/* products: on mobile make product-list scrollable while hero stays fixed */}
-          <div className="mobile-products-scroll">
-            <div className="mt-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="mobile-products-scroll overflow-y-auto" style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' }}>
+            <div className="mt-6 lg:mt-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {visibleItems.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

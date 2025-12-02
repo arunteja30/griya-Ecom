@@ -15,8 +15,23 @@ export default function Navbar() {
 
   useEffect(() => {
     const onScroll = () => setIsSticky(window.scrollY > 60);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    // Only enable scroll-based sticky behavior on md+ (desktop/tablet). On mobile we keep navbar static to avoid movement.
+    const handleAdd = () => {
+      if (window.matchMedia('(min-width: 768px)').matches) {
+        window.addEventListener('scroll', onScroll);
+      }
+    };
+    handleAdd();
+    const mm = window.matchMedia('(min-width: 768px)');
+    const onMedia = (e) => {
+      if (e.matches) window.addEventListener('scroll', onScroll);
+      else window.removeEventListener('scroll', onScroll);
+    };
+    mm.addEventListener('change', onMedia);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      mm.removeEventListener('change', onMedia);
+    };
   }, []);
 
   const handleSearchSubmit = (e) => {
@@ -70,7 +85,7 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`w-full top-0 z-50 sticky transition-all duration-300 ${
+        className={`fixed md:sticky left-0 right-0 w-full top-0 z-50 transition-all duration-300 ${
           isSticky 
             ? "backdrop-blur-xl bg-white/95 shadow-lg border-b border-accent-100" 
             : "bg-white shadow-md border-b border-neutral-100"
@@ -272,6 +287,9 @@ export default function Navbar() {
           </div>
         </div>
       </header>
+      
+      {/* Mobile spacer to prevent content being hidden under the fixed header */}
+      <div className="md:hidden h-20" aria-hidden />
 
       {/* Mobile Menu Overlay */}
       {mobileOpen && (

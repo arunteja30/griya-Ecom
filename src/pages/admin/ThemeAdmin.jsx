@@ -3,6 +3,7 @@ import { ref, set } from 'firebase/database';
 import { db } from '../../firebase';
 import { useFirebaseObject } from '../../hooks/useFirebase';
 import Loader from '../../components/Loader';
+import UniversalImage from '../../components/UniversalImage';
 import { showToast } from '../../components/Toast';
 
 export default function ThemeAdmin(){
@@ -183,7 +184,7 @@ export default function ThemeAdmin(){
           <div className="p-3">
             <div className="rounded-2xl shadow-md overflow-hidden" style={{ background: cardBg, width: 320 }}>
               <div style={{ height: 140, background: '#f3f4f6' }} className="w-full overflow-hidden">
-                <img src={'/placeholder.jpg'} alt="Preview" className="w-full h-full object-cover" />
+                <UniversalImage src={'/placeholder.jpg'} alt="Preview" className="w-full h-full object-cover" />
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">

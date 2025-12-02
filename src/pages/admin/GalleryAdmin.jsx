@@ -5,6 +5,7 @@ import Loader from '../../components/Loader';
 import Modal from '../../components/Modal';
 import { showToast } from '../../components/Toast';
 import { normalizeImageUrl } from '../../utils/imageHelpers';
+import UniversalImage from '../../components/UniversalImage';
 
 export default function GalleryAdmin(){
   const [gallery, setGallery] = useState({});
@@ -67,7 +68,7 @@ export default function GalleryAdmin(){
       <div className="grid grid-cols-3 gap-2">
         {Object.entries(gallery).map(([id, g])=> (
           <div key={id} className="border p-2 rounded flex items-center justify-between">
-            <img src={normalizeImageUrl(g.url)} alt="" className="w-20 h-20 object-cover rounded" />
+            <UniversalImage src={normalizeImageUrl(g.url)} alt="" className="w-20 h-20 object-cover rounded" />
             <div className="flex gap-2">
               <button onClick={()=>{setEditing(id); setUrl(g.url)}} className="text-blue-600">Edit</button>
               <button onClick={()=>confirmDelete(id)} className="text-red-600">Delete</button>

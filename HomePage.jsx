@@ -4,6 +4,7 @@ import Loader from "../components/Loader";
 import { normalizeImageUrl } from "../utils/imageHelpers";
 import { useFirebaseList } from "../hooks/useFirebase";
 import ProductCard from "../components/ProductCard";
+import UniversalImage from "../components/UniversalImage";
 
 // Lightweight local BannerCarousel fallback
 function BannerCarousel({ banners }) {
@@ -57,7 +58,7 @@ function BannerCarousel({ banners }) {
     >
       {/* Main Banner Image */}
       <div className="relative overflow-hidden bg-gradient-to-br from-neutral-100 to-neutral-50">
-        <img 
+        <UniversalImage 
           src={normalizeImageUrl(item.image) || item.image || '/placeholder.jpg'} 
           alt={item.heading || ''} 
           className="w-full h-72 md:h-96 lg:h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" 
@@ -305,7 +306,7 @@ export default function HomePage() {
                   style={{ borderTop: '1px solid rgba(212, 175, 55, 0.2)' }}
                 >
                   <div className="relative aspect-square bg-gradient-to-br from-neutral-50 via-white to-neutral-50 overflow-hidden">
-                    <img
+                    <UniversalImage
                       src={normalizeImageUrl(col?.image || col?.imageUrl || '/placeholder.jpg')}
                       alt={col?.title || col?.name || col.id}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
