@@ -29,7 +29,7 @@ export default function SearchPage() {
   if (loading) return <Loader />;
 
   return (
-    <div className="py-6">
+    <div className="py-6 mt-6">
       <h2 className="text-xl font-semibold mb-4">Search results for "{q}"</h2>
       {results.length === 0 ? (
         <div className="text-neutral-600">No results found.</div>
