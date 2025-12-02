@@ -164,22 +164,14 @@ export default function Navbar() {
             {/* Mobile: Compact Branding or Action Bar on inner pages */}
             <div className="md:hidden flex-1">
               { isHome ? (
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 text-center px-2">
-                    <div className="text-2xl font-bold" style={{ fontFamily: 'Cormorant Garamond, serif', color: '#1a1d20' }}>{settings?.brandName || 'Griya'}</div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-
-                    <Link to="/cart" className="relative p-2 rounded-md hover:bg-neutral-100">
-                      <svg className="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                      </svg>
-                      {cartCount > 0 && (
-                        <span className="absolute -top-1 -right-1 text-white text-[10px] font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1.5 shadow-md" style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #f9d77e 100%)', color: '#1a1d20' }}>{cartCount}</span>
-                      )}
-                    </Link>
-                  </div>
+                <div 
+                  className="text-2xl font-bold"
+                  style={{ 
+                    fontFamily: 'Cormorant Garamond, serif',
+                    color: '#1a1d20'
+                  }}
+                >
+                  {settings?.brandName || 'Griya'}
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
@@ -198,6 +190,12 @@ export default function Navbar() {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <button onClick={() => navigate('/search')} className="p-2 rounded-md hover:bg-neutral-100" aria-label="Search">
+                      <svg className="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </button>
+
                     <Link to="/cart" className="relative p-2 rounded-md hover:bg-neutral-100">
                       <svg className="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />

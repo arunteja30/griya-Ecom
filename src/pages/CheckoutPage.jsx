@@ -308,8 +308,8 @@ export default function CheckoutPage() {
 
             clearCart();
             setPlacedOrder(orderData);
-            setLoading(false);
-            showToast('Payment successful, order placed', 'success');
+             setLoading(false);
+             showToast('Payment successful, order placed', 'success');
           } catch (e) {
             console.error('onSuccess handler error', e);
             setLoading(false);
@@ -324,6 +324,7 @@ export default function CheckoutPage() {
             setPaymentFailed({ message: 'Payment failed or cancelled', details: failureResp });
             showToast('Payment failed or cancelled', 'error');
             setLoading(false);
+            closePaymentModal();
           } catch (e) {
             console.error('onFailure handler error', e);
             setLoading(false);

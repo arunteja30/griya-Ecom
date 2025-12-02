@@ -3,12 +3,21 @@ const express = require('express');
 const cors = require('cors');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
+const path = require('path');
+const helmet = require('helmet');
+const compression = require('compression');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(helmet());
+app.use(compression());
 
 const PORT = process.env.PORT || 4000;
+
+// Serve built client (Vite build outputs to /dist)
+const clientDir = path.join(__dirname, '..', 'dist');
+app.use(express.static(clientDir, { maxAge: '1d' }));
 
 // Validate env
 const KEY_ID = process.env.RAZORPAY_KEY_ID;
@@ -27,8 +36,13 @@ if (!KEY_ID || !KEY_SECRET) {
 }
 
 app.get('/', (req, res) => {
-  if (razorpay) return res.send('Razorpay helper running');
-  return res.status(200).send('Razorpay helper running — keys not configured');
+  // If index.html exists in clientDir, serve it (SPA landing page)
+  try {
+    return res.sendFile(path.join(clientDir, 'index.html'));
+  } catch (e) {
+    if (razorpay) return res.send('Razorpay helper running');
+    return res.status(200).send('Razorpay helper running — keys not configured');
+  }
 });
 
 // Create order endpoint
@@ -127,6 +141,12 @@ app.post('/api/razorpay/verify-payment', async (req, res) => {
     console.error('verify-payment error', err);
     return res.status(500).json({ error: err.message || 'Verification failed' });
   }
+});
+
+// SPA fallback - serve index.html for any unknown non-API route (must be after API routes)
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'API route not found' });
+  res.sendFile(path.join(clientDir, 'index.html'));
 });
 
 app.listen(PORT, () => console.log(`Razorpay server listening on http://localhost:${PORT}`));

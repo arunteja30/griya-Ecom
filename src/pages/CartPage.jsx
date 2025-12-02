@@ -235,15 +235,13 @@ export default function CartPage() {
               <div className="mb-4 font-semibold">Total: ₹{finalTotal}</div>
               <div className="space-y-2">
                 
-                {siteSettings?.enableRazorpayCheckout !== false && (
-                  <button onClick={() => { if (!canCheckout) return; navigate('/checkout'); }} disabled={!canCheckout} className={`w-full btn btn-primary text-dark py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>Proceed to Checkout</button>
-                )}
-                
-              </div>
-            </div>
-          </aside>
-        </div>
-      )}
+                <button onClick={() => navigate('/checkout')} disabled={!canCheckout} className={`w-full btn btn-primary text-dark py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>Proceed to Checkout</button>
+               
+               </div>
+             </div>
+           </aside>
+         </div>
+       )}
 
       {/* Mobile bottom bar (only when cart has items) */}
       {cartItems.length > 0 && (
@@ -263,14 +261,12 @@ export default function CartPage() {
           </div>
           <div className="flex items-center gap-2 w-[48%]">
          
-            {siteSettings?.enableRazorpayCheckout !== false && (
-              <button onClick={() => { if (!canCheckout) return; navigate('/checkout'); }} disabled={!canCheckout} className={`flex-1 btn btn-primary text-dark py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>
+            <button onClick={() => navigate('/checkout')} disabled={!canCheckout} className={`flex-1 btn btn-primary text-dark py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>
                 Checkout
               </button>
-            )}
-          </div>
-        </div>
-      )}
+           </div>
+         </div>
+       )}
 
       <Modal isOpen={showConfirmClear} hideActions onClose={()=>setShowConfirmClear(false)} title="Clear cart?">
         <p>Are you sure you want to clear your cart? This cannot be undone.</p>
