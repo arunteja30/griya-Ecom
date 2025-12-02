@@ -165,7 +165,7 @@ export default function Navbar() {
             <div className="md:hidden flex-1">
               { isHome ? (
                 <div 
-                  className="text-lg font-bold"
+                  className="text-2xl font-bold"
                   style={{ 
                     fontFamily: 'Cormorant Garamond, serif',
                     color: '#1a1d20'
@@ -186,7 +186,7 @@ export default function Navbar() {
                   </button>
 
                   <div className="flex-1 text-center px-2">
-                    <div className="text-lg font-bold" style={{ fontFamily: 'Cormorant Garamond, serif', color: '#1a1d20' }}>{getMobileTitle(location.pathname)}</div>
+                    <div className="text-2xl font-bold line-clamp-1" style={{ fontFamily: 'Cormorant Garamond, serif', color: '#1a1d20' }}>{getMobileTitle(location.pathname)}</div>
                   </div>
 
                   <div className="flex items-center gap-2">
