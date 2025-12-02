@@ -115,7 +115,7 @@ export default function CategoryProductsPage() {
   if (!category && !festivalTags) return <div className="py-12 text-center">Category not found</div>;
 
   return (
-    <div className="w-full px-4 lg:px-8 py-8" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}>
+    <div className="w-full px-3 lg:px-8 py-4 sm:py-8" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 86px)' }}>
       {/* Mobile filter floating icon (bottom-right) */}
       <div className="lg:hidden">
         <button
@@ -134,9 +134,9 @@ export default function CategoryProductsPage() {
 
       {/* Category hero (fixed on mobile) */}
       <div className="lg:hidden">
-        <div className="mobile-hero-fixed fixed mt-20 left-0 right-0 z-40" style={{ top: 'env(safe-area-inset-top, 0px)', paddingLeft: '1rem', paddingRight: '1rem' }}>
-          <div className="p-6 bg-white shadow-sm rounded-b-md">
-            <div className="flex items-center gap-3 mb-3">
+        <div className="mobile-hero-fixed fixed left-0 right-0 z-30" style={{ top: 'env(safe-area-inset-top, 64px)', paddingLeft: '1rem', paddingRight: '1rem' }}>
+          <div className="p-4 sm:p-6 bg-white shadow-sm rounded-b-md">
+            <div className="flex items-center gap-5 mb-3">
               <Link to="/collections" aria-label="Back to collections" title="Back" className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M15 18l-6-6 6-6" />
@@ -148,8 +148,8 @@ export default function CategoryProductsPage() {
             {!category && festivalTags && <p className="text-neutral-600 mt-2">Browse curated picks</p>}
           </div>
         </div>
-        {/* spacer to preserve layout space for fixed hero */}
-        <div className="mobile-hero-spacer" aria-hidden />
+        {/* spacer to preserve layout space for fixed hero (reduced on mobile) */}
+        <div className="mobile-hero-spacer h-16 sm:h-20" aria-hidden />
       </div>
 
       {/* Main layout: filters on left, products on right */}
@@ -220,7 +220,7 @@ export default function CategoryProductsPage() {
         <main className="lg:col-span-9">
           {/* products: on mobile make product-list scrollable while hero stays fixed */}
           <div className="mobile-products-scroll">
-            <div className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="mt-4 sm:mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {visibleItems.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

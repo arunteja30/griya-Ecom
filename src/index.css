@@ -1,15 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Playfair+Display:wght@400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --gradient-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    --surface-elevation-1: rgba(255, 255, 255, 0.8);
-    --surface-elevation-2: rgba(255, 255, 255, 0.95);
-    --glass-bg: rgba(255, 255, 255, 0.25);
-    --glass-border: rgba(255, 255, 255, 0.18);
+    --gradient-bg: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+    --surface-elevation-1: rgba(255, 255, 255, 0.9);
+    --surface-elevation-2: rgba(255, 255, 255, 0.98);
+    --glass-bg: rgba(255, 255, 255, 0.3);
+    --glass-border: rgba(212, 175, 55, 0.2);
+    --gold-gradient: linear-gradient(135deg, #D4AF37 0%, #f9d77e 50%, #D4AF37 100%);
   }
 
   html {
@@ -23,22 +24,27 @@
   }
 
   body {
-    @apply bg-neutral-50 text-neutral-900 font-sans antialiased;
-    background: var(--gradient-bg);
+    @apply bg-white text-neutral-900 antialiased;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f8f9fa 100%);
+    font-family: 'Montserrat', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
     overflow-x: hidden;
   }
 
-  /* Headings use tailwind font classes (font-serif / .section-title keeps Playfair) */
+  /* Elegant headings use Cormorant Garamond serif */
+  h1, h2, h3, h4, h5, h6, .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+  }
 
   * {
     @apply border-neutral-200;
   }
 
   a {
-    @apply text-primary-700 transition-colors duration-200 hover:text-primary-600;
+    @apply text-primary-700 transition-colors duration-200 hover:text-accent-600;
   }
 
   /* Smooth transitions for all interactive elements */
@@ -46,98 +52,127 @@
     @apply transition-all duration-200 ease-in-out;
   }
 
-  /* Custom scrollbar */
+  /* Custom scrollbar - gold accent */
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 10px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-neutral-100;
+    @apply bg-neutral-50;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-neutral-300 rounded-full;
+    background: linear-gradient(180deg, #D4AF37 0%, #b8960f 100%);
+    @apply rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-neutral-400;
+    background: linear-gradient(180deg, #fbbf24 0%, #D4AF37 100%);
   }
 }
 
 @layer components {
-  /* Modern Button Styles */
+  /* Elegant Jewelry Button Styles */
   .btn {
-    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-lg text-sm font-semibold tracking-wide transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-opacity-30 disabled:opacity-50 disabled:cursor-not-allowed;
+    letter-spacing: 0.5px;
   }
   
   .btn-primary {
-    background: var(--site-button-bg, var(--site-primary, #0b2a66));
-    color: var(--site-button-text, white);
-    @apply focus:ring-primary-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+    background: linear-gradient(135deg, #1a1d20 0%, #0d0f10 100%);
+    color: white;
+    @apply focus:ring-primary-500 shadow-md hover:shadow-xl transform hover:-translate-y-0.5;
+    border: 1px solid rgba(212, 175, 55, 0.3);
    }
    
    .btn-secondary {
-    @apply bg-white text-primary-900 border-2 border-primary-200 hover:border-primary-300 hover:bg-primary-50 focus:ring-primary-300 shadow-md hover:shadow-lg;
+    @apply bg-white text-primary-900 border-2 border-neutral-200 hover:border-accent-400 hover:bg-neutral-50 focus:ring-accent-300 shadow-sm hover:shadow-md;
    }
    
    .btn-accent {
-    background: var(--site-accent, #FFCC00);
-    color: var(--site-button-text, white);
-    @apply focus:ring-accent-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+    background: linear-gradient(135deg, #D4AF37 0%, #f9d77e 50%, #D4AF37 100%);
+    color: #1a1d20;
+    @apply focus:ring-accent-500 shadow-md hover:shadow-xl transform hover:-translate-y-0.5 font-semibold;
+    border: 1px solid rgba(212, 175, 55, 0.5);
   }
 
   .btn-ghost {
-    @apply bg-transparent text-primary-700 hover:bg-primary-50 focus:ring-primary-300;
+    @apply bg-transparent text-primary-700 hover:bg-neutral-50 focus:ring-neutral-300;
   }
 
   .btn-sm {
-    @apply px-4 py-2 text-xs rounded-lg;
+    @apply px-4 py-2 text-xs rounded-md;
   }
 
   .btn-lg {
-    @apply px-8 py-4 text-lg rounded-2xl;
+    @apply px-10 py-4 text-base rounded-xl;
   }
 
-  /* Modern Card Styles */
+  /* Elegant Jewelry Card Styles */
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-neutral-200/50 overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-neutral-300/50;
+    @apply bg-white rounded-lg shadow-sm border border-neutral-100 overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-accent-200;
+    background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
   }
 
   .card-elevated {
-    @apply bg-white rounded-2xl shadow-lg border border-neutral-200/50 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+    @apply bg-white rounded-xl shadow-md border border-neutral-100 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1;
+    background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
+    border-top: 2px solid rgba(212, 175, 55, 0.2);
   }
 
   .card-glass {
-    background: var(--glass-bg);
+    background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    @apply rounded-2xl shadow-lg overflow-hidden;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    @apply rounded-xl shadow-lg overflow-hidden;
   }
 
-  /* Product Card Styles */
+  /* Luxury Product Card Styles */
   .product-card {
-    @apply cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl;
+    @apply cursor-pointer transition-all duration-500 hover:scale-[1.02];
+    position: relative;
+  }
+  
+  .product-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0) 0%, rgba(212, 175, 55, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .product-card:hover::before {
+    opacity: 1;
   }
 
   .product-image {
         width: 100%;
         aspect-ratio: 1 / 1;
         object-fit: cover;
-        transition-property: transform;
+        transition-property: transform, filter;
         transition-duration: 700ms;
     }
     .product-image:hover, .group:hover .product-image {
-        transform: scale(1.10);
+        transform: scale(1.08);
+        filter: brightness(1.05);
   }
 
-  /* Navigation Styles */
+  /* Elegant Navigation Styles */
   .nav-link {
-    @apply relative px-4 py-2 text-sm font-medium text-neutral-700 hover:text-primary-600 transition-colors duration-200;
+    @apply relative px-4 py-2 text-sm font-medium text-neutral-700 hover:text-accent-600 transition-colors duration-300;
+    letter-spacing: 0.5px;
   }
 
   .nav-link::after {
     content: '';
-    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-primary-600 transition-all duration-300;
+    @apply absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300;
+    background: linear-gradient(90deg, #D4AF37 0%, #f9d77e 100%);
   }
 
   .nav-link:hover::after,
@@ -145,13 +180,15 @@
     @apply w-full;
   }
 
-  /* Form Styles */
+  /* Elegant Form Styles */
   .form-input {
-    @apply w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-all duration-200 placeholder:text-neutral-400;
+    @apply w-full px-4 py-3 rounded-lg border border-neutral-200 focus:border-accent-400 focus:ring-4 focus:ring-accent-100 transition-all duration-300 placeholder:text-neutral-400;
+    background: white;
   }
 
   .form-label {
     @apply block text-sm font-semibold text-neutral-700 mb-2;
+    letter-spacing: 0.3px;
   }
 
   /* Section Styles */
@@ -203,6 +240,16 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Horizontal scroll without scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 
   /* Animation utilities */
@@ -257,6 +304,18 @@
   .scroll-reveal.revealed {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  /* Utility: apply top offset matching the fixed nav height on large screens */
+  .page-with-nav-offset {
+    padding-top: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .page-with-nav-offset {
+      /* push content below fixed header + small gap */
+      padding-top: calc(var(--nav-height, 66px) + 1rem);
+    }
   }
 }
 
@@ -406,6 +465,28 @@ html::-webkit-scrollbar:horizontal, body::-webkit-scrollbar:horizontal {
   @media (max-width: 1024px) {
     .mobile-products-scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .mobile-products-scroll::-webkit-scrollbar { width: 0; }
+  }
+}
+
+/* Hide heroes on mobile when not on home */
+@media (max-width: 767px) {
+  body:not(.is-home) .hero-overlay,
+  body:not(.is-home) .mobile-hero-fixed,
+  body:not(.is-home) .mobile-hero-spacer,
+  body:not(.is-home) .page-hero,
+  body:not(.is-home) .banner-carousel {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* When hero is hidden, ensure page content is pushed below the navbar */
+  body:not(.is-home) .page-with-nav-offset,
+  body:not(.is-home) .mobile-nav-offset {
+    padding-top: var(--nav-height, 64px) !important;
   }
 }
 

@@ -231,10 +231,17 @@ export default function ProductDetailPage() {
         {related.length > 0 && (
           <div className="lg:col-span-12 mt-8">
             <h3 className="text-xl font-semibold mb-4">Related products</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {related.map((r) => (
-                <ProductCard key={r.id} product={r} />
-              ))}
+            <div className="relative">
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+                {related.map((r) => (
+                  <div key={r.id} className="flex-shrink-0 w-[160px] sm:w-[200px] md:w-[240px] lg:w-[260px] snap-start">
+                    <ProductCard product={r} />
+                  </div>
+                ))}
+              </div>
+
+              {/* subtle fade to indicate more items */}
+              <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none hidden sm:block" />
             </div>
           </div>
         )}

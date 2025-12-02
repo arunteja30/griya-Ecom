@@ -10,31 +10,31 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Flipkart-like primary blue scale
+        // Elegant jewelry primary palette - Deep charcoal/black
         primary: {
-          50: '#eef6ff',
-          100: '#d9eaff',
-          200: '#bcd9ff',
-          300: '#8fc2ff',
-          400: '#5aa9ff',
-          500: '#2874F0',
-          600: '#1f63d9',
-          700: '#194fb0',
-          800: '#123886',
-          900: '#0b2a66'
+          50: '#f8f9fa',
+          100: '#f1f3f5',
+          200: '#e9ecef',
+          300: '#dee2e6',
+          400: '#ced4da',
+          500: '#495057',
+          600: '#343a40',
+          700: '#212529',
+          800: '#1a1d20',
+          900: '#0d0f10'
         },
-        // Flipkart-like yellow accent
+        // Luxurious gold accent for jewelry
         accent: {
-          50: '#fff8e6',
-          100: '#fff1cc',
-          200: '#ffe599',
-          300: '#ffd966',
-          400: '#ffcf33',
-          500: '#FFCC00',
-          600: '#e6b800',
-          700: '#b88f00',
-          800: '#8f6b00',
-          900: '#6b4d00'
+          50: '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#D4AF37',
+          600: '#b8960f',
+          700: '#92710a',
+          800: '#6b5008',
+          900: '#453305'
         },
         neutral: {
           50: '#fafafa',

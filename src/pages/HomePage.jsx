@@ -33,14 +33,14 @@ function BannerCarousel({ banners }) {
   const [paused, setPaused] = React.useState(false);
 
   // reset index if active length changes
-  React.useEffect(() => { if (idx >= active.length) setIdx(0); }, [active.length]);
+  React.useEffect(() => { if (idx >= active.length) setIdx(0); }, [active.length, idx]);
 
-  // autoplay every 5s
+  // autoplay every 4s
   React.useEffect(() => {
     if (paused || active.length <= 1) return;
     const tid = setInterval(() => {
       setIdx(i => (i + 1) % active.length);
-    }, 5000);
+    }, 4000);
     return () => clearInterval(tid);
   }, [active.length, paused]);
 
@@ -50,31 +50,103 @@ function BannerCarousel({ banners }) {
   const item = active[idx];
 
   return (
-    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} className="w-full rounded overflow-hidden relative">
-      <a href={item.ctaLink || item.link || '#'} className="block">
-        <img src={normalizeImageUrl(item.image) || item.image || '/placeholder.jpg'} alt={item.heading || ''} className="w-full h-64 md:h-96 object-cover" />
-      </a>
+    <div 
+      onMouseEnter={() => setPaused(true)} 
+      onMouseLeave={() => setPaused(false)} 
+      className="w-full relative group"
+    >
+      {/* Main Banner Image */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-neutral-100 to-neutral-50">
+        <img 
+          src={normalizeImageUrl(item.image) || item.image || '/placeholder.jpg'} 
+          alt={item.heading || ''} 
+          className="w-full h-72 md:h-96 lg:h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" 
+        />
+        
+        {/* Elegant Overlay Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+      </div>
 
-      {/* overlay content */}
+      {/* Elegant Content Overlay */}
       <div className="absolute inset-0 flex items-end">
-        <div className="w-full bg-gradient-to-t from-black/60 to-transparent p-6 md:p-12">
-          <div className="max-w-2xl text-white">
-            {item.heading && <h2 className="text-2xl md:text-4xl font-bold">{item.heading}</h2>}
-            {item.body && <p className="mt-2 text-sm md:text-base">{item.body}</p>}
+        <div className="w-full p-4 sm:p-6 md:p-12 lg:p-16">
+          <div className="max-w-3xl">
+            {item.heading && (
+              <h2 
+                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 drop-shadow-2xl"
+                style={{ 
+                  fontFamily: 'Cormorant Garamond, serif',
+                  lineHeight: '1.2',
+                  textShadow: '0 2px 20px rgba(0,0,0,0.5)'
+                }}
+              >
+                {item.heading}
+              </h2>
+            )}
+            {item.body && (
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 mb-4 sm:mb-5 md:mb-6 max-w-2xl drop-shadow-lg" style={{ lineHeight: '1.6' }}>
+                {item.body}
+              </p>
+            )}
             {(item.ctaLabel && (item.link || item.ctaLink)) && (
-              <a href={item.link || item.ctaLink} className="inline-block mt-4 px-4 py-2 bg-orange-600 text-white rounded">{item.ctaLabel}</a>
+              <a 
+                href={item.link || item.ctaLink} 
+                className="inline-flex items-center gap-1.5 sm:gap-2 px-5 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-3.5 rounded-lg font-semibold text-xs sm:text-sm tracking-wide transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+                style={{
+                  background: 'linear-gradient(135deg, #D4AF37 0%, #f9d77e 100%)',
+                  color: '#1a1d20',
+                  letterSpacing: '0.8px'
+                }}
+              >
+                {item.ctaLabel}
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
             )}
           </div>
         </div>
       </div>
 
-      {/* controls */}
-      <button onClick={prev} aria-label="Previous" className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/30 text-white rounded-full p-2">
-        ‹
-      </button>
-      <button onClick={next} aria-label="Next" className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/30 text-white rounded-full p-2">
-        ›
-      </button>
+      {/* Elegant Navigation Controls */}
+      {active.length > 1 && (
+        <>
+          <button 
+            onClick={prev} 
+            aria-label="Previous" 
+            className="absolute left-2 sm:left-4 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 text-white border border-white/30 transition-all duration-300 flex items-center justify-center group-hover:scale-110"
+          >
+            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button 
+            onClick={next} 
+            aria-label="Next" 
+            className="absolute right-2 sm:right-4 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 text-white border border-white/30 transition-all duration-300 flex items-center justify-center group-hover:scale-110"
+          >
+            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          {/* Elegant Dot Indicators */}
+          <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-2">
+            {active.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setIdx(i)}
+                aria-label={`Go to slide ${i + 1}`}
+                className={`transition-all duration-300 rounded-full ${
+                  i === idx 
+                    ? 'w-6 sm:w-8 h-1.5 sm:h-2 bg-gradient-to-r from-accent-400 to-accent-500' 
+                    : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/50 hover:bg-white/70'
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -162,37 +234,63 @@ export default function HomePage() {
   if (loading) return <Loader />;
 
   return (
-    <main className="space-y-8 pb-8">
+    <main className="min-h-screen">
 
-      {/* Banners / Carousel */}
-      <section className="max-w-7xl mx-auto px-4 mb-3 md:mb-0">
-        <BannerCarousel banners={banners} />
+      {/* Banners / Carousel - Full width on mobile */}
+      <section className="max-w-7xl mx-auto px-0 sm:px-4 pt-0 sm:pt-4 md:pt-6">
+        <div className="rounded-none sm:rounded-xl md:rounded-2xl overflow-hidden shadow-lg md:shadow-xl border-0 sm:border border-accent-100">
+          <BannerCarousel banners={banners} />
+        </div>
       </section>
 
-      {/* Categories Section - horizontal scrolling */}
-      <section className="max-w-7xl mx-auto px-4">
-        {categories && categories.length ? (
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold text-gray-800">Shop by Category</h2>
+      {/* Elegant Section Divider - Full width on mobile */}
+      <div className="max-w-7xl mx-auto px-0 sm:px-4 py-4 sm:py-6 md:py-8">
+        <div className="h-px bg-gradient-to-r from-transparent via-accent-200 to-transparent"></div>
+      </div>
 
-            {/* horizontal scroll container */}
-            <div className="flex gap-4 overflow-x-auto py-3">
+      {/* Categories Section - Full width on mobile */}
+      <section className="max-w-7xl mx-auto px-0 sm:px-4 py-3 sm:py-4 md:py-6">
+        {categories && categories.length ? (
+          <div className="space-y-4 sm:space-y-6 md:space-y-8">
+            <div className="text-center px-4 sm:px-0">
+              <h2 
+                className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2"
+                style={{ 
+                  fontFamily: 'Cormorant Garamond, serif',
+                  color: '#1a1d20',
+                  letterSpacing: '0.5px'
+                }}
+              >
+                Shop by Category
+              </h2>
+              <div className="w-16 sm:w-20 md:w-24 h-0.5 md:h-1 mx-auto bg-gradient-to-r from-accent-400 via-accent-500 to-accent-400 rounded-full"></div>
+            </div>
+
+            <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1 sm:gap-3 md:gap-4 lg:gap-6 px-1 sm:px-0">
               {categories.map((col) => (
                 <Link
                   key={col.id}
                   to={`/collections/${col.slug || col.id}`}
-                  className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 w-40 flex-shrink-0"
+                  className="group bg-white rounded-none sm:rounded-lg md:rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-neutral-100 hover:border-accent-200 transform hover:-translate-y-1"
+                  style={{ borderTop: '1px solid rgba(212, 175, 55, 0.2)' }}
                 >
-                  <div className="relative aspect-square bg-gradient-to-br from-orange-50 to-orange-100">
+                  <div className="relative aspect-square bg-gradient-to-br from-neutral-50 via-white to-neutral-50 overflow-hidden">
                     <img
                       src={normalizeImageUrl(col?.image || col?.imageUrl || '/placeholder.jpg')}
                       alt={col?.title || col?.name || col.id}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
-                  <div className="p-3 text-center">
-                    <div className="font-medium text-gray-800 text-sm group-hover:text-orange-600 transition-colors">
+                  <div className="p-1.5 sm:p-2 md:p-3 text-center bg-gradient-to-b from-white to-neutral-50">
+                    <div 
+                      className="font-semibold text-lg sm:text-base md:text-lg group-hover:text-accent-600 transition-colors duration-300"
+                      style={{
+                        fontFamily: 'Cormorant Garamond, serif',
+                        color: '#1a1d20',
+                        letterSpacing: '0.3px'
+                      }}
+                    >
                       {col?.title || col?.name || col.id}
                     </div>
                   </div>
@@ -201,33 +299,65 @@ export default function HomePage() {
             </div>
           </div>
         ) : (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">🛒</div>
-            <p className="text-gray-600">No categories available</p>
+          <div className="text-center py-8 sm:py-12 md:py-16">
+            <div className="text-4xl sm:text-5xl md:text-6xl mb-3 sm:mb-4">�</div>
+            <p className="text-neutral-500 font-medium text-sm sm:text-base">No categories available</p>
           </div>
         )}
       </section>
 
-      {/* Festival Sections (server configured) - horizontal product carousels */}
-      <section className="max-w-7xl mx-auto px-4 space-y-6">
+      {/* Festival Sections - Full width horizontal scroll on mobile */}
+      <section className="max-w-7xl mx-auto px-0 sm:px-4 py-4 sm:py-6 md:py-8 space-y-6 sm:space-y-8 md:space-y-12">
         {festivalSections && festivalSections.length > 0 && festivalSections.map(s => (
-          <section key={`fest-${s.key}`}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold">{s.title}</h3>
-              <Link to={`/collections/${s.key}`} className="text-sm border-b border-fill border-accent-600">Browse all</Link>
+          <div key={`fest-${s.key}`} className="space-y-3 sm:space-y-4 md:space-y-6">
+            <div className="flex items-center justify-between px-4 sm:px-0">
+              <div>
+                <h3 
+                  className="text-xl sm:text-2xl md:text-3xl font-bold mb-0.5 sm:mb-1"
+                  style={{ 
+                    fontFamily: 'Cormorant Garamond, serif',
+                    color: '#1a1d20'
+                  }}
+                >
+                  {s.title}
+                </h3>
+                <div className="w-12 sm:w-14 md:w-16 h-0.5 bg-gradient-to-r from-accent-500 to-transparent rounded-full"></div>
+              </div>
+              <Link 
+                to={`/collections/${s.key}`}
+                className="group flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs md:text-sm font-semibold rounded-md md:rounded-lg transition-all duration-300 hover:bg-accent-50"
+                style={{ 
+                  color: '#D4AF37',
+                  letterSpacing: '0.3px'
+                }}
+              >
+                <span className="hidden sm:inline">Browse All</span>
+                <span className="sm:hidden">All</span>
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
 
-            {/* horizontal product list */}
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              {s.products.map(p => (
-                <div key={p.id} className="w-64 flex-shrink-0">
-                  <ProductCard product={p} />
-                </div>
-              ))}
+            {/* Horizontal Scrollable Product List - Full width on mobile */}
+            <div className="relative">
+              <div className="flex gap-3 sm:gap-4 md:gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory pl-4 sm:pl-0">
+                {s.products.map(p => (
+                  <div key={p.id} className="flex-shrink-0 w-[160px] sm:w-[200px] md:w-[240px] lg:w-[280px] snap-start first:ml-0 last:mr-4 sm:last:mr-0">
+                    <ProductCard product={p} />
+                  </div>
+                ))}
+              </div>
+              
+              {/* Fade effect at the end to indicate more items */}
+              <div className="absolute right-0 top-0 bottom-4 w-16 bg-gradient-to-l from-[#f8f9fa] to-transparent pointer-events-none hidden sm:block"></div>
             </div>
-          </section>
+          </div>
         ))}
       </section>
+
+      {/* Bottom Spacing - Reduced on mobile */}
+      <div className="h-6 sm:h-8 md:h-12"></div>
 
     </main>
   );

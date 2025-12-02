@@ -731,7 +731,18 @@ export default function CheckoutPage() {
   // Default checkout form
   return (
     <div className="max-w-3xl mx-auto py-8 flex flex-col" style={{ height: 'calc(100vh - 4rem)' }}>
-      <div className="mb-6 sticky top-0  z-30 py-3">
+      <div className="mb-4 sticky top-0 z-30 py-3 md:hidden">
+        <div className="flex items-center">
+          <button onClick={() => navigate('/cart')} className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center no-print hidden md:block" aria-label="Back to cart">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop / tablet: full hero (title + description) */}
+      <div className="mb-6 sticky top-0 z-30 py-3 hidden md:block">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/cart')} className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center no-print">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">

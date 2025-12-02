@@ -79,13 +79,13 @@ export default function ProductCard({ product, variant = 'normal' }) {
     for (let i = 0; i < 5; i++) {
       if (i < full) {
         stars.push(
-          <svg key={i} className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--pc-star, #F59E0B)' }}>
+          <svg key={i} className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--accent-color, #F59E0B)' }}>
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.387 2.46a1 1 0 00-.364 1.118l1.287 3.974c.3.921-.755 1.688-1.54 1.118L10 15.347l-3.387 2.46c-.785.57-1.84-.197-1.54-1.118l1.287-3.974a1 1 0 00-.364-1.118L2.609 9.4c-.783-.57-.38-1.81.588-1.81h4.18a1 1 0 00.95-.69L9.05 2.927z" />
           </svg>
         );
       } else if (i === full && half) {
         stars.push(
-          <svg key={i} className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--pc-star, #F59E0B)' }}>
+          <svg key={i} className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor" style={{ color: 'var(--accent-color, #F59E0B)' }}>
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.974a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.387 2.46a1 1 0 00-.364 1.118l1.287 3.974c.3.921-.755 1.688-1.54 1.118L10 15.347V2.927z" />
           </svg>
         );
@@ -102,16 +102,24 @@ export default function ProductCard({ product, variant = 'normal' }) {
 
   return (
     <div
-      className="product-card card group overflow-hidden"
-      style={{ background: 'var(--pc-card-bg, white)' }}
+      className="group bg-white rounded-lg md:rounded-xl overflow-hidden shadow-sm border border-neutral-100 transition-all duration-300 hover:shadow-xl hover:border-accent-200"
+      style={{ 
+        background: 'linear-gradient(to bottom, #ffffff 0%, #fafafa 100%)',
+        borderTop: '1px solid var(--accent-color, rgba(212, 175, 55, 0.15))'
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Compact image area */}
-      <div className={`relative overflow-hidden ${isLarge ? 'h-48 md:h-56' : 'h-36 md:h-40'} flex items-center justify-center`} style={{ background: 'var(--pc-image-bg, #f3f4f6)' }}>
-        {/* Use object-cover to fill the area while keeping center; slight scale on hover for subtle effect */}
+      {/* Elegant image area with gold border accent - Reduced for mobile */}
+      <div 
+        className={`relative overflow-hidden ${isLarge ? 'h-40 sm:h-48 md:h-56 lg:h-64' : 'h-32 sm:h-36 md:h-40 lg:h-48'} flex items-center justify-center`}
+        style={{ 
+          background: 'linear-gradient(135deg, #fafafa 0%, #ffffff 100%)',
+          borderBottom: '1px solid var(--accent-color, rgba(212, 175, 55, 0.1))'
+        }}
+      >
         <img
-          className="w-full h-full object-cover object-center transition-transform duration-300 ease-out group-hover:scale-105"
+          className="w-full h-full object-cover object-center transition-all duration-500 ease-out group-hover:scale-105 group-hover:brightness-105"
           src={imgSrc}
           onError={handleImgError}
           alt={product.name}
@@ -119,67 +127,117 @@ export default function ProductCard({ product, variant = 'normal' }) {
           draggable={false}
         />
 
-        {/* Hover quick action - stays centered */}
-        <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${isHovered ? "opacity-100" : "opacity-0"}`}>
-          <Link
-            to={`/product/${product.slug}`}
-            className={`btn btn-secondary ${isLarge ? 'btn-lg' : 'btn-sm'} bg-white/90 text-neutral-800 shadow-sm`}
-            aria-label="View product"
-          >
-            View
-          </Link>
+        {/* Elegant hover overlay with gold gradient - Hidden on mobile, shown on hover for desktop */}
+        <div className={`hidden md:block absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent transition-opacity duration-300 ${isHovered ? "opacity-100" : "opacity-0"}`}>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Link
+              to={`/product/${product.slug}`}
+              className="px-4 md:px-6 py-2 md:py-2.5 bg-white/95 backdrop-blur-sm rounded-lg font-semibold text-xs md:text-sm shadow-lg transform transition-all duration-300 hover:scale-105"
+              style={{ 
+                color: 'var(--primary-color, #1a1d20)',
+                borderColor: 'var(--accent-color, #D4AF37)',
+                borderWidth: '1px',
+                borderStyle: 'solid'
+              }}
+              aria-label="View product"
+            >
+              View Details
+            </Link>
+          </div>
         </div>
+
+        {/* Elegant badges with gold accents - Smaller on mobile */}
+        {(product.isNew || isBestseller || hasFreeShipping || product.discount) && (
+          <div className="absolute top-1.5 md:top-3 left-1.5 md:left-3 flex flex-col gap-1">
+            {product.isNew && (
+              <div className="text-white text-[8px] md:text-[10px] font-bold px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full shadow-md" style={{ background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' }}>NEW</div>
+            )}
+            {isBestseller && (
+              <div className="text-primary-900 text-[8px] md:text-[10px] font-bold px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full shadow-md" style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #f9d77e 100%)' }}>BESTSELLER</div>
+            )}
+            {hasFreeShipping && (
+              <div className="text-white text-[8px] md:text-[10px] font-bold px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full shadow-md" style={{ background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)' }}>FREE SHIP</div>
+            )}
+          </div>
+        )}
+        {product.discount && (
+          <div className="absolute top-1.5 md:top-3 right-1.5 md:right-3 text-white text-[9px] md:text-xs font-bold px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full shadow-md" style={{ background: 'linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)' }}>-{product.discount}%</div>
+        )}
       </div>
 
-      {/* Badges row (placed below image) */}
-      {(product.isNew || isBestseller || hasFreeShipping || product.discount) && (
-        <div className="flex items-center gap-2 mt-2">
-          {product.isNew && (
-            <div className="text-white text-[10px] ml-2 font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-new, #10B981)' }}>New</div>
-          )}
-          {isBestseller && (
-            <div className="text-white text-[10px] ml-2 font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-bestseller, #F59E0B)' }}>Bestseller</div>
-          )}
-          {hasFreeShipping && (
-            <div className="text-white text-[10px] ml-2 font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-new, #10B981)' }}>Free shipping</div>
-          )}
-          {product.discount && (
-            <div className="text-white text-[10px] ml-2 font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--pc-badge-discount, #DC2626)' }}>-{product.discount}%</div>
-          )}
-        </div>
-      )}
-
-      {/* Compact details */}
-      <div className={`p-3 space-y-1 ${isLarge ? 'p-4' : ''}`}>
-        {product.category && <div className="text-[11px] text-accent-600 font-semibold uppercase tracking-wide">{product.category}</div>}
+      {/* Elegant details section - Compact on mobile */}
+      <div className={`${isLarge ? 'p-3 md:p-5' : 'p-2.5 md:p-4'} space-y-1.5 md:space-y-2`}>
+        {product.category && (
+          <div 
+            className="text-[8px] md:text-[10px] font-semibold uppercase tracking-wider" 
+            style={{ 
+              color: 'var(--accent-color, #D4AF37)', 
+              letterSpacing: '0.5px md:1px' 
+            }}
+          >
+            {product.category}
+          </div>
+        )}
 
         <Link to={`/product/${product.slug}`} className="block">
-          <h3 className={`font-semibold text-primary-900 ${isLarge ? 'text-base' : 'text-sm'} line-clamp-2 hover:text-accent-600 transition-colors duration-150`} style={{ color: 'var(--pc-name, #0b2a66)' }}>{product.name}</h3>
+          <h3 
+            className={`font-semibold ${isLarge ? 'text-lg md:text-xl' : 'text-base md:text-lg'} line-clamp-2 transition-colors duration-200`}
+            style={{ 
+              fontFamily: 'Cormorant Garamond, serif',
+              color: 'var(--primary-color, #0d0c0eff)',
+              lineHeight: '1.3'
+            }}
+          >
+            {product.name}
+          </h3>
         </Link>
 
-        {/* Rating */}
-        <div className="mt-1">{renderStars(avgRating)}</div>
+        {/* Rating with gold stars - Smaller on mobile */}
+        <div className="mt-1 md:mt-1.5 scale-90 md:scale-100 origin-left">{renderStars(avgRating)}</div>
 
-        <div className="flex items-center justify-between mt-1">
-          <div className="flex items-center gap-2">
-            <span className={`font-bold ${isLarge ? 'text-lg' : 'text-base'}`} style={{ color: 'var(--pc-price, #0b2a66)' }}>{formatPrice(product.price)}</span>
-            {product.originalPrice && product.originalPrice > product.price && <span className="text-sm text-neutral-500 line-through">{formatPrice(product.originalPrice)}</span>}
+        <div className="flex items-center justify-between mt-1.5 md:mt-2 pt-1.5 md:pt-2 border-t border-neutral-100">
+          <div className="flex flex-col gap-0.5">
+            <span 
+              className={`font-bold ${isLarge ? 'text-sm md:text-lg' : 'text-sm md:text-base'}`}
+              style={{ 
+                color: 'var(--primary-color, #1a1d20)',
+                fontFamily: 'Montserrat, sans-serif'
+              }}
+            >
+              {formatPrice(product.price)}
+            </span>
+            {product.originalPrice && product.originalPrice > product.price && (
+              <span className="text-[10px] md:text-xs text-neutral-400 line-through">{formatPrice(product.originalPrice)}</span>
+            )}
           </div>
 
           <button
             onClick={handleAddToCart}
             disabled={isLoading || !inStock}
-            className={`btn btn-primary ${isLarge ? 'btn-sm' : 'btn-sm'} ${isLoading || !inStock ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`px-2 md:px-4 py-1.5 md:py-2 text-[10px] md:text-xs font-semibold rounded-md md:rounded-lg transition-all duration-300 ${
+              isLoading || !inStock 
+                ? "opacity-50 cursor-not-allowed bg-neutral-200 text-neutral-500" 
+                : "hover:shadow-lg transform hover:-translate-y-0.5"
+            }`}
+            style={{ 
+              letterSpacing: '0.3px',
+              ...(!(isLoading || !inStock) && {
+                background: 'var(--accent-color, linear-gradient(to right, #D4AF37, #f9d77e))',
+                color: 'var(--primary-color, #1a1d20)'
+              })
+            }}
           >
-            {isLoading ? "Adding..." : inStock ? "Add" : "Out"}
+            {isLoading ? "..." : inStock ? "ADD" : "OUT"}
           </button>
         </div>
 
-        {/* Tactical notes */}
-        <div className="flex items-center justify-between mt-2">
-          {lowStock && <div className="text-xs text-red-600 font-medium">Only {stock} left</div>}
-          {!inStock && <div className="text-xs text-neutral-500">Out of stock</div>}
-        </div>
+        {/* Stock indicator - Smaller on mobile */}
+        {lowStock && (
+          <div className="flex items-center gap-1 md:gap-1.5 mt-1.5 md:mt-2 text-[10px] md:text-xs">
+            <span className="w-1 h-1 md:w-1.5 md:h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+            <span className="text-red-600 font-medium">Only {stock} left</span>
+          </div>
+        )}
       </div>
     </div>
   );

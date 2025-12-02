@@ -56,7 +56,7 @@ export default function CollectionsPage() {
 
   try {
     return (
-      <div className="section-container py-8" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}>
+      <div className="section-container py-4 sm:py-8" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)' }}>
         {/* Hero + toolbar: fixed on mobile, normal on larger screens */}
           <div className="lg:hidden">
             <div
@@ -97,7 +97,7 @@ export default function CollectionsPage() {
               </div>
             </div>
           </div>
-          <div className="mobile-hero-spacer" aria-hidden />
+          <div className="mobile-hero-spacer h-16 sm:h-20" aria-hidden />
         </div>
 
         {/* Desktop hero */}
@@ -163,21 +163,21 @@ export default function CollectionsPage() {
           {/* Grid */}
           <main className="lg:col-span-9">
             <div className="mobile-products-scroll">
-              <div className="mt-10 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="mt-4 sm:mt-10 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {visibleItems.map((c) => (
                   <Link
                     key={c.id}
                     to={`/collections/${c.slug || c.id}`}
                     className="card overflow-hidden hover:shadow-lg transition-shadow duration-300 p-0"
                   >
-                    <div className="w-full h-36 bg-neutral-100 overflow-hidden">
+                    <div className="w-full h-32 sm:h-36 bg-neutral-100 overflow-hidden">
                       <img
                         src={c.thumbnail || c.image || "/placeholder.jpg"}
                         alt={c.name || c.title}
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="p-3">
+                    <div className="p-2 sm:p-3">
                       <div className="font-semibold text-sm text-primary-900 leading-tight">
                         {c.name || c.title}
                       </div>

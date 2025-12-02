@@ -37,97 +37,224 @@ export default function Navbar() {
     return sum + qty;
   }, 0);
 
+  // detect if current route is home
+  const isHome = location.pathname === '/' || location.pathname === '/home';
+
+  // add/remove a body class so other components/CSS can react (show mobile hero only on home)
+  React.useEffect(() => {
+    try {
+      if (typeof document !== 'undefined') {
+        if (isHome) document.body.classList.add('is-home');
+        else document.body.classList.remove('is-home');
+      }
+    } catch (e) {
+      // ignore
+    }
+    return () => {};
+  }, [isHome]);
+
+  // Helper: derive a friendly page title from the path for the mobile action bar
+  const getMobileTitle = (pathname) => {
+    try {
+      const parts = pathname.split('/').filter(Boolean);
+      if (!parts.length) return settings?.brandName || 'Griya';
+      const last = parts[parts.length - 1];
+      const decoded = decodeURIComponent(last.replace(/\+/g, ' '));
+      return decoded.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    } catch (e) {
+      return settings?.brandName || 'Griya';
+    }
+  };
+
   return (
     <>
       <header
-        className={`w-full top-0 z-50 sticky transition-all duration-300 shadow-sm ${
-          isSticky ? "glass-effect shadow-lg backdrop-blur-xl bg-white/80" : "bg-[var(--site-nav-bg,theme('colors.primary.50'))]"
+        className={`w-full top-0 z-50 sticky transition-all duration-300 ${
+          isSticky 
+            ? "backdrop-blur-xl bg-white/95 shadow-lg border-b border-accent-100" 
+            : "bg-white shadow-md border-b border-neutral-100"
         }`}
-        style={{ borderBottomColor: 'var(--site-nav-border, rgba(0,0,0,0.06))' }}
       >
-        {/* Top row */}
-        <div className="section-container">
+        {/* Top row - Elegant Jewelry Store Header */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 py-3 lg:py-4">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-3 mr-2">
-              <img
-                src={settings?.logoUrl || "/placeholder.jpg"}
-                alt={settings?.brandName || "Brand"}
-                className="h-14 w-14 md:h-12 md:w-12 object-cover rounded-md shadow-sm"
-              />
-              <div className="hidden sm:block">
-                <div className="font-bold text-lg" style={{ color: 'var(--site-nav-text, var(--primary-900))', fontFamily: 'Playfair Display, serif' }}>
-                  {settings?.brandName || "Griya Jewellery"}
+            {/* Elegant Logo or Back Button on inner pages */}
+            {isHome ? (
+              <Link to="/" className="flex items-center gap-3 mr-2 group">
+                <div className="relative">
+                  <img
+                    src={settings?.logoUrl || "/placeholder.jpg"}
+                    alt={settings?.brandName || "Brand"}
+                    className="h-14 w-14 md:h-12 md:w-12 object-cover rounded-lg shadow-md border border-accent-100 transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-accent-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
-                {settings?.tagline && (
-                  <div className="text-xs font-medium" style={{ color: 'var(--site-nav-subtext, #6b7280)' }}>{settings.tagline}</div>
-                )}
+                <div className="hidden sm:block">
+                  <div 
+                    className="font-bold text-xl tracking-wide"
+                    style={{ 
+                      fontFamily: 'Cormorant Garamond, serif',
+                      color: '#1a1d20',
+                      letterSpacing: '0.5px'
+                    }}
+                  >
+                    {settings?.brandName || "Griya Jewellery"}
+                  </div>
+                  {settings?.tagline && (
+                    <div className="text-xs font-medium text-accent-600" style={{ letterSpacing: '0.5px' }}>
+                      {settings.tagline}
+                    </div>
+                  )}
+                </div>
+              </Link>
+            ) : (
+              <div className="mr-2 hidden md:block">
+                <button
+                  onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
+                  className="p-2 rounded-md hover:bg-neutral-100"
+                  aria-label="Back"
+                >
+                  <svg className="w-6 h-6 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
               </div>
-            </Link>
+            )}
 
-            {/* Desktop/tablet inline search (hidden on small screens) */}
-            <div className="hidden md:flex flex-1">
+            {/* Elegant Search Bar - Desktop/Tablet */}
+            <div className="hidden md:flex flex-1 max-w-2xl mx-4">
               <form onSubmit={handleSearchSubmit} className="flex items-center w-full">
                 <div className="relative w-full">
                   <input
                     name="q"
-                    placeholder="Search products, categories, brands..."
-                    className="form-input header-search w-full pr-12 md:pr-36"
+                    placeholder="Search for exquisite jewelry..."
+                    className="w-full px-5 py-2.5 pr-12 rounded-lg border border-neutral-200 focus:border-accent-400 focus:ring-4 focus:ring-accent-100 transition-all duration-300 text-sm bg-neutral-50 focus:bg-white"
+                    style={{ letterSpacing: '0.3px' }}
                   />
                   <button
                     type="submit"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 btn px-3 md:px-4 py-2 rounded-md"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md transition-all duration-300 hover:bg-accent-50"
                     aria-label="Search"
-                    style={{ background: 'var(--site-button-bg, var(--site-primary, #111827))', color: 'var(--site-button-text, white)' }}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path
-                        fillRule="evenodd"
-                        d="M12.9 14.32a8 8 0 111.414-1.414l4.387 4.387a1 1 0 01-1.414 1.414l-4.387-4.387zM8 14a6 6 0 100-12 6 6 0 000 12z"
-                        clipRule="evenodd"
-                      />
+                    <svg className="h-5 w-5 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </button>
                 </div>
               </form>
             </div>
 
-            {/* Mobile: title and search bar below logo */}
-            <div className="md:hidden flex-1 ml-2">
-              <div className="text-base font-semibold text-primary-900">{settings?.brandName || 'Griya Jewellery'}</div>
-              <form onSubmit={handleSearchSubmit} className="mt-2">
-                <div className="relative">
-                  <input name="q" placeholder="Search products, categories, brands..." className="form-input header-search w-full pr-10" />
-                  <button type="submit" className="absolute right-1 top-1/2 -translate-y-1/2 btn px-3 py-1 rounded-md" aria-label="Search" style={{ background: 'var(--site-button-bg, var(--site-primary, #111827))', color: 'var(--site-button-text, white)' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l4.387 4.387a1 1 0 01-1.414 1.414l-4.387-4.387zM8 14a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
+            {/* Mobile: Compact Branding or Action Bar on inner pages */}
+            <div className="md:hidden flex-1">
+              { isHome ? (
+                <div 
+                  className="text-lg font-bold"
+                  style={{ 
+                    fontFamily: 'Cormorant Garamond, serif',
+                    color: '#1a1d20'
+                  }}
+                >
+                  {settings?.brandName || 'Griya'}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
+                    className="p-2 rounded-md hover:bg-neutral-100"
+                    aria-label="Back"
+                  >
+                    <svg className="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
+
+                  <div className="flex-1 text-center px-2">
+                    <div className="text-lg font-bold" style={{ fontFamily: 'Cormorant Garamond, serif', color: '#1a1d20' }}>{getMobileTitle(location.pathname)}</div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => navigate('/search')} className="p-2 rounded-md hover:bg-neutral-100" aria-label="Search">
+                      <svg className="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </button>
+
+                    <Link to="/cart" className="relative p-2 rounded-md hover:bg-neutral-100">
+                      <svg className="w-5 h-5 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
+                      {cartCount > 0 && (
+                        <span className="absolute -top-1 -right-1 text-white text-[10px] font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1.5 shadow-md" style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #f9d77e 100%)', color: '#1a1d20' }}>{cartCount}</span>
+                      )}
+                    </Link>
+                  </div>
                 </div>
-              </form>
+              )}
             </div>
 
-            {/* Desktop: simplified header — only show cart */}
-            <div className="hidden md:flex items-center gap-6 ml-4">
-              <Link to="/cart" className="relative flex items-center gap-2">
-                <svg className="w-6 h-6 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6" />
+            {/* Action Icons - Elegant */}
+            <div className="flex items-center gap-3 md:gap-4">
+              {/* Desktop cart (hidden on mobile to avoid duplication) */}
+              <Link 
+                to="/cart" 
+                className="hidden md:flex relative items-center gap-2 group px-3 py-2 rounded-lg hover:bg-accent-50 transition-all duration-300"
+              >
+                <svg className="w-6 h-6 text-neutral-700 group-hover:text-accent-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
-                <span className="hidden sm:inline text-sm font-medium">Cart</span>
+                <span className="hidden lg:inline text-sm font-semibold text-neutral-700 group-hover:text-accent-600 transition-colors duration-300" style={{ letterSpacing: '0.5px' }}>
+                  Cart
+                </span>
                 {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 text-white text-xs font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1" style={{ background: 'var(--site-accent, #FFCC00)' }}>
+                  <span 
+                    className="absolute -top-1 -right-1 text-white text-[10px] font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1.5 shadow-md"
+                    style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #f9d77e 100%)', color: '#1a1d20' }}
+                  >
                     {cartCount}
                   </span>
                 )}
               </Link>
+
+              {/* Mobile Menu Toggle */}
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="md:hidden p-2 rounded-lg hover:bg-accent-50 transition-all duration-300"
+                aria-label="Toggle menu"
+              >
+                <svg className="w-6 h-6 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Category bar */}
-        <div className="hidden md:block w-full border-t border-neutral-200/60 bg-white">
-          <div className="container-fluid overflow-x-auto">
-            <div className="flex items-center gap-3 py-2 text-sm text-neutral-700">
+        {/* Mobile Search Bar */}
+        <div className="md:hidden px-4 pb-3">
+          <form onSubmit={handleSearchSubmit}>
+            <div className="relative">
+              <input 
+                name="q" 
+                placeholder="Search jewelry..." 
+                className="w-full px-4 py-2 pr-10 rounded-lg border border-neutral-200 focus:border-accent-400 focus:ring-2 focus:ring-accent-100 text-sm bg-neutral-50 focus:bg-white transition-all duration-300" 
+              />
+              <button 
+                type="submit" 
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md hover:bg-accent-50 transition-colors duration-300" 
+                aria-label="Search"
+              >
+                <svg className="h-4 w-4 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Elegant Navigation Bar - Desktop */}
+        <div className="hidden md:block border-t border-neutral-100 bg-gradient-to-b from-white to-neutral-50/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-center gap-1 py-3 overflow-x-auto">
               {navLoading ? (
                 <div className="flex gap-3">
                   {[1, 2, 3, 4, 5].map((i) => (
@@ -139,9 +266,12 @@ export default function Navbar() {
                   <Link
                     key={item.id || item.key || item.path}
                     to={item.url || item.path}
-                    className={`px-3 py-1 rounded hover:bg-primary-50 hover:text-primary-600 whitespace-nowrap ${
-                      location.pathname === (item.url || item.path) ? "font-semibold text-primary-700" : ""
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
+                      location.pathname === (item.url || item.path)
+                        ? "bg-accent-50 text-accent-700"
+                        : "text-neutral-700 hover:bg-neutral-50 hover:text-accent-600"
                     }`}
+                    style={{ letterSpacing: '0.5px' }}
                   >
                     {item.title || item.label}
                   </Link>
