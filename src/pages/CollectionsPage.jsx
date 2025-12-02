@@ -3,6 +3,7 @@ import { useFirebaseList } from "../hooks/useFirebase";
 import SectionTitle from "../components/SectionTitle";
 import Loader from "../components/Loader";
 import { Link } from "react-router-dom";
+import UniversalImage from "../components/UniversalImage";
 
 export default function CollectionsPage() {
   const { data: categories, loading } = useFirebaseList("/categories");
@@ -171,10 +172,11 @@ export default function CollectionsPage() {
                     className="card overflow-hidden hover:shadow-lg transition-shadow duration-300 p-0"
                   >
                     <div className="w-full h-32 sm:h-36 bg-neutral-100 overflow-hidden">
-                      <img
+                      <UniversalImage
                         src={c.thumbnail || c.image || "/placeholder.jpg"}
                         alt={c.name || c.title}
                         className="w-full h-full object-cover"
+                        fallback={'/placeholder.jpg'}
                       />
                     </div>
                     <div className="p-2 sm:p-3">

@@ -3,6 +3,7 @@ import Loader from '../components/Loader';
 import { normalizeImageUrl } from '../utils/imageHelpers';
 import { useFirebaseList } from '../hooks/useFirebase';
 import { Link } from 'react-router-dom';
+import UniversalImage from '../components/UniversalImage';
 
 export default function BannersPage() {
   const { data: bannersData, loading, error } = useFirebaseList('/banners');
@@ -30,10 +31,11 @@ export default function BannersPage() {
         {items.map(b => (
           <div key={b.id} className="bg-white border rounded overflow-hidden shadow-sm">
             <div className="w-full h-44 bg-gray-50 overflow-hidden">
-              <img
+              <UniversalImage
                 src={normalizeImageUrl(b.image) || b.image || '/placeholder.jpg'}
                 alt={b.heading || b.title || ''}
                 className="w-full h-full object-cover"
+                fallback={'/placeholder.jpg'}
               />
             </div>
             <div className="p-4">

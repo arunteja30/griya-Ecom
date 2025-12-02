@@ -79,10 +79,11 @@
   }
   
   .btn-primary {
-    background: linear-gradient(135deg, #1a1d20 0%, #0d0f10 100%);
-    color: white;
-    @apply focus:ring-primary-500 shadow-md hover:shadow-xl transform hover:-translate-y-0.5;
-    border: 1px solid rgba(212, 175, 55, 0.3);
+    /* Gold primary to match jewelry brand theme */
+    background: linear-gradient(135deg, #D4AF37 0%, #f9d77e 50%, #D4AF37 100%);
+    color: #1a1d20;
+    @apply focus:ring-accent-500 shadow-md hover:shadow-xl transform hover:-translate-y-0.5;
+    border: 1px solid rgba(212, 175, 55, 0.35);
    }
    
    .btn-secondary {

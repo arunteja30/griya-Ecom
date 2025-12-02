@@ -3,6 +3,7 @@ import { useFirebaseList } from "../hooks/useFirebase";
 import Loader from "../components/Loader";
 import SectionTitle from "../components/SectionTitle";
 import { normalizeImageUrl } from '../utils/imageHelpers';
+import UniversalImage from '../components/UniversalImage';
 
 export default function GalleryPage() {
   const { data: gallery, loading } = useFirebaseList("/gallery");
@@ -16,7 +17,7 @@ export default function GalleryPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {items.map((it, idx) => (
           <div key={idx} className="overflow-hidden rounded">
-            <img src={normalizeImageUrl(it.url) || '/placeholder.jpg'} alt={it.caption} className="w-full h-64 object-cover" />
+            <UniversalImage src={normalizeImageUrl(it.url) || '/placeholder.jpg'} alt={it.caption} className="w-full h-64 object-cover" fallback={'/placeholder.jpg'} />
             <div className="p-2 text-sm text-gray-600">{it.caption}</div>
           </div>
         ))}

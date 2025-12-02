@@ -1,6 +1,7 @@
 import React from "react";
 import { useBanners, useSiteContent, useProducts, useSiteSettings } from "../hooks/useRealtime";
 import { Link } from "react-router-dom";
+import UniversalImage from '../components/UniversalImage';
 
 export default function Home() {
   const { data: banners, loading: bannersLoading } = useBanners();
@@ -17,7 +18,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(banners).map(([key, banner]) => (
               <div key={key} className="relative h-64 bg-gray-100 rounded overflow-hidden">
-                <img src={banner.image || siteSettings?.defaultProductImage || '/placeholder.jpg'} alt={banner.title || 'Banner'} className="w-full h-full object-cover" />
+                <UniversalImage src={banner.image || ''} alt={banner.title || 'Banner'} className="w-full h-full object-cover" fallback={'/placeholder.jpg'} />
                 <div className="absolute left-6 bottom-6 text-white">
                   <h2 className="text-2xl font-bold">{banner.title}</h2>
                   <p className="mt-2">{banner.subtitle}</p>
@@ -38,7 +39,7 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Object.entries(products).map(([id, p]) => (
               <Link to={`/products/${id}`} key={id} className="block border rounded p-2">
-                <img src={p.image || siteSettings?.defaultProductImage || '/placeholder.jpg'} alt={p.title} className="w-full h-40 object-cover mb-2 rounded" />
+                <UniversalImage src={p.image || ''} alt={p.title} className="w-full h-40 object-cover mb-2 rounded" fallback={'/placeholder.jpg'} />
                 <div className="text-sm font-medium">{p.title}</div>
                 <div className="text-sm text-gray-600">₹{p.price}</div>
               </Link>

@@ -7,6 +7,7 @@ import { CartContext } from "../context/CartContext";
 import { showToast } from "../components/Toast";
 import { normalizeImageUrl } from "../utils/imageHelpers";
 import Modal from "../components/Modal";
+import UniversalImage from "../components/UniversalImage";
 
 export default function ProductDetailPage() {
   const { productSlug } = useParams();
@@ -23,6 +24,9 @@ export default function ProductDetailPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+  // Zoom state for main image
+  const [isZoomActive, setIsZoomActive] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
 
   // Normalize products list
   const productsArray = allProducts && typeof allProducts === "object"
@@ -68,11 +72,6 @@ export default function ProductDetailPage() {
     if (openCart) navigate("/cart");
   };
 
-  const handleBuyNow = () => {
-    addToCart({ ...product, variant: selectedVariant }, Number(qty) || 1);
-    navigate("/checkout");
-  };
-
   return (
     <div className="section-container py-8">
       <nav className="text-sm text-neutral-500 mb-4">
@@ -87,24 +86,51 @@ export default function ProductDetailPage() {
         {/* Gallery */}
         <div className="lg:col-span-7">
           <div className="card overflow-hidden">
-            <div className="w-full bg-neutral-100">
-              <div className="aspect-[4/3] bg-neutral-100 overflow-hidden">
-                <img
+            <div className="w-full bg-neutral-100 relative">
+              {/* Main image area: click to open lightbox, hover to preview zoom (desktop) */}
+              <div
+                className="aspect-[4/3] bg-neutral-100 overflow-hidden relative cursor-zoom-in"
+                onMouseEnter={(e) => { if (window.innerWidth >= 768) setIsZoomActive(true); }}
+                onMouseMove={(e) => {
+                  if (!isZoomActive) return;
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = ((e.clientX - rect.left) / rect.width) * 100;
+                  const y = ((e.clientY - rect.top) / rect.height) * 100;
+                  setZoomPos({ x, y });
+                }}
+                onMouseLeave={() => setIsZoomActive(false)}
+                onClick={() => setLightboxOpen(true)}
+              >
+                <UniversalImage
                   src={normalizeImageUrl(product.images?.[selectedImage]) || "/placeholder.jpg"}
                   alt={product.name}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain object-center"
+                  placeholder={normalizeImageUrl(product.images?.[0])}
+                  fallback={'/placeholder.jpg'}
+                />
+
+                {/* Zoom pane (desktop only) */}
+                <div
+                  className={`hidden md:block pointer-events-none absolute top-3 right-3 w-40 h-40 rounded overflow-hidden shadow-lg border`} 
+                  style={{
+                    backgroundImage: `url(${normalizeImageUrl(product.images?.[selectedImage]) || '/placeholder.jpg'})`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+                    backgroundSize: isZoomActive ? '220%' : '100%'
+                  }}
                 />
               </div>
 
-              <div className="mt-3 grid grid-cols-4 gap-3 p-4">
+              {/* Thumbnails */}
+              <div className="mt-3 grid grid-cols-4 sm:grid-cols-6 gap-3 p-4">
                 {(product.images || []).map((img, i) => (
                   <button
                     key={i}
-                    onClick={() => setSelectedImage(i)}
+                    onClick={() => { setSelectedImage(i); setIsZoomActive(false); }}
                     className={`overflow-hidden rounded border ${i === selectedImage ? 'ring-2 ring-primary-500' : 'border-transparent'}`}
                     aria-label={`View image ${i + 1}`}
                   >
-                    <img src={normalizeImageUrl(img) || '/placeholder.jpg'} className="w-full h-20 object-contain" alt={`thumb-${i}`} />
+                    <UniversalImage src={normalizeImageUrl(img) || '/placeholder.jpg'} className="w-full h-20 object-contain" alt={`thumb-${i}`} fallback={'/placeholder.jpg'} />
                   </button>
                 ))}
               </div>
@@ -115,114 +141,127 @@ export default function ProductDetailPage() {
         {/* Details panel */}
         <div className="lg:col-span-5">
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Link to={`/collections/${product.categorySlug || product.categoryId || ''}`} aria-label="Back to collections" title="Back" className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </Link>
-              <h1 className="text-2xl md:text-3xl font-bold text-primary-900">{product.name}</h1>
-            </div>
-
-            {/** Use computedAvgRating and reviewCount when available **/}
-            { (computedAvgRating || reviewCount > 0) && (
+            {/* Make details sticky on large screens for easier add-to-cart access */}
+            <div className="lg:sticky lg:top-24 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="flex items-center text-yellow-500" aria-hidden>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <span key={i} className={i < Math.round(computedAvgRating) ? '' : 'opacity-30'}>★</span>
-                  ))}
-                </div>
-                <div className="text-sm text-neutral-600">{(computedAvgRating || 0).toFixed(1)} · {reviewCount} reviews</div>
+                <Link to={`/collections/${product.categorySlug || product.categoryId || ''}`} aria-label="Back to collections" title="Back" className="p-2 rounded-full bg-primary-600 text-white shadow-md inline-flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </Link>
+                <h1 className="text-2xl md:text-3xl font-bold text-primary-900">{product.name}</h1>
               </div>
-            )}
 
-            <div className="flex items-center gap-3">
-              <div className="text-2xl font-bold text-primary-900">₹{displayPrice}</div>
-              {originalPrice && originalPrice > displayPrice && (
-                <div className="text-sm text-neutral-500 line-through">₹{originalPrice}</div>
+              {/** Use computedAvgRating and reviewCount when available **/}
+              { (computedAvgRating || reviewCount > 0) && (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center text-yellow-500" aria-hidden>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span key={i} className={i < Math.round(computedAvgRating) ? '' : 'opacity-30'}>★</span>
+                    ))}
+                  </div>
+                  <div className="text-sm text-neutral-600">{(computedAvgRating || 0).toFixed(1)} · {reviewCount} reviews</div>
+                </div>
               )}
-            </div>
 
-            {product.shortDescription && <p className="text-neutral-600">{product.shortDescription}</p>}
+              <div className="flex items-center gap-3">
+                <div className="text-2xl font-bold text-primary-900">₹{displayPrice}</div>
+                {originalPrice && originalPrice > displayPrice && (
+                  <div className="text-sm text-neutral-500 line-through">₹{originalPrice}</div>
+                )}
+              </div>
 
-            {/* Variants */}
-            {variants.length > 0 && (
-              <div className="mt-2">
-                <div className="text-sm text-neutral-600 mb-2">Options</div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {variants.map((v, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setSelectedVariantIndex(i)}
-                      className={`px-3 py-2 border rounded text-sm ${i === selectedVariantIndex ? 'bg-primary-50 border-primary-300' : 'bg-white'}`}
-                    >
-                      {v.label || v.name || `Option ${i + 1}`}
-                    </button>
-                  ))}
+              {product.shortDescription && <p className="text-neutral-600">{product.shortDescription}</p>}
+
+              {/* Variants */}
+              {variants.length > 0 && (
+                <div className="mt-2">
+                  <div className="text-sm text-neutral-600 mb-2">Options</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {variants.map((v, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setSelectedVariantIndex(i)}
+                        className={`px-3 py-2 border rounded text-sm ${i === selectedVariantIndex ? 'bg-primary-50 border-primary-300' : 'bg-white'}`}
+                      >
+                        {v.label || v.name || `Option ${i + 1}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Quantity & actions */}
+              <div className="flex items-center gap-3 mt-4">
+                <div className="flex items-center border rounded overflow-hidden">
+                  <button className="px-3 py-2" onClick={() => setQty((q) => Math.max(1, Number(q) - 1))}>-</button>
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    inputMode="numeric"
+                    pattern="\d*"
+                    aria-label="Quantity"
+                    value={qty}
+                    onChange={(e) => setQty(Number(e.target.value) || 1)}
+                    className="w-20 text-center border rounded px-2 py-1 bg-white"
+                  />
+                  <button className="px-3 py-2" onClick={() => setQty((q) => Number(q) + 1)}>+</button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button disabled={!inStock} onClick={() => handleAdd(false)} className={`btn btn-primary px-5 ${!inStock ? 'opacity-50 cursor-not-allowed' : ''}`}>Add to Cart</button>
                 </div>
               </div>
-            )}
 
-            {/* Quantity & actions */}
-            <div className="flex items-center gap-3 mt-4">
-              <div className="flex items-center border rounded overflow-hidden">
-                <button className="px-3 py-2" onClick={() => setQty((q) => Math.max(1, Number(q) - 1))}>-</button>
-                <input type="number" min={1} value={qty} onChange={(e) => setQty(Number(e.target.value) || 1)} className="w-16 text-center" />
-                <button className="px-3 py-2" onClick={() => setQty((q) => Number(q) + 1)}>+</button>
+              {!inStock && <div className="text-sm text-error">Currently out of stock</div>}
+
+              {/* Meta */}
+              {product.brand && (
+                <div className="text-sm text-neutral-500 mt-4">
+                  <div>Brand: {product.brand}</div>
+                </div>
+              )}
+
+              {/* Tabs */}
+              <div className="mt-6">
+                <div className="flex items-center gap-2 border-b border-neutral-200">
+                  <button onClick={() => setActiveTab('description')} className={`px-4 py-3 ${activeTab === 'description' ? 'border-b-2 border-primary-600 text-primary-700' : 'text-neutral-600'}`}>Description</button>
+                  <button onClick={() => setActiveTab('details')} className={`px-4 py-3 ${activeTab === 'details' ? 'border-b-2 border-primary-600 text-primary-700' : 'text-neutral-600'}`}>Details</button>
+                  <button onClick={() => setActiveTab('reviews')} className={`px-4 py-3 ${activeTab === 'reviews' ? 'border-b-2 border-primary-600 text-primary-700' : 'text-neutral-600'}`}>Reviews</button>
+                </div>
+
+                <div className="p-4 bg-white border rounded-b mt-2">
+                  {activeTab === 'description' && (
+                    <div className="prose text-neutral-700">{product.description || product.longDescription || 'No description available.'}</div>
+                  )}
+
+                  {activeTab === 'details' && (
+                    <div className="text-sm text-neutral-700 grid grid-cols-1 gap-2">
+                      {product.materials && <div><strong>Material:</strong> {product.materials}</div>}
+                      {product.weight && <div><strong>Weight:</strong> {product.weight}</div>}
+                      {product.dimensions && <div><strong>Dimensions:</strong> {product.dimensions}</div>}
+                      {product.manufacturer && <div><strong>Manufacturer:</strong> {product.manufacturer}</div>}
+                    </div>
+                  )}
+
+                  {activeTab === 'reviews' && (
+                    <div>
+                      {productReviews && productReviews.length > 0 ? (
+                        productReviews.map((r) => (
+                          <div key={r.id} className="border-b py-2">
+                            <div className="font-semibold">{r.name} <span className="text-sm text-neutral-500">{r.rating}★</span></div>
+                            <div className="text-sm text-neutral-600">{r.message}</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-neutral-500">No reviews yet.</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button disabled={!inStock} onClick={() => handleAdd(false)} className={`btn btn-primary px-5 ${!inStock ? 'opacity-50 cursor-not-allowed' : ''}`}>Add to Cart</button>
-                <button disabled={!inStock} onClick={() => handleBuyNow()} className={`btn btn-accent px-5 ${!inStock ? 'opacity-50 cursor-not-allowed' : ''}`}>Buy Now</button>
-              </div>
-            </div>
-
-            {!inStock && <div className="text-sm text-error">Currently out of stock</div>}
-
-            {/* Meta */}
-            {product.brand && (
-              <div className="text-sm text-neutral-500 mt-4">
-                <div>Brand: {product.brand}</div>
-              </div>
-            )}
-
-            {/* Tabs */}
-            <div className="mt-6">
-              <div className="flex items-center gap-2 border-b border-neutral-200">
-                <button onClick={() => setActiveTab('description')} className={`px-4 py-3 ${activeTab === 'description' ? 'border-b-2 border-primary-600 text-primary-700' : 'text-neutral-600'}`}>Description</button>
-                <button onClick={() => setActiveTab('details')} className={`px-4 py-3 ${activeTab === 'details' ? 'border-b-2 border-primary-600 text-primary-700' : 'text-neutral-600'}`}>Details</button>
-                <button onClick={() => setActiveTab('reviews')} className={`px-4 py-3 ${activeTab === 'reviews' ? 'border-b-2 border-primary-600 text-primary-700' : 'text-neutral-600'}`}>Reviews</button>
-              </div>
-
-              <div className="p-4 bg-white border rounded-b mt-2">
-                {activeTab === 'description' && (
-                  <div className="prose text-neutral-700">{product.description || product.longDescription || 'No description available.'}</div>
-                )}
-
-                {activeTab === 'details' && (
-                  <div className="text-sm text-neutral-700 grid grid-cols-1 gap-2">
-                    {product.materials && <div><strong>Material:</strong> {product.materials}</div>}
-                    {product.weight && <div><strong>Weight:</strong> {product.weight}</div>}
-                    {product.dimensions && <div><strong>Dimensions:</strong> {product.dimensions}</div>}
-                    {product.manufacturer && <div><strong>Manufacturer:</strong> {product.manufacturer}</div>}
-                  </div>
-                )}
-
-                {activeTab === 'reviews' && (
-                  <div>
-                    {productReviews && productReviews.length > 0 ? (
-                      productReviews.map((r) => (
-                        <div key={r.id} className="border-b py-2">
-                          <div className="font-semibold">{r.name} <span className="text-sm text-neutral-500">{r.rating}★</span></div>
-                          <div className="text-sm text-neutral-600">{r.message}</div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-neutral-500">No reviews yet.</div>
-                    )}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
@@ -250,7 +289,7 @@ export default function ProductDetailPage() {
       {/* Lightbox modal for larger image view */}
       <Modal isOpen={lightboxOpen} onClose={() => setLightboxOpen(false)} hideActions>
         <div className="max-w-4xl mx-auto">
-          <img src={normalizeImageUrl(product.images?.[selectedImage]) || '/placeholder.jpg'} alt={product.name} className="w-full h-auto object-contain" />
+          <UniversalImage src={normalizeImageUrl(product.images?.[selectedImage]) || '/placeholder.jpg'} alt={product.name} className="w-full h-auto object-contain" fallback={'/placeholder.jpg'} />
         </div>
       </Modal>
     </div>

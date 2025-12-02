@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSiteSettings, useNavigation } from "../hooks/useRealtime";
 import { CartContext } from "../context/CartContext";
+import UniversalImage from "./UniversalImage";
 
 export default function Navbar() {
   const { data: settings } = useSiteSettings();
@@ -81,32 +82,33 @@ export default function Navbar() {
             {/* Elegant Logo or Back Button on inner pages */}
             {isHome ? (
               <Link to="/" className="flex items-center gap-3 mr-2 group">
-                <div className="relative">
-                  <img
-                    src={settings?.logoUrl || "/placeholder.jpg"}
-                    alt={settings?.brandName || "Brand"}
-                    className="h-14 w-14 md:h-12 md:w-12 object-cover rounded-lg shadow-md border border-accent-100 transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-accent-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative">
+                <UniversalImage
+                  src={settings?.logoUrl || "/placeholder.jpg"}
+                  alt={settings?.brandName || "Brand"}
+                  className="h-14 w-14 md:h-12 md:w-12 object-cover rounded-lg shadow-md border border-accent-100 transition-transform duration-300 group-hover:scale-105"
+                  fallback={'/placeholder.jpg'}
+                />
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-accent-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+              <div className="hidden sm:block">
+                <div 
+                  className="font-bold text-xl tracking-wide"
+                  style={{ 
+                    fontFamily: 'Cormorant Garamond, serif',
+                    color: '#1a1d20',
+                    letterSpacing: '0.5px'
+                  }}
+                >
+                  {settings?.brandName || "Griya Jewellery"}
                 </div>
-                <div className="hidden sm:block">
-                  <div 
-                    className="font-bold text-xl tracking-wide"
-                    style={{ 
-                      fontFamily: 'Cormorant Garamond, serif',
-                      color: '#1a1d20',
-                      letterSpacing: '0.5px'
-                    }}
-                  >
-                    {settings?.brandName || "Griya Jewellery"}
+                {settings?.tagline && (
+                  <div className="text-xs font-medium text-accent-600" style={{ letterSpacing: '0.5px' }}>
+                    {settings.tagline}
                   </div>
-                  {settings?.tagline && (
-                    <div className="text-xs font-medium text-accent-600" style={{ letterSpacing: '0.5px' }}>
-                      {settings.tagline}
-                    </div>
-                  )}
-                </div>
-              </Link>
+                )}
+              </div>
+            </Link>
             ) : (
               <div className="mr-2 hidden md:block">
                 <button
@@ -214,17 +216,6 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
-
-              {/* Mobile Menu Toggle */}
-              <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-accent-50 transition-all duration-300"
-                aria-label="Toggle menu"
-              >
-                <svg className="w-6 h-6 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
@@ -266,7 +257,7 @@ export default function Navbar() {
                   <Link
                     key={item.id || item.key || item.path}
                     to={item.url || item.path}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
+                    className={`px-4 py-2 rounded-lg text-lg font-semibold transition-all duration-300 whitespace-nowrap ${
                       location.pathname === (item.url || item.path)
                         ? "bg-accent-50 text-accent-700"
                         : "text-neutral-700 hover:bg-neutral-50 hover:text-accent-600"

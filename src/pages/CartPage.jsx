@@ -6,6 +6,7 @@ import Modal from "../components/Modal";
 import { showToast } from "../components/Toast";
 import { normalizeImageUrl } from '../utils/imageHelpers'; 
 import { useNavigate, Link } from 'react-router-dom';
+import UniversalImage from "../components/UniversalImage";
 
 export default function CartPage() {
   const { cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, appliedPromo, appliedPromoKey, applyPromo, clearPromo } = useContext(CartContext);
@@ -160,7 +161,7 @@ export default function CartPage() {
             {cartItems.map((item) => (
               <div key={item.id} className="card flex items-center gap-4 p-4">
                 <Link to={`/product/${item.product?.slug}`} className="block flex-shrink-0">
-                  <img src={normalizeImageUrl(item.product?.images?.[0]) || '/placeholder.jpg'} className="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-lg" alt={item.product?.name} />
+                  <UniversalImage src={normalizeImageUrl(item.product?.images?.[0]) || '/placeholder.jpg'} className="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-lg" alt={item.product?.name} fallback={'/placeholder.jpg'} />
                 </Link>
                 <div className="flex-1">
                   <div className="flex items-start justify-between gap-4">
@@ -239,7 +240,7 @@ export default function CartPage() {
               <div className="space-y-2">
                 
                 {siteSettings?.enableRazorpayCheckout !== false && (
-                  <button onClick={() => { if (!canCheckout) return; navigate('/checkout'); }} disabled={!canCheckout} className={`w-full bg-primary-500 text-white py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>Proceed to Checkout</button>
+                  <button onClick={() => { if (!canCheckout) return; navigate('/checkout'); }} disabled={!canCheckout} className={`w-full btn btn-primary text-dark py-2 rounded ${!canCheckout? 'opacity-50 cursor-not-allowed':''}`}>Proceed to Checkout</button>
                 )}
                 
               </div>

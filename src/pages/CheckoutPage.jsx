@@ -440,7 +440,7 @@ export default function CheckoutPage() {
             </div>
           </div>
           <div className="flex gap-3 mt-6 pt-6 border-t">
-            <button onClick={async () => { setPaymentFailed(null); setFieldErrors({}); try { await proceedToPay(); } catch (e) {} }} className="flex-1 bg-primary-600 text-white py-3 rounded">Retry Payment</button>
+            <button onClick={async () => { setPaymentFailed(null); setFieldErrors({}); try { await proceedToPay(); } catch (e) {} }} className="flex-1 btn btn-primary">Retry Payment</button>
             <button onClick={() => { setPaymentFailed(null); navigate('/cart'); }} className="flex-1 border border-gray-300 text-gray-700 py-3 rounded">Back to Cart</button>
           </div>
         </div>
@@ -827,7 +827,7 @@ export default function CheckoutPage() {
             <div className={CLS.label}>Promo Code</div>
             <div className="flex gap-2">
               <input type="text" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} className={`${CLS.input} ${CLS.promoInput}`} placeholder="Enter promo code" />
-              <button onClick={applyPromo} className={CLS.btnPrimary}>Apply</button>
+              <button onClick={applyPromo} className="btn btn-primary w-full">Apply</button>
             </div>
             {promoError && <div className="text-red-500 text-sm mt-1">{promoError}</div>}
           </div>
@@ -866,7 +866,7 @@ export default function CheckoutPage() {
             )}
 
             {proceedEnabled && (
-              <button onClick={proceedToPay} className={CLS.btnPrimary} disabled={loading}>
+              <button onClick={proceedToPay} className="btn btn-primary w-full" disabled={loading}>
                 {loading ? 'Processing...' : 'Proceed to Payment'}
               </button>
             )}

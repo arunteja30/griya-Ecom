@@ -4,6 +4,7 @@ import { CartContext } from "../context/CartContext";
 import { showToast } from "./Toast";
 import { normalizeImageUrl } from "../utils/imageHelpers";
 import { useSiteSettings } from "../hooks/useRealtime";
+import UniversalImage from "./UniversalImage";
 
 export default function ProductCard({ product, variant = 'normal' }) {
   const { addToCart } = useContext(CartContext);
@@ -118,13 +119,12 @@ export default function ProductCard({ product, variant = 'normal' }) {
           borderBottom: '1px solid var(--accent-color, rgba(212, 175, 55, 0.1))'
         }}
       >
-        <img
-          className="w-full h-full object-cover object-center transition-all duration-500 ease-out group-hover:scale-105 group-hover:brightness-105"
+        <UniversalImage
           src={imgSrc}
-          onError={handleImgError}
           alt={product.name}
-          loading="lazy"
-          draggable={false}
+          className="w-full h-full object-cover object-center transition-all duration-500 ease-out group-hover:scale-105 group-hover:brightness-105"
+          placeholder={normalizeImageUrl(product.images?.[0]) || defaultImageFromAdmin}
+          fallback={defaultImageFromAdmin}
         />
 
         {/* Elegant hover overlay with gold gradient - Hidden on mobile, shown on hover for desktop */}
