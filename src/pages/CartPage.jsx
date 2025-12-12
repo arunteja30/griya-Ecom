@@ -135,6 +135,48 @@ export default function CartPage() {
 
   const handleClearPromo = () => { setPromoInput(''); setPromoError(null); clearPromo(); showToast('Promo cleared', 'info'); };
 
+  // Pre-render cart items to avoid parser issues with inline complex JSX
+  const renderedCartItems = (cartItems || []).map((item) => {
+    const available = Number(item.product?.stock ?? item.product?.quantity ?? 0) || 0;
+    const exceedsStock = available > 0 && item.quantity > available;
+    return (
+      <div key={item.id} className="card flex items-center gap-4 p-4">
+        <Link to={`/product/${item.product?.slug}`} className="block flex-shrink-0">
+          <UniversalImage src={normalizeImageUrl(item.product?.images?.[0]) || '/placeholder.jpg'} className="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-lg" alt={item.product?.name} fallback={'/placeholder.jpg'} />
+        </Link>
+        <div className="flex-1">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <Link to={`/product/${item.product?.slug}`} className="font-semibold text-base line-clamp-2 block">{item.product?.name}</Link>
+              <div className="text-sm text-neutral-500">{item.product?.variant || ''}</div>
+            </div>
+            <div className="text-right hidden sm:block">
+              <div className="font-semibold">₹{item.product?.price}</div>
+            </div>
+          </div>
+
+          <div className="mt-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button aria-label="Decrease quantity" onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} className="px-2 py-1 rounded-lg border bg-white">-</button>
+              <span className={`px-3 py-1 border rounded-md ${exceedsStock ? 'bg-yellow-50 text-yellow-800' : ''}`}>{item.quantity}</span>
+              <button aria-label="Increase quantity" onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-2 py-1 rounded-lg border bg-white">+</button>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right sm:hidden">
+                <div className="font-semibold">₹{item.product?.price}</div>
+              </div>
+              <button onClick={()=>removeFromCart(item.id)} className="text-red-600 p-2 rounded" aria-label="Remove item">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6h18M8 6v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6M10 11v6M14 11v6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  });
+
   return (
     <div className="space-y-2 mt-6" style={{ paddingBottom: cartItems.length > 0 ? 'calc(env(safe-area-inset-bottom, 0px) + 96px)' : undefined }}>
       <div className="mt-2 flex items-center justify-between">
@@ -154,42 +196,7 @@ export default function CartPage() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
-            {cartItems.map((item) => (
-              <div key={item.id} className="card flex items-center gap-4 p-4">
-                <Link to={`/product/${item.product?.slug}`} className="block flex-shrink-0">
-                  <UniversalImage src={normalizeImageUrl(item.product?.images?.[0]) || '/placeholder.jpg'} className="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-lg" alt={item.product?.name} fallback={'/placeholder.jpg'} />
-                </Link>
-                <div className="flex-1">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <Link to={`/product/${item.product?.slug}`} className="font-semibold text-base line-clamp-2 block">{item.product?.name}</Link>
-                      <div className="text-sm text-neutral-500">{item.product?.variant || ''}</div>
-                    </div>
-                    <div className="text-right hidden sm:block">
-                      <div className="font-semibold">₹{item.product?.price}</div>
-                    </div>
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button aria-label="Decrease quantity" onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} className="px-2 py-1 rounded-lg border bg-white">-</button>
-                      <span className="px-3 py-1 border rounded-md">{item.quantity}</span>
-                      <button aria-label="Increase quantity" onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-2 py-1 rounded-lg border bg-white">+</button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right sm:hidden">
-                        <div className="font-semibold">₹{item.product?.price}</div>
-                      </div>
-                      <button onClick={()=>removeFromCart(item.id)} className="text-red-600 p-2 rounded" aria-label="Remove item">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6h18M8 6v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6M10 11v6M14 11v6" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {renderedCartItems}
 
             <div className="flex items-center justify-between">
               <button onClick={confirmClear} className="text-sm text-red-600">Clear cart</button>

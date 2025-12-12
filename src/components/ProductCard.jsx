@@ -61,8 +61,39 @@ export default function ProductCard({ product, variant = 'normal' }) {
   const handleAddToCart = async () => {
     setIsLoading(true);
     try {
+      // Determine available stock (prefer variant-level stock if present)
+      const variantStock = Number(product?.variant?.stock ?? product?.variant?.quantity ?? 0) || 0;
+      const rawStockVal = product.stock ?? product.quantity ?? null;
+      const hasNumericStock = rawStockVal !== null && rawStockVal !== undefined;
+      const stockVal = hasNumericStock ? Math.max(0, Number(rawStockVal) || 0) : 0;
+      const available = variantStock > 0 ? variantStock : stockVal;
+
+      // If numeric stock is provided and zero, block add
+      if (hasNumericStock && available <= 0) {
+        showToast("Item is out of stock", "error");
+        return;
+      }
+
+      // If boolean inStock is explicitly false, block add
+      if (!inStock) {
+        showToast("Item is out of stock", "error");
+        return;
+      }
+
+      // If available is positive but less than requested quantity (1), block
+      if (available > 0 && available < 1) {
+        showToast(`Only ${available} items available`, "error");
+        return;
+      }
+
       addToCart(product, 1);
-      showToast("Added to cart successfully!", "success");
+      if (available < 1) {
+        console.log("Item is out of stock");
+        showToast("Item is out of stock", "error");
+      } else {
+        console.log("Item added to cart");
+        showToast("Added to cart successfully!", "success");
+      }
     } catch (error) {
       showToast("Failed to add to cart", "error");
     } finally {

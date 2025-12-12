@@ -16,7 +16,7 @@ export default function ProductDetailPage() {
   const { data: product, loading } = useProductBySlug(productSlug);
   const { data: allProducts } = useFirebaseList("/products");
   const { data: allReviews } = useFirebaseList("/reviews");
-  const { addToCart } = useContext(CartContext);
+  const { addToCart, cartItems } = useContext(CartContext);
 
   // UI state
   const [qty, setQty] = useState(1);
@@ -67,9 +67,41 @@ export default function ProductDetailPage() {
   const inStock = selectedVariant.inStock ?? product.inStock;
 
   const handleAdd = (openCart = false) => {
-    addToCart({ ...product, variant: selectedVariant }, Number(qty) || 1);
-    showToast("Added to cart");
-    if (openCart) navigate("/cart");
+    const qtyInt = Math.max(1, Math.floor(Number(qty) || 1));
+
+    // If we have a finite availableStock, ensure existing+requested doesn't exceed it
+    if (availableStock > 0) {
+      const pid = (product.id || product.slug || product.sku || product.name);
+      const existing = (cartItems || []).find(i => String(i.id) === String(pid));
+      const existingQty = existing ? Number(existing.quantity || 0) : 0;
+
+      if (existingQty >= availableStock) {
+        setQtyError('No more stock available');
+        showToast('No more stock available', 'error');
+        return;
+      }
+
+      const remaining = availableStock - existingQty;
+      const toAdd = Math.min(qtyInt, remaining);
+      if (toAdd <= 0) {
+        setQtyError('No more stock available');
+        showToast('No more stock available', 'error');
+        return;
+      }
+
+      addToCart({ ...product, variant: selectedVariant }, toAdd);
+      setQtyError(null);
+      showToast(`Added ${toAdd} to cart`, 'success');
+      if (openCart) navigate('/cart');
+      return;
+    }
+
+    // No finite stock info -> allow add
+    const toAdd = qtyInt;
+    addToCart({ ...product, variant: selectedVariant }, toAdd);
+    setQtyError(null);
+    showToast(`Added ${toAdd} to cart`, 'success');
+    if (openCart) navigate('/cart');
   };
 
   return (
@@ -194,7 +226,7 @@ export default function ProductDetailPage() {
               {/* Quantity & actions */}
               <div className="flex items-center gap-3 mt-4">
                 <div className="flex items-center border rounded overflow-hidden">
-                  <button className="px-3 py-2" onClick={() => setQty((q) => Math.max(1, Number(q) - 1))}>-</button>
+                  <button className="px-3 py-2" onClick={() => setQty((q) => Math.max(1, Math.floor(Number(q) || 1) - 1))}>-</button>
                   <input
                     type="number"
                     min={1}
@@ -203,10 +235,18 @@ export default function ProductDetailPage() {
                     pattern="\d*"
                     aria-label="Quantity"
                     value={qty}
-                    onChange={(e) => setQty(Number(e.target.value) || 1)}
+                    onKeyDown={(e) => { if (['e','E','+','-','.'].includes(e.key)) e.preventDefault(); }}
+                    onPaste={(e) => { const paste = (e.clipboardData.getData('text')||'').replace(/\D/g,''); if (!paste) e.preventDefault(); }}
+                    onChange={(e) => {
+                      const raw = String(e.target.value || '');
+                      // strip non-digits
+                      const digits = raw.replace(/\D/g, '');
+                      const n = Math.max(1, Math.floor(Number(digits) || 1));
+                      setQty(n);
+                    }}
                     className="w-20 text-center border rounded px-2 py-1 bg-white"
                   />
-                  <button className="px-3 py-2" onClick={() => setQty((q) => Number(q) + 1)}>+</button>
+                  <button className="px-3 py-2" onClick={() => setQty((q) => Math.max(1, Math.floor(Number(q) || 1) + 1))}>+</button>
                 </div>
 
                 <div className="flex items-center gap-2">
