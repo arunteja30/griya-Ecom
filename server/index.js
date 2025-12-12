@@ -17,7 +17,8 @@ const PORT = process.env.PORT || 4000;
 
 // Serve built client (Vite build outputs to /dist)
 const clientDir = path.join(__dirname, '..', 'dist');
-app.use(express.static(clientDir, { maxAge: '1d' }));
+// Prevent express.static from redirecting unknown routes to /index.html — let SPA fallback handle it
+app.use(express.static(clientDir, { index: false, redirect: false, maxAge: '1d' }));
 
 // Validate env
 const KEY_ID = process.env.RAZORPAY_KEY_ID;
