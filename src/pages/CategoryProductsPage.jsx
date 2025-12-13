@@ -203,14 +203,8 @@ export default function CategoryProductsPage() {
               </label>
             </div>
             <div>
-              <h5 className="text-sm font-semibold mb-2">Quick Filters</h5>
-              <div className="flex flex-col gap-2">
-                <button className="category-pill text-sm" onClick={() => setQuery("")}>All</button>
-                <button className="category-pill text-sm" onClick={() => setQuery("ring")}>Rings</button>
-                <button className="category-pill text-sm" onClick={() => setQuery("neck")}>Necklaces</button>
-                <button className="category-pill text-sm" onClick={() => setQuery("ear")}>Earrings</button>
-              </div>
-            </div>
+              {/* Quick Filters removed */}
+             </div>
             <div className="mt-4 hidden lg:block">
               <button className="btn btn-ghost w-full" onClick={() => { setQuery(""); setSort('relevance'); setRatingFilter(0); setOnlyBestseller(false); }}>Reset</button>
             </div>
@@ -282,13 +276,8 @@ export default function CategoryProductsPage() {
             </div>
 
             <div className="mb-4">
-              <h5 className="text-sm font-semibold mb-2">Quick links</h5>
-              <div className="flex flex-col gap-2">
-                <button className="text-sm text-neutral-700 hover:text-primary-600 text-left" onClick={() => { setQuery(""); setShowFilters(false); }}>All</button>
-                <button className="text-sm text-neutral-700 hover:text-primary-600 text-left" onClick={() => { setQuery("ring"); setShowFilters(false); }}>Rings</button>
-                <button className="text-sm text-neutral-700 hover:text-primary-600 text-left" onClick={() => { setQuery("neck"); setShowFilters(false); }}>Necklaces</button>
-              </div>
-            </div>
+              {/* Quick links removed for mobile filters */}
+             </div>
 
             <div className="flex gap-2">
               <button onClick={() => { setQuery(""); setSort('relevance'); setRatingFilter(0); setOnlyBestseller(false); setShowFilters(false); }} className="flex-1 px-4 py-2 border rounded">Reset</button>

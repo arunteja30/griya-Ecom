@@ -24,6 +24,7 @@ export default function ProductDetailPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+  const [qtyError, setQtyError] = useState(null);
   // Zoom state for main image
   const [isZoomActive, setIsZoomActive] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
@@ -64,7 +65,11 @@ export default function ProductDetailPage() {
 
   const displayPrice = selectedVariant.price ?? product.price;
   const originalPrice = selectedVariant.originalPrice ?? product.originalPrice;
-  const inStock = selectedVariant.inStock ?? product.inStock;
+  // Determine boolean availability: prefer explicit boolean flags; default to true when unknown
+  const inStock = (typeof selectedVariant.inStock === 'boolean') ? selectedVariant.inStock : (typeof product.inStock === 'boolean' ? product.inStock : true);
+  // Determine numeric stock if provided. null means unknown.
+  const numericStockRaw = (selectedVariant.stock ?? selectedVariant.quantity ?? product.stock ?? product.quantity);
+  const availableStock = (numericStockRaw === undefined || numericStockRaw === null) ? null : Math.max(0, Number(numericStockRaw) || 0);
 
   const handleAdd = (openCart = false) => {
     const qtyInt = Math.max(1, Math.floor(Number(qty) || 1));

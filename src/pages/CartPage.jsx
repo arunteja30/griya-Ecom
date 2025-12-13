@@ -148,7 +148,15 @@ export default function CartPage() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <Link to={`/product/${item.product?.slug}`} className="font-semibold text-base line-clamp-2 block">{item.product?.name}</Link>
-              <div className="text-sm text-neutral-500">{item.product?.variant || ''}</div>
+              <div className="text-sm text-neutral-500">
+                {(() => {
+                  const v = item.product?.variant;
+                  if (v === null || v === undefined) return '';
+                  if (typeof v === 'string' || typeof v === 'number') return v;
+                  // variant might be an object like { label, name, option }
+                  return v.label || v.name || v.option || '';
+                })()}
+              </div>
             </div>
             <div className="text-right hidden sm:block">
               <div className="font-semibold">₹{item.product?.price}</div>
@@ -210,15 +218,7 @@ export default function CartPage() {
               <div className="mb-4 text-sm text-neutral-600">Items: {cartItems.length}</div>
               {/* subtotal removed - show total only below */}
               <div className="mb-2">
-                <div className="flex items-center gap-2">
-                  <input className="form-input" placeholder="Promo code" value={promoInput} onChange={(e)=>setPromoInput(e.target.value)} />
-                  <button onClick={handleApplyWithToast} className="btn btn-outline">Apply</button>
-                  <button onClick={handleClearPromo} className="btn btn-ghost">Clear</button>
-                </div>
-                {promoError && <div className="text-sm text-red-600">{promoError}</div>}
-                {appliedPromo && (
-                  <div className="text-sm text-green-700 mt-2">Applied: {appliedPromo.code} — Discount: {appliedPromo.type==='percent'?`${appliedPromo.amount}%`:`₹${appliedPromo.amount}`}</div>
-                )}
+                {/* Promo code input and buttons intentionally hidden */}
               </div>
 
               {/* Minimum purchase & free-shipping notices (display above total) */}

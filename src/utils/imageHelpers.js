@@ -34,14 +34,14 @@ export function normalizeImageUrl(url) {
                 fileId = '1' + fileId;
             }
             
-            console.log(`🔗 Converting Google Drive URL: ${url} -> file ID: ${fileId}`);
+            // console.log(`🔗 Converting Google Drive URL: ${url} -> file ID: ${fileId}`);
             // const finalUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
             const url1 = `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
-            console.log(`🔗 thumbnail URL: ${url1}`);
+            // console.log(`🔗 thumbnail URL: ${url1}`);
 
             return url1;
         } else {
-            console.warn(`⚠️ Could not extract file ID from Google Drive URL: ${url}`);
+            // console.warn(`⚠️ Could not extract file ID from Google Drive URL: ${url}`);
         }
     }
     
