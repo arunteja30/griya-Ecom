@@ -1,5 +1,6 @@
 import { ref, get, push, set } from 'firebase/database';
 import { db } from './firebase';
+import { isLocationServiceable, fallbackPincodeServiceable } from './utils/deliveryArea';
 
 // Return a promise that resolves to an array of categories: [{ id, ...data }, ...]
 export async function getCategories() {
@@ -48,6 +49,29 @@ export async function getProductsByCategory(categoryId) {
 // Create an order under /orders and return the new key
 export async function createOrder(order) {
   try {
+    // Defensive serviceability check using geo fence or pincode
+    try {
+      const settingsSnap = await get(ref(db, 'siteSettings'));
+      const siteSettings = settingsSnap.exists() ? settingsSnap.val() : null;
+      if (siteSettings) {
+        // Prefer geo coordinates if the client provided them (order.geo.lat/lon or order.address.lat/lon)
+        const geoLat = order?.geo?.lat ?? order?.address?.lat ?? order?.address?.latitude ?? null;
+        const geoLon = order?.geo?.lon ?? order?.address?.lon ?? order?.address?.longitude ?? null;
+        let ok = true;
+        if (geoLat !== null && geoLon !== null && typeof siteSettings?.deliveryRadiusKm !== 'undefined' && siteSettings?.storeLocation) {
+          ok = isLocationServiceable(geoLat, geoLon, siteSettings);
+        } else if (order?.address?.pincode) {
+          ok = fallbackPincodeServiceable(order.address.pincode, siteSettings);
+        }
+        if (!ok) {
+          return Promise.reject(new Error('Pincode/Location not serviceable'));
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to perform serviceability check in createOrder:', e);
+      // fail open: continue to save order
+    }
+
     const ordersRef = ref(db, 'orders');
     const newRef = push(ordersRef);
     const orderData = {

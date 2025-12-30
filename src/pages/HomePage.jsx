@@ -10,6 +10,8 @@ import RecommendationsSection from "../components/RecommendationsSection";
 import HomeSection from "../components/HomeSection";
 import BannerCarousel from "../components/BannerCarousel";
 import { useCart } from '../context/CartContext';
+import * as locationService from '../utils/locationService';
+import { isLocationServiceable, fallbackPincodeServiceable } from '../utils/deliveryArea';
 
 export default function HomePage() {
   const { data: siteSettings } = useSiteSettings();
@@ -22,6 +24,10 @@ export default function HomePage() {
   // read server-configured recommendation maps (optional)
   const { data: homeConfig } = useFirebaseList('/homeConfig');
   const { cartItems } = useCart();
+  const [checkingLocation, setCheckingLocation] = useState(true);
+  const [serviceable, setServiceable] = useState(null); // null = unknown/not-detected, true/false = result
+  const [detected, setDetected] = useState({ city: '', pincode: '', weather: null });
+  const [manualPincode, setManualPincode] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -38,6 +44,49 @@ export default function HomePage() {
         setError(err.message || 'Failed to load categories');
         setLoading(false);
       });
+
+    // detect location and check serviceability once siteSettings are available
+    async function detectAndCheck() {
+      try {
+        if (!navigator.geolocation) throw new Error('Geolocation not available');
+        // This will prompt the user for permission if not already granted
+        const pos = await locationService.getCurrentPosition({ timeout: 8000 }).catch((e) => { throw e; });
+        if (!mounted) return;
+        const addr = await locationService.reverseGeocode(pos.lat, pos.lon).catch(() => ({ city: '', postcode: '' }));
+        const weather = await locationService.getWeather(pos.lat, pos.lon).catch(() => null);
+        const pincode = addr.postcode || '';
+        // Prefer lat/lon geofence if configured; default radius is 5 km if not set on server
+        const radiusKm = Number(siteSettings?.deliveryRadiusKm ?? 5);
+        const svc = (siteSettings?.storeLocation)
+          ? isLocationServiceable(pos.lat, pos.lon, { ...siteSettings, deliveryRadiusKm: radiusKm })
+          : fallbackPincodeServiceable(pincode, siteSettings || {});
+        if (!mounted) return;
+        setDetected({ city: addr.city || '', pincode, weather, lat: pos.lat, lon: pos.lon });
+        setServiceable(Boolean(svc));
+      } catch (e) {
+        // detection failed; leave serviceable as null
+        console.warn('Location detection failed or denied', e);
+        setServiceable(null);
+      } finally {
+        if (mounted) setCheckingLocation(false);
+      }
+    }
+
+    // Only start detecting after siteSettings loaded (so we can compare against server config)
+    if (siteSettings) {
+      detectAndCheck();
+    } else {
+      // poll or wait until siteSettings available; simple timeout fallback
+      const t = setInterval(() => {
+        if (siteSettings) {
+          clearInterval(t);
+          detectAndCheck();
+        }
+      }, 300);
+      // give up after 8s
+      setTimeout(() => { clearInterval(t); if (mounted) setCheckingLocation(false); }, 8000);
+    }
+
     return () => { mounted = false; };
   }, []);
 
@@ -194,7 +243,83 @@ export default function HomePage() {
   const popularProductsFinal = getProductsFromConfig('popular') || popularProducts;
   const showFestivals = showConfig.festivals !== false; // default true
 
+  // If still loading categories or checking location, show Loader
+  const restrictionsConfigured = Boolean((siteSettings?.storeLocation && (siteSettings?.deliveryRadiusKm || siteSettings?.deliveryRadius)) || siteSettings?.serviceablePincodes);
+
   if (loading) return <Loader />;
+
+  // If restrictions are configured on server, wait for location check to finish before showing the content
+  if (restrictionsConfigured && checkingLocation) return <Loader />;
+
+  // If we determined not serviceable, show a message and allow manual pincode check
+  if (serviceable === false) {
+    return (
+      <main className="space-y-4 pb-6">
+        <section className="max-w-3xl mx-auto px-4 py-12 text-center">
+          <div className="text-4xl mb-4">📍</div>
+          <h2 className="text-2xl font-bold mb-2">We do not deliver to your area</h2>
+          <p className="text-gray-600 mb-4">Our service currently doesn't cover {detected.city || 'your location'} ({detected.pincode || 'unknown pincode'}).</p>
+          <div className="max-w-sm mx-auto flex gap-2">
+            <input value={manualPincode} onChange={(e) => setManualPincode(e.target.value.replace(/\D/g, '').slice(0,6))} placeholder="Enter pincode" className="w-full px-3 py-2 border rounded" />
+            <button onClick={() => {
+              const svc = fallbackPincodeServiceable(manualPincode, siteSettings || {});
+              setServiceable(Boolean(svc));
+              if (svc) setDetected((d) => ({ ...d, pincode: manualPincode }));
+            }} className="px-4 py-2 bg-orange-500 text-white rounded">Check</button>
+          </div>
+          <div className="mt-4 text-sm text-gray-500">Or you can still browse the store, but we may not deliver to your address.</div>
+          <div className="mt-4">
+            <button onClick={() => setServiceable(true)} className="px-4 py-2 border rounded">Continue anyway</button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  // If restrictions configured and serviceability is still unknown (e.g., user denied location and didn't enter pincode), prompt user
+  if (restrictionsConfigured && serviceable === null) {
+    return (
+      <main className="space-y-4 pb-6">
+        <section className="max-w-3xl mx-auto px-4 py-12 text-center">
+          <div className="text-4xl mb-4">📍</div>
+          <h2 className="text-2xl font-bold mb-2">Check delivery availability</h2>
+          <p className="text-gray-600 mb-4">We need to know your location to show if we deliver to your area. Please allow location access or enter your pincode.</p>
+          <div className="flex gap-2 justify-center mb-4">
+            <button onClick={async () => {
+              setCheckingLocation(true);
+              try {
+                const pos = await locationService.getCurrentPosition({ timeout: 8000 });
+                const addr = await locationService.reverseGeocode(pos.lat, pos.lon).catch(()=>({ postcode: '' }));
+                const weather = await locationService.getWeather(pos.lat, pos.lon).catch(()=>null);
+                const pincode = addr.postcode || '';
+                const radiusKm = Number(siteSettings?.deliveryRadiusKm ?? 5);
+                const svc = (siteSettings?.storeLocation)
+                  ? isLocationServiceable(pos.lat, pos.lon, { ...siteSettings, deliveryRadiusKm: radiusKm })
+                  : fallbackPincodeServiceable(pincode, siteSettings || {});
+                setDetected({ city: addr.city || '', pincode, weather, lat: pos.lat, lon: pos.lon });
+                setServiceable(Boolean(svc));
+              } catch (e) {
+                console.warn('Location detect failed', e);
+                setServiceable(null);
+              } finally { setCheckingLocation(false); }
+            }} className="px-4 py-2 bg-orange-500 text-white rounded">Detect my location</button>
+            <div className="flex items-center gap-2">
+              <input value={manualPincode} onChange={(e) => setManualPincode(e.target.value.replace(/\D/g, '').slice(0,6))} placeholder="Enter pincode" className="px-3 py-2 border rounded" />
+              <button onClick={() => {
+                const svc = fallbackPincodeServiceable(manualPincode, siteSettings || {});
+                setServiceable(Boolean(svc));
+                if (svc) setDetected((d) => ({ ...d, pincode: manualPincode }));
+              }} className="px-4 py-2 bg-orange-500 text-white rounded">Check</button>
+            </div>
+          </div>
+          <div className="text-sm text-gray-500">You can also continue browsing, but delivery may not be available to your address.</div>
+          <div className="mt-4">
+            <button onClick={() => setServiceable(true)} className="px-4 py-2 border rounded">Continue anyway</button>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="space-y-4 pb-6">

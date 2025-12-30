@@ -5,6 +5,8 @@ import { createOrder as createOrderInDb } from '../firebaseApi';
 import { showToast } from '../components/Toast';
 import { useFirebaseObject } from '../hooks/useFirebase';
 import { createOrderOnServer, openRazorpayCheckout } from '../utils/razorpay';
+import * as locationService from '../utils/locationService';
+import { isLocationServiceable, fallbackPincodeServiceable } from '../utils/deliveryArea';
 
 export default function CheckoutPage() {
   const { cartItems = [], cartTotal = 0, clearCart } = useCart() || {};
@@ -14,6 +16,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
   const [error, setError] = useState(null);
+  const [detected, setDetected] = useState({ loading: false, available: false, city: '', pincode: '', weather: null, message: '' });
 
   const MIN_ORDER = 350; // minimum order amount in INR
 
@@ -43,6 +46,34 @@ export default function CheckoutPage() {
     }
   }, [cartItems, navigate, placedOrder]);
 
+  // Try to detect location on mount and check serviceability
+  useEffect(() => {
+    let mounted = true;
+    async function detect() {
+      if (!navigator.geolocation) return;
+      setDetected((d) => ({ ...d, loading: true }));
+      try {
+        const pos = await locationService.getCurrentPosition({ timeout: 10000 });
+        if (!mounted) return;
+          const addr = await locationService.reverseGeocode(pos.lat, pos.lon);
+        if (!mounted) return;
+        const weather = await locationService.getWeather(pos.lat, pos.lon).catch(() => null);
+        const pincode = addr.postcode || '';
+        const serviceable = (typeof siteSettings?.deliveryRadiusKm !== 'undefined' && siteSettings?.storeLocation)
+          ? isLocationServiceable(pos.lat, pos.lon, siteSettings || {})
+          : fallbackPincodeServiceable(pincode, siteSettings || {});
+        if (!mounted) return;
+          setDetected({ loading: false, available: true, city: addr.city || '', pincode, weather, message: serviceable ? 'We deliver here' : 'Not in delivery area', lat: pos.lat, lon: pos.lon });
+      } catch (e) {
+        if (!mounted) return;
+        setDetected({ loading: false, available: false, city: '', pincode: '', weather: null, message: 'Location not available' });
+      }
+    }
+    detect();
+    return () => { mounted = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const validate = () => {
     if (!address.name.trim()) return 'Please enter full name';
     if (!/^[0-9]{6,15}$/.test(address.phone.replace(/\D/g, ''))) return 'Please enter a valid phone number';
@@ -57,6 +88,16 @@ export default function CheckoutPage() {
   const placeOrder = async () => {
     const v = validate();
     if (v) return setError(v);
+    // final serviceability check: prefer geofence if configured
+    const finalServiceable = (typeof siteSettings?.deliveryRadiusKm !== 'undefined' && siteSettings?.storeLocation && detected && detected.available)
+      ? isLocationServiceable(detected?.lat ?? null, detected?.lon ?? null, siteSettings || {})
+      : fallbackPincodeServiceable(address.pincode, siteSettings || {});
+    if (!finalServiceable) {
+      const msg = 'Sorry, we do not deliver to this address.';
+      setError(msg);
+      showToast(msg, 'error');
+      return;
+    }
     setError(null);
     setLoading(true);
 
@@ -229,6 +270,28 @@ export default function CheckoutPage() {
         {/* Delivery Information */}
         <div className="lg:col-span-2">
           <h1 className="text-2xl font-bold text-gray-800 mb-6">Checkout</h1>
+          {/* Detected location / weather banner */}
+          {detected && (
+            <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: detected.message === 'We deliver here' ? '#ecfdf5' : '#fff1f2', border: '1px solid #e6e6e6' }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium">{detected.available ? `Location: ${detected.city || 'Unknown'}` : 'Location: not available'}</div>
+                  <div className="text-xs text-gray-600">{detected.pincode ? `Pincode: ${detected.pincode}` : ''} {detected.weather ? ` • ${detected.weather.temperature}°C, wind ${detected.weather.windspeed} m/s` : ''}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`text-sm font-medium ${detected.message === 'We deliver here' ? 'text-green-600' : 'text-red-600'}`}>{detected.message}</div>
+                  {detected.available && detected.pincode && (
+                    <button
+                      onClick={() => setAddress((a) => ({ ...a, pincode: detected.pincode, city: detected.city || a.city, line1: a.line1 }))}
+                      className="ml-2 px-3 py-1 bg-orange-500 text-white rounded text-sm"
+                    >
+                      Use Detected
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           <div className="rounded-xl p-6 shadow-sm" style={cardStyle}>
             <div className="space-y-4">
               <div>

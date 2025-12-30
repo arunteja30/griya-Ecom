@@ -14,6 +14,13 @@ export default function SiteSettingsAdmin() {
     // Prefill bannerOffers textarea from settings.offers (array -> newline separated string)
     const pre = { ...settings };
     if (Array.isArray(settings.offers)) pre.bannerOffers = settings.offers.join('\n');
+    if (Array.isArray(settings.serviceablePincodes)) pre.serviceablePincodes = settings.serviceablePincodes.join('\n');
+    else if (typeof settings.serviceablePincodes === 'string') pre.serviceablePincodes = settings.serviceablePincodes;
+    if (settings.storeLocation) {
+      pre.storeLat = settings.storeLocation.lat ?? settings.storeLocation.latitude ?? '';
+      pre.storeLon = settings.storeLocation.lon ?? settings.storeLocation.longitude ?? '';
+    }
+    pre.deliveryRadiusKm = settings.deliveryRadiusKm ?? settings.deliveryRadius ?? '';
     setForm(pre);
   }, [settings]);
   if (loading) return <Loader />;
@@ -32,6 +39,9 @@ export default function SiteSettingsAdmin() {
         otherFee: Number(form.otherFee) || 0,
         deliveryFee: Number(form.deliveryFee) || 0,
         freeDeliveryMin: Number(form.freeDeliveryMin) || 0,
+        storeLocation: (form.storeLat || form.storeLon) ? { lat: Number(form.storeLat) || 0, lon: Number(form.storeLon) || 0 } : undefined,
+        deliveryRadiusKm: Number(form.deliveryRadiusKm) || 0,
+        serviceablePincodes: form.serviceablePincodes ? (form.serviceablePincodes.includes('\n') ? form.serviceablePincodes.split('\n').map(s=>s.trim()).filter(Boolean) : form.serviceablePincodes) : settings?.serviceablePincodes || undefined,
         // banner settings
         bannerText: String(form.bannerText || ''),
         bannerLink: String(form.bannerLink || ''),
@@ -98,6 +108,22 @@ export default function SiteSettingsAdmin() {
         <div>
           <label className="block text-sm font-medium text-gray-700">Address</label>
           <input value={form.address||''} onChange={(e)=>setForm({...form, address: e.target.value})} className="border p-2" placeholder="Address" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Store Location (lat, lon)</label>
+          <div className="flex gap-2">
+            <input value={form.storeLat||''} onChange={(e)=>setForm({...form, storeLat: e.target.value})} className="border p-2 w-1/2" placeholder="Latitude" />
+            <input value={form.storeLon||''} onChange={(e)=>setForm({...form, storeLon: e.target.value})} className="border p-2 w-1/2" placeholder="Longitude" />
+          </div>
+          <div className="text-xs text-gray-500 mt-1">Optional: used for radius-based delivery checks.</div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Delivery radius (km)</label>
+          <input value={form.deliveryRadiusKm||''} onChange={(e)=>setForm({...form, deliveryRadiusKm: e.target.value})} className="border p-2" placeholder="Delivery radius in km" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Serviceable pincodes</label>
+          <textarea value={form.serviceablePincodes||''} onChange={(e)=>setForm({...form, serviceablePincodes: e.target.value})} className="border p-2 h-24" placeholder="Provide pincodes one-per-line or comma separated (fallback)." />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Footer text</label>
