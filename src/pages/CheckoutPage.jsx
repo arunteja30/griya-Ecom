@@ -286,20 +286,20 @@ export default function CheckoutPage() {
                 placeholder="Full Name"
                 value={address.name}
                 onChange={(e) => setAddress({...address, name: e.target.value})}
-                className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
               <input
                 type="tel"
                 placeholder="Phone Number"
                 value={address.phone}
                 onChange={(e) => setAddress({...address, phone: e.target.value.replace(/\D/g, '').slice(0,15)})}
-                className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
               <textarea
                 placeholder="House No, Building Name, Area"
                 value={address.line1}
                 onChange={(e) => setAddress({...address, line1: e.target.value})}
-                className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[60px]"
+                className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[60px]"
                 rows={2}
               />
               <div className="grid grid-cols-2 gap-3">
@@ -308,14 +308,14 @@ export default function CheckoutPage() {
                   placeholder="City"
                   value={address.city}
                   onChange={(e) => setAddress({...address, city: e.target.value})}
-                  className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
                 <input
                   type="text"
                   placeholder="Pincode"
                   value={address.pincode}
                   onChange={(e) => setAddress({...address, pincode: e.target.value.replace(/\D/g, '').slice(0,6)})}
-                  className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
               </div>
             </div>
@@ -380,7 +380,7 @@ export default function CheckoutPage() {
           <button
             onClick={openWhatsApp}
             disabled={loading || !address.name || !address.phone || !address.line1 || !address.city || !address.pincode || (cartTotal || 0) < MIN_ORDER}
-            className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+            className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed"
           >
             <span className="text-lg">📱</span>
             <span className="text-sm">WhatsApp Order</span>
@@ -388,7 +388,7 @@ export default function CheckoutPage() {
           <button
             onClick={placeOrder}
             disabled={loading || !address.name || !address.phone || !address.line1 || !address.city || !address.pincode || (cartTotal || 0) < MIN_ORDER}
-            className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+            className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 text-white py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed"
           >
             {loading ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

@@ -128,7 +128,7 @@ export default function Layout() {
                   <div className="flex items-center gap-2">
                     <h1 className="text-lg font-bold text-gradient">{siteSettings.brandName}</h1>
                     {storeStatus && (
-                      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
                         storeStatus.isOpen 
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-red-100 text-red-700'
@@ -166,7 +166,7 @@ export default function Layout() {
                       <div className="w-2 h-2 bg-fresh-500 rounded-full"></div>
                       <div className="absolute inset-0 w-2 h-2 bg-fresh-500 rounded-full animate-ping"></div>
                     </div>
-                    <span className="text-surface-700 font-medium truncate max-w-24">
+                    <span className="text-surface-700 truncate max-w-24">
                       {location.city || location.area || 'Location'}
                     </span>
                     {/* Store Hours Display */}

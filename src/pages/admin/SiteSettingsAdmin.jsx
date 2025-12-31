@@ -115,7 +115,7 @@ export default function SiteSettingsAdmin() {
               {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
                 const isSelected = (form.storeOpenDays || []).includes(day);
                 return (
-                  <label key={day} className="flex items-center gap-1 text-sm">
+                  <label key={day} className="flex items-center gap-1">
                     <input 
                       type="checkbox" 
                       checked={isSelected}
@@ -127,7 +127,7 @@ export default function SiteSettingsAdmin() {
                         setForm({...form, storeOpenDays: newDays});
                       }}
                     />
-                    {day.slice(0, 3)}
+                    <span className="text-sm">{day.slice(0, 3)}</span>
                   </label>
                 );
               })}
@@ -135,21 +135,21 @@ export default function SiteSettingsAdmin() {
           </div>
           
           <div className="grid grid-cols-2 gap-4">
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2">
               <input 
                 type="checkbox" 
                 checked={!!form.storeManuallyOpen} 
                 onChange={(e)=>setForm({...form, storeManuallyOpen: e.target.checked, storeManuallyClosed: false})} 
               />
-              Manually Open (Override Hours)
+              <span className="text-sm">Manually Open (Override Hours)</span>
             </label>
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2">
               <input 
                 type="checkbox" 
                 checked={!!form.storeManuallyClosed} 
                 onChange={(e)=>setForm({...form, storeManuallyClosed: e.target.checked, storeManuallyOpen: false})} 
               />
-              Manually Closed (Override Hours)
+              <span className="text-sm">Manually Closed (Override Hours)</span>
             </label>
           </div>
           

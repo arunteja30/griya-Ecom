@@ -152,7 +152,7 @@ function HomePageContent() {
       return (
         <section className="py-6 px-mobile">
           <LinkComponent {...linkProps} className="block">
-            <div className="relative overflow-hidden rounded-3xl shadow-soft hover:shadow-medium transition-all duration-300">
+            <div className="relative overflow-hidden rounded-3xl shadow-soft hover:shadow-medium transition-shadow">
               <div className="aspect-[2/1] relative">
                 <img 
                   src={banner.image} 
@@ -192,7 +192,7 @@ function HomePageContent() {
 
               return (
                 <LinkComponent key={banner.id || index} {...linkProps} className="block flex-shrink-0">
-                  <div className="w-80 relative overflow-hidden rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300">
+                  <div className="w-80 relative overflow-hidden rounded-2xl shadow-soft hover:shadow-medium transition-shadow">
                     <div className="aspect-[3/2] relative">
                       <img 
                         src={banner.image} 
@@ -321,10 +321,10 @@ function HomePageContent() {
                 to="/groceries"
                 className="group flex flex-col items-center space-y-2"
               >
-                <div className="relative w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl group-hover:scale-105 transition-all duration-300 border border-white/30 hover:border-primary-300/50">
+                <div className="relative w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl group-hover:scale-105 transition-all border border-white/30 hover:border-primary-300/50">
                   {/* Glow effect */}
                   <div className="absolute -inset-1 bg-gradient-to-r from-primary-400/30 to-primary-500/30 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
-                  <svg className="w-8 h-8 text-primary-500 relative z-10 group-hover:scale-110 transition-transform duration-300 drop-shadow-sm" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-8 h-8 text-primary-500 relative z-10 group-hover:scale-110 transition-transform drop-shadow-sm" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
                   </svg>
                 </div>
@@ -337,7 +337,7 @@ function HomePageContent() {
                   to={`/category/${category.id}`}
                   className="group flex flex-col items-center space-y-2"
                 >
-                  <div className="relative w-16 h-16 bg-gradient-to-br from-primary-100 to-fresh-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg hover:shadow-xl group-hover:scale-105 transition-all duration-300 border border-white/30 hover:border-fresh-300/50">
+                  <div className="relative w-16 h-16 bg-gradient-to-br from-primary-100 to-fresh-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg hover:shadow-xl group-hover:scale-105 transition-all border border-white/30 hover:border-fresh-300/50">
                     {/* Enhanced Glow effect */}
                     <div className="absolute -inset-1 bg-gradient-to-r from-primary-400/30 to-fresh-400/30 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
                     {category.imageUrl || category.image ? (

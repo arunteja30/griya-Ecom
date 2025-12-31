@@ -78,7 +78,7 @@ export default function AdminLogin() {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-white text-primary-600 font-semibold py-3 px-6 rounded-xl hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-white text-primary-600 font-semibold py-3 px-6 rounded-xl hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">

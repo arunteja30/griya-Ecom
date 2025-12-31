@@ -7,12 +7,12 @@ export default function BottomSheet({ isOpen = false, onClose = () => {}, childr
     <div className={`fixed inset-0 z-50 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`} aria-hidden={!isOpen}>
       {/* dimmed overlay covering whole screen */}
       <div
-        className={`absolute inset-0 bg-black/40 transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 bg-black/40 transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0'}`}
         onClick={onClose}
       />
 
       {/* sheet container - 40% height from bottom */}
-      <div className={`absolute inset-x-0 bottom-0 ${isOpen ? 'translate-y-0' : 'translate-y-full'} transition-transform duration-300`}> 
+      <div className={`absolute inset-x-0 bottom-0 ${isOpen ? 'translate-y-0' : 'translate-y-full'} transition-transform`}> 
         <div className="bg-white rounded-t-2xl shadow-2xl" style={{ height: '40vh', minHeight: '300px' }}>
           <div className="flex items-center justify-between p-4 border-b border-surface-200">
             {/* Drag handle */}

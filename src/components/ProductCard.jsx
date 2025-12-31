@@ -102,7 +102,7 @@ export default function ProductCard({ product }) {
         {/* Wishlist Button */}
         <button
           onClick={() => toggleWishlist(product)}
-          className={`absolute top-1 right-1 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+          className={`absolute top-1 right-1 w-8 h-8 rounded-full flex items-center justify-center ${
             isWishlisted 
               ? 'bg-red-500 text-white shadow-glow' 
               : 'bg-white/80 backdrop-blur-sm text-surface-400 hover:text-red-500'

@@ -81,7 +81,7 @@ export default function AdminLayout({ children }) {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                     item.isSubItem ? 'ml-4' : ''
                   } ${
                     isActiveRoute(item.path)
@@ -127,7 +127,7 @@ export default function AdminLayout({ children }) {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                   item.isSubItem ? 'ml-4' : ''
                 } ${
                   isActiveRoute(item.path)

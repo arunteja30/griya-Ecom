@@ -261,7 +261,7 @@ export default function CartPage() {
             <div className="w-full space-y-3">
               {isStoreClosed && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
-                  <div className="text-red-700 font-medium text-sm mb-1">Store Closed</div>
+                  <div className="text-red-700 text-sm mb-1">Store Closed</div>
                   <div className="text-red-600 text-xs">{storeStatus.message}</div>
                 </div>
               )}
@@ -274,7 +274,7 @@ export default function CartPage() {
                   navigate('/checkout');
                 }} 
                 disabled={(cartTotal || 0) < MIN_ORDER || isStoreClosed}
-                className="w-full btn-primary py-3 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full btn-primary py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isStoreClosed ? 'Store Closed' : 'Proceed to Checkout'}
               </button>

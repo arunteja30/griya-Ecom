@@ -115,7 +115,7 @@ export default function Navbar() {
 
               {/* Cart Button */}
               <Link to="/cart" className="relative group">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-50 hover:bg-primary-100 text-primary-700 transition-all duration-200" style={{ background: theme.primaryColor ? undefined : undefined }}>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-50 hover:bg-primary-100 text-primary-700 transition-colors">
                   <svg
                     className="w-5 h-5"
                     fill="none"
