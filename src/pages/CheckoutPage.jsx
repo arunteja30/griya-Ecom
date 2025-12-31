@@ -5,6 +5,7 @@ import { createOrder as createOrderInDb } from '../firebaseApi';
 import { showToast } from '../components/Toast';
 import { useFirebaseObject } from '../hooks/useFirebase';
 import { createOrderOnServer, openRazorpayCheckout } from '../utils/razorpay';
+import { isStoreOpen, getStoreStatus } from '../utils/storeHours';
 
 export default function CheckoutPage() {
   const { cartItems = [], cartTotal = 0, clearCart } = useCart() || {};
@@ -41,6 +42,11 @@ export default function CheckoutPage() {
     if (!/^[0-9]{5,6}$/.test(address.pincode)) return 'Please enter a valid pincode';
     if (!cartItems || cartItems.length === 0) return 'Your cart is empty';
     if ((cartTotal || 0) < MIN_ORDER) return `Minimum order value is ₹${MIN_ORDER}`;
+    
+    // Check if store is open
+    const storeIsOpen = isStoreOpen(siteSettings);
+    if (storeIsOpen === false) return 'Store is currently closed. Please try again during business hours.';
+    
     return null;
   };
 

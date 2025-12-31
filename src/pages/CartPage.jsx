@@ -6,6 +6,7 @@ import Modal from "../components/Modal";
 import { showToast } from "../components/Toast";
 import { normalizeImageUrl } from '../utils/imageHelpers';
 import { useFirebaseObject, useFirebaseList } from '../hooks/useFirebase';
+import { isStoreOpen, getStoreStatus } from '../utils/storeHours';
 
 export default function CartPage() {
   const { cartItems = [], cartTotal = 0, updateQuantity, removeFromCart, clearCart } = useCart() || {};
@@ -18,6 +19,10 @@ export default function CartPage() {
   const deliveryFee = 0; // Free delivery
   const convenienceFee = 15;
   const totalAmount = cartTotal + deliveryFee + convenienceFee;
+  
+  // Get store status
+  const storeStatus = getStoreStatus(siteSettings);
+  const isStoreClosed = storeStatus && !storeStatus.isOpen;
 
   // Simple formatter
   const formatINR = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n || 0);
@@ -253,13 +258,25 @@ export default function CartPage() {
             )}
 
             {/* Action Buttons */}
-            <div className="w-full">
+            <div className="w-full space-y-3">
+              {isStoreClosed && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                  <div className="text-red-700 font-medium text-sm mb-1">Store Closed</div>
+                  <div className="text-red-600 text-xs">{storeStatus.message}</div>
+                </div>
+              )}
               <button 
-                onClick={() => navigate('/checkout')} 
-                disabled={(cartTotal || 0) < MIN_ORDER}
+                onClick={() => {
+                  if (isStoreClosed) {
+                    showToast('Store is currently closed', 'error');
+                    return;
+                  }
+                  navigate('/checkout');
+                }} 
+                disabled={(cartTotal || 0) < MIN_ORDER || isStoreClosed}
                 className="w-full btn-primary py-3 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Proceed to Checkout
+                {isStoreClosed ? 'Store Closed' : 'Proceed to Checkout'}
               </button>
             </div>
           </div>

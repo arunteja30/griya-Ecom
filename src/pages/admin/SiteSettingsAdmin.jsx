@@ -52,7 +52,13 @@ export default function SiteSettingsAdmin() {
         bannerVisible: !!form.bannerVisible,
         bannerBgColor: String(form.bannerBgColor || ''),
         bannerTextColor: String(form.bannerTextColor || ''),
-        offers: offersArray
+        offers: offersArray,
+        // Store hours settings
+        storeOpenTime: String(form.storeOpenTime || ''),
+        storeCloseTime: String(form.storeCloseTime || ''),
+        storeOpenDays: Array.isArray(form.storeOpenDays) ? form.storeOpenDays : [],
+        storeManuallyOpen: !!form.storeManuallyOpen,
+        storeManuallyClosed: !!form.storeManuallyClosed
       };
       await set(ref(db, '/siteSettings'), payload);
       setStatus('saved');
@@ -76,6 +82,80 @@ export default function SiteSettingsAdmin() {
         <div>
           <label className="block text-sm font-medium text-gray-700">Logo URL</label>
           <input value={form.logoUrl||''} onChange={(e)=>setForm({...form, logoUrl: e.target.value})} className="border p-2" placeholder="Logo URL" />
+        </div>
+        
+        {/* Store Hours Settings */}
+        <div className="bg-gray-50 p-4 rounded border">
+          <h3 className="text-md font-semibold mb-3 text-gray-800">Store Hours</h3>
+          
+          <div className="grid grid-cols-2 gap-4 mb-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Store Open Time</label>
+              <input 
+                type="time" 
+                value={form.storeOpenTime||''} 
+                onChange={(e)=>setForm({...form, storeOpenTime: e.target.value})} 
+                className="border p-2 w-full" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Store Close Time</label>
+              <input 
+                type="time" 
+                value={form.storeCloseTime||''} 
+                onChange={(e)=>setForm({...form, storeCloseTime: e.target.value})} 
+                className="border p-2 w-full" 
+              />
+            </div>
+          </div>
+          
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Open Days</label>
+            <div className="flex flex-wrap gap-2">
+              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
+                const isSelected = (form.storeOpenDays || []).includes(day);
+                return (
+                  <label key={day} className="flex items-center gap-1 text-sm">
+                    <input 
+                      type="checkbox" 
+                      checked={isSelected}
+                      onChange={(e) => {
+                        const currentDays = form.storeOpenDays || [];
+                        const newDays = e.target.checked 
+                          ? [...currentDays, day]
+                          : currentDays.filter(d => d !== day);
+                        setForm({...form, storeOpenDays: newDays});
+                      }}
+                    />
+                    {day.slice(0, 3)}
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <label className="flex items-center gap-2 text-sm">
+              <input 
+                type="checkbox" 
+                checked={!!form.storeManuallyOpen} 
+                onChange={(e)=>setForm({...form, storeManuallyOpen: e.target.checked, storeManuallyClosed: false})} 
+              />
+              Manually Open (Override Hours)
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input 
+                type="checkbox" 
+                checked={!!form.storeManuallyClosed} 
+                onChange={(e)=>setForm({...form, storeManuallyClosed: e.target.checked, storeManuallyOpen: false})} 
+              />
+              Manually Closed (Override Hours)
+            </label>
+          </div>
+          
+          <div className="text-xs text-gray-500 mt-2">
+            Manual overrides take precedence over scheduled hours. Use these for holidays or emergency closures.
+          </div>
         </div>
         {/* Top banner settings */}
         <div className="grid grid-cols-1 gap-2">
