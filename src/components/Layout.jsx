@@ -1,12 +1,16 @@
 import React, { useState } from "react";
-import { Outlet, useLocation, Link } from "react-router-dom";
+import { Outlet, useLocation as useRouterLocation, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import { useLocation } from "../context/LocationContext";
+import { useServiceStatus } from "../context/ServiceStatusContext";
 
 export default function Layout() {
+  const routerLocation = useRouterLocation();
   const location = useLocation();
   const { cart } = useCart();
   const { wishlistCount } = useWishlist();
+  const { isServiceable } = useServiceStatus();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   const cartItemCount = cart ? cart.reduce((sum, item) => sum + item.quantity, 0) : 0;
@@ -71,15 +75,6 @@ export default function Layout() {
           )}
         </div>
       )
-    },
-    {
-      name: 'Account',
-      path: '/account',
-      icon: (active) => (
-        <svg className={`w-6 h-6 ${active ? 'text-primary-600' : 'text-surface-500'}`} fill={active ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 0 : 2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      )
     }
   ];
 
@@ -89,18 +84,49 @@ export default function Layout() {
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-surface-200/50">
         <div className="px-mobile py-3">
           <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center shadow-soft">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7Z"/>
-                </svg>
+            {/* Logo and Location */}
+            <div className="flex items-center space-x-3">
+              <Link to="/" className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-soft">
+                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7Z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold text-gradient">FreshMart</h1>
+                </div>
+              </Link>
+              
+              {/* Location Display */}
+              <div className="hidden xs:flex items-center gap-2 text-xs">
+                {location.loading ? (
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-primary-300 rounded-full animate-pulse"></div>
+                    <span className="text-surface-500">Getting location...</span>
+                  </div>
+                ) : location.error ? (
+                  <button 
+                    onClick={location.refetch}
+                    className="flex items-center gap-1 text-red-600 hover:text-red-700 transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M6.938 4h10.124c1.54 0 2.502 1.667 1.732 2.5L12.732 11c.77.833.77 2.167 0 3L18.794 18.5c.77.833-.192 2.5-1.732 2.5H6.938" />
+                    </svg>
+                    <span>Enable location</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <div className="relative">
+                      <div className="w-2 h-2 bg-fresh-500 rounded-full"></div>
+                      <div className="absolute inset-0 w-2 h-2 bg-fresh-500 rounded-full animate-ping"></div>
+                    </div>
+                    <span className="text-surface-700 font-medium truncate max-w-24">
+                      {location.city || location.area || 'Location'}
+                    </span>
+                  </div>
+                )}
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-gradient">FreshMart</h1>
-                <p className="text-xs text-surface-500">Fresh & Fast</p>
-              </div>
-            </Link>
+            </div>
 
             {/* Header Actions */}
             <div className="flex items-center gap-3">
@@ -113,16 +139,6 @@ export default function Layout() {
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
               </button>
-
-              {/* Menu Toggle */}
-              <button 
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2.5 rounded-2xl bg-surface-100 hover:bg-surface-200 transition-colors"
-              >
-                <svg className="w-5 h-5 text-surface-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
@@ -133,44 +149,32 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      {/* Floating Cart Button (when cart has items) */}
-      {cartItemCount > 0 && location.pathname !== '/cart' && (
-        <Link to="/cart" className="fab">
-          <div className="relative">
-            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M7 4V2C7 1.45 7.45 1 8 1H16C16.55 1 17 1.45 17 2V4H20C20.55 4 21 4.45 21 5S20.55 6 20 6H19V19C19 20.1 18.1 21 17 21H7C5.9 21 5 20.1 5 19V6H4C3.45 6 3 5.55 3 5S3.45 4 4 4H7ZM9 3V4H15V3H9ZM7 6V19H17V6H7Z"/>
-            </svg>
-            <div className="absolute -top-2 -right-2 w-5 h-5 bg-white text-primary-600 text-xs font-bold rounded-full flex items-center justify-center">
-              {cartItemCount > 9 ? '9+' : cartItemCount}
-            </div>
-          </div>
-        </Link>
-      )}
-
       {/* Bottom Navigation */}
-      <nav className="bottom-nav">
-        <div className="flex items-center justify-around">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path || 
-                           (item.path !== '/' && location.pathname.startsWith(item.path));
-            
-            return (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={isActive ? 'nav-tab-active' : 'nav-tab'}
-              >
-                {item.icon(isActive)}
-                <span className={`text-xs font-medium mt-1 ${
-                  isActive ? 'text-primary-600' : 'text-surface-500'
-                }`}>
-                  {item.name}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      {isServiceable && routerLocation.pathname !== '/cart' && routerLocation.pathname !== '/checkout' && (
+        <nav className="bottom-nav">
+          <div className="flex items-center justify-around">
+            {navItems.map((item) => {
+              const isActive = routerLocation.pathname === item.path || 
+                             (item.path !== '/' && routerLocation.pathname.startsWith(item.path));
+              
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={isActive ? 'nav-tab-active' : 'nav-tab'}
+                >
+                  {item.icon(isActive)}
+                  <span className={`text-xs font-medium mt-1 ${
+                    isActive ? 'text-primary-600' : 'text-surface-500'
+                  }`}>
+                    {item.name}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
 
       {/* Sidebar Overlay */}
       {sidebarOpen && (

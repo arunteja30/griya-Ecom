@@ -42,8 +42,8 @@ export default function SiteSettingsAdmin() {
         deliveryFee: Number(form.deliveryFee) || 0,
         freeDeliveryMin: Number(form.freeDeliveryMin) || 0,
         // geofence settings
-        storeLocation: (form.storeLat || form.storeLon) ? { lat: Number(form.storeLat) || 0, lon: Number(form.storeLon) || 0 } : undefined,
-        deliveryRadiusKm: Number(form.deliveryRadiusKm) || 0,
+        storeLocation: (form.storeLat && form.storeLon) ? { lat: Number(form.storeLat), lon: Number(form.storeLon) } : (settings?.storeLocation || null),
+        deliveryRadiusKm: form.deliveryRadiusKm ? Number(form.deliveryRadiusKm) : (settings?.deliveryRadiusKm || null),
         // serviceable pincodes: textarea -> array (one per line) OR keep string if user provided comma separated
         serviceablePincodes: form.serviceablePincodes ? (form.serviceablePincodes.includes('\n') ? form.serviceablePincodes.split('\n').map(s=>s.trim()).filter(Boolean) : form.serviceablePincodes) : settings?.serviceablePincodes || undefined,
         // banner settings

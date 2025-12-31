@@ -2,21 +2,53 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { useFirebaseList } from '../hooks/useFirebase';
+import { useServiceAreaSimple as useServiceArea } from "../hooks/useServiceAreaSimple";
+import { useServiceStatus } from '../context/ServiceStatusContext';
+import Loader from "../components/Loader";
+import NotServiceableScreen from "../components/NotServiceableScreen";
 
 export default function HomePage() {
+  const serviceArea = useServiceArea();
+  const { setIsServiceable } = useServiceStatus();
+  
+  // Update global service status when local status changes
+  useEffect(() => {
+    if (serviceArea.isServiceable !== null) {
+      setIsServiceable(serviceArea.isServiceable);
+    }
+  }, [serviceArea.isServiceable, setIsServiceable]);
+  
+  // Show loading while checking service area
+  if (serviceArea.loading || serviceArea.isServiceable === null) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-surface-50 to-primary-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader />
+          <p className="mt-4 text-surface-600">Checking service availability...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show not serviceable screen if area is not covered
+  if (serviceArea.isServiceable === false) {
+    return <NotServiceableScreen serviceStatus={serviceArea} onRetry={serviceArea.retry} />;
+  }
+
+  // Render normal content
+  return <HomePageContent />;
+}
+
+function HomePageContent() {
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useFirebaseList('/categories');
   const { data: products, loading: productsLoading, error: productsError } = useFirebaseList('/products');
   const { data: homeConfig, loading: homeConfigLoading } = useFirebaseList('/homeConfig');
+  const { data: bannersData } = useFirebaseList('/banners');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const categoriesArray = categories ? Object.entries(categories).map(([id, cat]) => ({ id, ...cat })) : [];
   const productsArray = products ? Object.entries(products).map(([id, prod]) => ({ id, ...prod })) : [];
-
-  // Debug logging
-  console.log('Categories:', { data: categories, loading: categoriesLoading, error: categoriesError });
-  console.log('Products:', { data: products, loading: productsLoading, error: productsError });
-  console.log('HomeConfig:', { data: homeConfig, loading: homeConfigLoading });
 
   // Filter products based on search and category
   const filteredProducts = productsArray.filter(product => {
@@ -64,6 +96,128 @@ export default function HomePage() {
     });
     return sections;
   }, [homeConfig, productsArray]);
+
+  // Convert banners data to array and filter active banners
+  const activeBanners = React.useMemo(() => {
+    if (!bannersData) return [];
+    const bannersArray = Array.isArray(bannersData) 
+      ? bannersData 
+      : Object.entries(bannersData).map(([id, banner]) => ({ id, ...banner }));
+    
+    // Filter active banners based on date range
+    const now = new Date();
+    return bannersArray.filter(banner => {
+      if (banner.startDate) {
+        const startDate = new Date(banner.startDate);
+        if (startDate > now) return false;
+      }
+      if (banner.endDate) {
+        const endDate = new Date(banner.endDate);
+        if (endDate < now) return false;
+      }
+      return true;
+    });
+  }, [bannersData]);
+
+  const renderBanners = () => {
+    if (!activeBanners || activeBanners.length === 0) {
+      // Fallback to default free delivery banner when no admin banners
+      return (
+        <section className="py-6 px-mobile">
+          <div className="card-glass bg-gradient-to-r from-accent-coral/20 to-accent-gold/20 p-6 rounded-3xl border border-accent-coral/20">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold text-surface-900">Free Delivery</h3>
+                <p className="text-surface-600">On orders above ₹199</p>
+                <button className="btn-fresh text-sm px-6 py-2">
+                  Shop Now
+                </button>
+              </div>
+              <div className="text-6xl opacity-50">🚚</div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // Single banner display
+    if (activeBanners.length === 1) {
+      const banner = activeBanners[0];
+      const isExternal = banner.ctaLink && (banner.ctaLink.startsWith('http://') || banner.ctaLink.startsWith('https://'));
+      const LinkComponent = banner.ctaLink ? (isExternal ? 'a' : Link) : 'div';
+      const linkProps = banner.ctaLink ? (isExternal ? 
+        { href: banner.ctaLink, target: '_blank', rel: 'noopener noreferrer' } : 
+        { to: banner.ctaLink }) : {};
+
+      return (
+        <section className="py-6 px-mobile">
+          <LinkComponent {...linkProps} className="block">
+            <div className="relative overflow-hidden rounded-3xl shadow-soft hover:shadow-medium transition-all duration-300">
+              <div className="aspect-[2/1] relative">
+                <img 
+                  src={banner.image} 
+                  alt={banner.title || 'Banner'} 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 p-6 text-white">
+                  {banner.title && (
+                    <h3 className="text-xl font-bold mb-2">{banner.title}</h3>
+                  )}
+                  {banner.subtitle && (
+                    <p className="text-white/90 text-sm">{banner.subtitle}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </LinkComponent>
+        </section>
+      );
+    }
+
+    // Multiple banners - horizontal scroll
+    return (
+      <section className="py-6">
+        <div className="px-mobile mb-4">
+          <h2 className="text-xl font-bold text-surface-900">Special Offers</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <div className="flex gap-4 px-mobile pb-2">
+            {activeBanners.map((banner, index) => {
+              const isExternal = banner.ctaLink && (banner.ctaLink.startsWith('http://') || banner.ctaLink.startsWith('https://'));
+              const LinkComponent = banner.ctaLink ? (isExternal ? 'a' : Link) : 'div';
+              const linkProps = banner.ctaLink ? (isExternal ? 
+                { href: banner.ctaLink, target: '_blank', rel: 'noopener noreferrer' } : 
+                { to: banner.ctaLink }) : {};
+
+              return (
+                <LinkComponent key={banner.id || index} {...linkProps} className="block flex-shrink-0">
+                  <div className="w-80 relative overflow-hidden rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300">
+                    <div className="aspect-[3/2] relative">
+                      <img 
+                        src={banner.image} 
+                        alt={banner.title || 'Banner'} 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 p-4 text-white">
+                        {banner.title && (
+                          <h3 className="text-lg font-bold mb-1">{banner.title}</h3>
+                        )}
+                        {banner.subtitle && (
+                          <p className="text-white/90 text-sm">{banner.subtitle}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </LinkComponent>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  };
 
   return (
     <div className="min-h-screen">
@@ -219,7 +373,7 @@ export default function HomePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-surface-900">✨ Featured</h2>
-              <Link to="/collections" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+              <Link to="/groceries?featured=true" className="text-sm font-medium text-primary-600 hover:text-primary-700">
                 See all
               </Link>
             </div>
@@ -240,7 +394,7 @@ export default function HomePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-surface-900">{section.title}</h2>
-              <Link to={`/collections`} className="text-sm font-medium text-primary-600 hover:text-primary-700">
+              <Link to={`/groceries?festival=${section.key}`} className="text-sm font-medium text-primary-600 hover:text-primary-700">
                 See all
               </Link>
             </div>
@@ -261,7 +415,7 @@ export default function HomePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-surface-900">🔥 Popular</h2>
-              <Link to="/collections" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+              <Link to="/groceries?popular=true" className="text-sm font-medium text-primary-600 hover:text-primary-700">
                 See all
               </Link>
             </div>
@@ -282,7 +436,7 @@ export default function HomePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-surface-900">💰 Best Deals</h2>
-              <Link to="/collections" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+              <Link to="/groceries?deals=true" className="text-sm font-medium text-primary-600 hover:text-primary-700">
                 See all
               </Link>
             </div>
@@ -303,7 +457,7 @@ export default function HomePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-surface-900">⚡ Quick Buys</h2>
-              <Link to="/collections" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+              <Link to="/groceries?quickbuy=true" className="text-sm font-medium text-primary-600 hover:text-primary-700">
                 See all
               </Link>
             </div>
@@ -324,7 +478,7 @@ export default function HomePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-surface-900">👍 Recommended</h2>
-              <Link to="/collections" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+              <Link to="/groceries?recommended=true" className="text-sm font-medium text-primary-600 hover:text-primary-700">
                 See all
               </Link>
             </div>
@@ -339,23 +493,8 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Promotional Banner - Hidden when searching */}
-      {!searchTerm && (
-        <section className="py-6 px-mobile">
-          <div className="card-glass bg-gradient-to-r from-accent-coral/20 to-accent-gold/20 p-6 rounded-3xl border border-accent-coral/20">
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <h3 className="text-lg font-bold text-surface-900">Free Delivery</h3>
-                <p className="text-surface-600">On orders above ₹199</p>
-                <button className="btn-fresh text-sm px-6 py-2">
-                  Shop Now
-                </button>
-              </div>
-              <div className="text-6xl opacity-50">🚚</div>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Dynamic Banners - Hidden when searching */}
+      {!searchTerm && bannersData && (renderBanners())}
 
       {/* Search Results / All Products Grid */}
       <section className="py-6 px-mobile pb-safe">

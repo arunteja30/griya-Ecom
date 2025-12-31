@@ -1,18 +1,72 @@
 import React from "react";
 import { useBanners, useSiteContent, useProducts, useSiteSettings } from "../hooks/useRealtime";
+import { useServiceAreaSimple as useServiceArea } from "../hooks/useServiceAreaSimple";
 import { Link } from "react-router-dom";
+import Loader from "../components/Loader";
+import NotServiceableScreen from "../components/NotServiceableScreen";
 
 export default function Home() {
   const { data: banners, loading: bannersLoading } = useBanners();
   const { data: siteContent } = useSiteContent();
   const { data: products, loading: productsLoading } = useProducts();
   const { data: settings } = useSiteSettings();
+  const serviceArea = useServiceArea();
+
+  // Show loading while checking service area
+  if (serviceArea.loading || serviceArea.isServiceable === null) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-surface-50 to-primary-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader />
+          <p className="mt-4 text-surface-600">Checking service availability...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show not serviceable screen if area is not covered
+  if (serviceArea.isServiceable === false) {
+    return <NotServiceableScreen serviceStatus={serviceArea} onRetry={serviceArea.retry} />;
+  }
+
+  // Only show normal page if explicitly serviceable
+  if (serviceArea.isServiceable !== true) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-surface-50 to-primary-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader />
+          <p className="mt-4 text-surface-600">Verifying service area...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
+      {/* Debug Service Area Status (remove in production) */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-2 text-sm">
+        <h3 className="font-bold text-blue-800 mb-2">🔍 Service Area Debug</h3>
+        <div className="space-y-1">
+          <div><strong>Status:</strong> {serviceArea.loading ? 'Loading' : serviceArea.isServiceable ? 'Serviceable' : 'Not Serviceable'}</div>
+          <div><strong>Reason:</strong> {serviceArea.reason}</div>
+          {serviceArea.distance && <div><strong>Distance:</strong> {serviceArea.distance}km</div>}
+          {serviceArea.maxRadius && <div><strong>Max Radius:</strong> {serviceArea.maxRadius}km</div>}
+        </div>
+      </div>
+
+      {/* Debug Site Settings */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-2 text-sm">
+        <h3 className="font-bold text-yellow-800 mb-2">🏪 Site Settings Debug</h3>
+        <div className="space-y-1">
+          <div><strong>Store Location:</strong> {settings?.storeLocation ? `${settings.storeLocation.lat}, ${settings.storeLocation.lon}` : 'Not set'}</div>
+          <div><strong>Delivery Radius:</strong> {settings?.deliveryRadiusKm ? `${settings.deliveryRadiusKm}km` : 'Not set'}</div>
+          <div><strong>Settings Loaded:</strong> {settings ? 'Yes' : 'No'}</div>
+        </div>
+      </div>
+
       {/* Featured Products - keep at top */}
-      <section className="mb-8 bg-red-100 shadow-md rounded p-4">
-        <h2 className="text-2xl font-semibold mb-4">Featured Products</h2>
+      <section className="mb-4 bg-red-100 shadow-md rounded p-4">
+        <h2 className="text-2xl font-semibold mb-2">Featured Products</h2>
         {productsLoading ? (
           <div>Loading products...</div>
         ) : products ? (
@@ -31,7 +85,7 @@ export default function Home() {
       </section>
 
       {/* Banners moved here so they are visible only on the Home screen and appear below Featured Products */}
-      <section className="mb-8">
+      <section className="mb-4">
         {bannersLoading ? (
           <div>Loading banners...</div>
         ) : banners ? (
@@ -51,8 +105,8 @@ export default function Home() {
         )}
       </section>
 
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold mb-4">About</h2>
+      <section className="space-y-3">
+        <h2 className="text-2xl font-semibold mb-2">About</h2>
         <div className="prose max-w-none">
           {siteContent?.about || 'About text not configured in database.'}
         </div>

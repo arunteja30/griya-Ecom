@@ -127,24 +127,24 @@ export default function ProductDetailPage() {
     <div className="min-h-screen bg-surface-50">
       {/* Back Button Header */}
       <div className="bg-white/95 backdrop-blur-md sticky top-16 z-40 border-b border-surface-200/50">
-        <div className="px-mobile py-4">
+        <div className="px-mobile py-2">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-surface-600 hover:text-primary-600 transition-colors"
+            className="flex items-center gap-1 text-surface-600 hover:text-primary-600 transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            <span className="font-medium">Back</span>
+            <span className="text-sm font-medium">Back</span>
           </button>
         </div>
       </div>
 
-      <div className="px-mobile py-4 space-y-6 pb-safe">
+      <div className="px-mobile py-3 space-y-4 pb-safe">
         {/* Product Images Section */}
-        <div className="card space-y-4">
+        <div className="card space-y-3">
           {/* Main Image */}
-          <div className="aspect-square bg-surface-100 rounded-2xl overflow-hidden relative">
+          <div className="aspect-square bg-surface-100 rounded-xl overflow-hidden relative">
             <img
               src={images[selectedImageIndex] || '/placeholder.jpg'}
               alt={product.name}
@@ -156,13 +156,13 @@ export default function ProductDetailPage() {
             
             {/* Floating Badges */}
             {discount && (
-              <div className="badge-floating badge-coral top-4 left-4">
+              <div className="absolute top-2 left-2 bg-accent-coral text-white px-2 py-1 rounded-lg text-xs font-bold">
                 {discount}% OFF
               </div>
             )}
             
             {product.featured && (
-              <div className="badge-floating badge-fresh top-4 right-4">
+              <div className="absolute top-2 right-10 bg-fresh-500 text-white px-2 py-1 rounded-lg text-xs font-bold">
                 ⭐ Featured
               </div>
             )}
@@ -170,13 +170,13 @@ export default function ProductDetailPage() {
             {/* Wishlist Button */}
             <button
               onClick={() => setIsWishlisted(!isWishlisted)}
-              className={`absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 ${
+              className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
                 isWishlisted 
                   ? 'bg-red-500 text-white shadow-glow' 
                   : 'bg-white/80 backdrop-blur-sm text-surface-400 hover:text-red-500'
               }`}
             >
-              <svg className="w-6 h-6" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </button>
@@ -184,12 +184,12 @@ export default function ProductDetailPage() {
 
           {/* Image Thumbnails */}
           {hasMultipleImages && (
-            <div className="flex gap-3 overflow-x-auto">
+            <div className="flex gap-2 overflow-x-auto">
               {images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImageIndex(index)}
-                  className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-colors ${
+                  className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
                     selectedImageIndex === index 
                       ? 'border-primary-500 shadow-soft' 
                       : 'border-surface-200 hover:border-surface-300'
@@ -207,13 +207,13 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Product Info Section */}
-        <div className="card space-y-6 p-4">
+        <div className="card space-y-4 p-3">
           {/* Basic Info */}
-          <div className="space-y-3">
-            <h1 className="text-2xl font-bold text-surface-900 leading-tight">{product.name}</h1>
+          <div className="space-y-2">
+            <h1 className="text-xl font-bold text-surface-900 leading-tight">{product.name}</h1>
             
             {/* Brand & Category */}
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-1 flex-wrap">
               {product.brand && (
                 <span className="badge-primary px-2 py-1 text-xs">
                   {product.brand}
@@ -228,7 +228,7 @@ export default function ProductDetailPage() {
 
             {/* Description */}
             {product.description && (
-              <p className="text-surface-700 leading-relaxed text-sm">{product.description}</p>
+              <p className="text-surface-700 leading-relaxed text-xs">{product.description}</p>
             )}
           </div>
 
@@ -249,20 +249,20 @@ export default function ProductDetailPage() {
 
           {/* Variant Selection */}
           {variants && variants.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="font-semibold text-surface-900">Choose Size/Variant</h3>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-surface-900 text-sm">Choose Size/Variant</h3>
               <div className="grid grid-cols-2 gap-2">
                 {variants.map((variant) => (
                   <button
                     key={variant.id}
                     onClick={() => setSelectedVariant(variant)}
-                    className={`p-3 rounded-lg border transition-all duration-200 text-left ${
+                    className={`p-2 rounded-lg border transition-all duration-200 text-left ${
                       selectedVariant?.id === variant.id
                         ? 'border-primary-500 bg-primary-50 shadow-sm'
                         : 'border-surface-200 hover:border-primary-300 hover:bg-surface-50'
                     }`}
                   >
-                    <div className="font-medium text-surface-900 text-sm mb-1">{variant.label} {variant.unit}</div>
+                    <div className="font-medium text-surface-900 text-xs mb-1">{variant.label} {variant.unit}</div>
                     <div className="text-xs text-surface-600">₹{variant.price}</div>
                     {variant.originalPrice && variant.originalPrice > variant.price && (
                       <div className="text-xs text-surface-400 line-through">₹{variant.originalPrice}</div>
@@ -274,12 +274,12 @@ export default function ProductDetailPage() {
           )}
 
           {/* Price Section */}
-          <div className="bg-surface-50 rounded-xl p-4 space-y-3">
+          <div className="bg-surface-50 rounded-xl p-3 space-y-2">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-surface-900">₹{currentPrice}</span>
+              <span className="text-xl font-bold text-surface-900">₹{currentPrice}</span>
               {currentOriginalPrice && currentOriginalPrice > currentPrice && (
                 <>
-                  <span className="text-lg text-surface-400 line-through">₹{currentOriginalPrice}</span>
+                  <span className="text-sm text-surface-400 line-through">₹{currentOriginalPrice}</span>
                   <span className="badge-fresh px-2 py-0.5 text-xs">Save ₹{currentOriginalPrice - currentPrice}</span>
                 </>
               )}
@@ -326,27 +326,27 @@ export default function ProductDetailPage() {
 
         {/* Add to Cart Section */}
         {product.inStock !== false && (
-          <div className="card p-4 space-y-4">
+          <div className="card p-3 space-y-3">
             {cartQuantity === 0 ? (
               <>
                 {/* Quantity Selector */}
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-surface-900">Quantity:</span>
-                  <div className="flex items-center gap-3">
+                  <span className="font-medium text-surface-900 text-sm">Quantity:</span>
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-10 h-10 rounded-lg border border-surface-300 flex items-center justify-center hover:bg-surface-50 transition-colors"
+                      className="w-8 h-8 rounded-lg border border-surface-300 flex items-center justify-center hover:bg-surface-50 transition-colors"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                       </svg>
                     </button>
-                    <span className="w-12 text-center font-semibold text-lg">{quantity}</span>
+                    <span className="w-8 text-center font-semibold text-sm">{quantity}</span>
                     <button
                       onClick={() => setQuantity(quantity + 1)}
-                      className="w-10 h-10 rounded-lg border border-surface-300 flex items-center justify-center hover:bg-surface-50 transition-colors"
+                      className="w-8 h-8 rounded-lg border border-surface-300 flex items-center justify-center hover:bg-surface-50 transition-colors"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                     </button>
@@ -356,7 +356,7 @@ export default function ProductDetailPage() {
                 {/* Add to Cart Button */}
                 <button
                   onClick={handleAddToCart}
-                  className="btn-primary w-full py-4 text-lg font-bold rounded-xl"
+                  className="btn-primary w-full py-3 text-base font-bold rounded-xl"
                 >
                   Add to Cart • ₹{currentPrice * quantity}
                 </button>
@@ -390,11 +390,11 @@ export default function ProductDetailPage() {
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-surface-900">Related Products</h2>
+          <div className="space-y-3">
+            <h2 className="text-lg font-bold text-surface-900">Related Products</h2>
             <div className="story-scroll">
               {relatedProducts.map((relatedProduct) => (
-                <div key={relatedProduct.id} className="w-48 flex-shrink-0">
+                <div key={relatedProduct.id} className="w-40 flex-shrink-0">
                   <ProductCard product={relatedProduct} />
                 </div>
               ))}

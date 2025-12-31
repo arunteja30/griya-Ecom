@@ -24,6 +24,8 @@ import TestimonialsAdmin from "./pages/admin/TestimonialsAdmin";
 import OrdersAdmin from "./pages/admin/OrdersAdmin";
 import { CartProvider } from "./context/CartContext";import { VariantProvider } from './context/VariantContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { LocationProvider } from './context/LocationContext';
+import { ServiceStatusProvider } from './context/ServiceStatusContext';
 import VariantSelector from './components/VariantSelector';import ToastContainer from "./components/Toast";
 import CheckoutPage from "./pages/CheckoutPage";
 import WishlistPage from "./pages/WishlistPage";
@@ -35,9 +37,11 @@ import ThemeAdmin from "./pages/admin/ThemeAdmin";
 
 export default function App() {
   return (
-    <CartProvider>
-      <VariantProvider>
-        <WishlistProvider>
+    <LocationProvider>
+      <ServiceStatusProvider>
+        <CartProvider>
+          <VariantProvider>
+            <WishlistProvider>
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
@@ -75,9 +79,11 @@ export default function App() {
         {/* Global Variant Selector */}
         <VariantSelector />
         
-        <ToastContainer />
-        </WishlistProvider>
-      </VariantProvider>
-    </CartProvider>
+            <ToastContainer />
+            </WishlistProvider>
+          </VariantProvider>
+        </CartProvider>
+      </ServiceStatusProvider>
+    </LocationProvider>
   );
 }

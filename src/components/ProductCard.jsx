@@ -5,7 +5,7 @@ import { useVariant } from "../context/VariantContext";
 import { useWishlist } from "../context/WishlistContext";
 
 export default function ProductCard({ product }) {
-  const { addToCart, cart } = useCart();
+  const { addToCart, removeFromCart, cart } = useCart();
   const { openVariantSelector } = useVariant();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +52,21 @@ export default function ProductCard({ product }) {
       await addToCart(itemForCart, 1);
     } catch (error) {
       console.error('Failed to add to cart:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDecreaseQuantity = async () => {
+    if (cartQuantity <= 0) return;
+    
+    setIsLoading(true);
+    try {
+      const baseId = product.id || product.slug || product.name;
+      const itemId = selectedVariant ? `${baseId}-${selectedVariant.id}` : baseId;
+      await removeFromCart(itemId, 1);
+    } catch (error) {
+      console.error('Failed to decrease quantity:', error);
     } finally {
       setIsLoading(false);
     }
@@ -160,26 +175,32 @@ export default function ProductCard({ product }) {
             )}
           </div>
         ) : (
-          <div className="flex items-center justify-center">
-            <div className="flex items-center bg-primary-50 rounded">
+          <div className="w-full">
+            <div className="flex items-center bg-gradient-to-r from-primary-50 to-primary-100 rounded-lg border border-primary-200 w-full">
               <button
-                onClick={() => {/* decrease quantity */}}
-                className="w-4 h-4 flex items-center justify-center text-primary-600 hover:bg-primary-100 rounded-l transition-colors"
+                onClick={handleDecreaseQuantity}
+                disabled={isLoading || cartQuantity <= 0}
+                className="flex-1 h-8 flex items-center justify-center text-primary-600 hover:bg-primary-200 rounded-l-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                 </svg>
               </button>
-              <span className="px-1 py-0.5 text-[9px] font-semibold text-primary-700 min-w-4 text-center">
+              <div className="flex-1 py-2 text-xs font-bold text-primary-700 text-center border-x border-primary-200">
                 {cartQuantity}
-              </span>
+              </div>
               <button
                 onClick={handleAddToCart}
-                className="w-4 h-4 flex items-center justify-center text-primary-600 hover:bg-primary-100 rounded-r transition-colors"
+                disabled={isLoading}
+                className="flex-1 h-8 flex items-center justify-center text-primary-600 hover:bg-primary-200 rounded-r-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
+                {isLoading ? (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                )}
               </button>
             </div>
           </div>

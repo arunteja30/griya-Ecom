@@ -7,6 +7,7 @@ export default function AllProductsPage() {
   const location = useLocation();
   const { data: products, loading: productsLoading } = useFirebaseList('/products');
   const { data: categories, loading: categoriesLoading } = useFirebaseList('/categories');
+  const { data: homeConfig } = useFirebaseList('/homeConfig');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('name');
@@ -14,16 +15,40 @@ export default function AllProductsPage() {
   const productsArray = products ? Object.entries(products).map(([id, prod]) => ({ id, ...prod })) : [];
   const categoriesArray = categories ? Object.entries(categories).map(([id, cat]) => ({ id, ...cat })) : [];
 
-  // Get search term from URL params if available
+  // Get search term and special filters from URL params if available
+  const [festivalFilter, setFestivalFilter] = useState('');
+  const [specialFilter, setSpecialFilter] = useState('');
+  
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const query = params.get('q');
+    const festival = params.get('festival');
+    const featured = params.get('featured');
+    const popular = params.get('popular');
+    const deals = params.get('deals');
+    const quickbuy = params.get('quickbuy');
+    const recommended = params.get('recommended');
+    
     if (query) {
       setSearchTerm(query);
     }
+    if (festival) {
+      setFestivalFilter(festival);
+    }
+    if (featured) {
+      setSpecialFilter('featured');
+    } else if (popular) {
+      setSpecialFilter('popular');
+    } else if (deals) {
+      setSpecialFilter('deals');
+    } else if (quickbuy) {
+      setSpecialFilter('quickbuy');
+    } else if (recommended) {
+      setSpecialFilter('recommended');
+    }
   }, [location.search]);
 
-  // Filter products based on search and category
+  // Filter products based on search, category, festival, and special filters
   const filteredProducts = productsArray.filter(product => {
     const matchesSearch = !searchTerm || 
       product.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -32,7 +57,34 @@ export default function AllProductsPage() {
     const matchesCategory = selectedCategory === 'all' || 
       product.category === selectedCategory || 
       product.categoryId === selectedCategory;
-    return matchesSearch && matchesCategory;
+    
+    // Festival filtering logic
+    let matchesFestival = true;
+    if (festivalFilter && homeConfig?.festivals?.[festivalFilter]) {
+      const festivalTags = homeConfig.festivals[festivalFilter];
+      if (Array.isArray(festivalTags) && festivalTags.length > 0) {
+        matchesFestival = festivalTags.some(tag => 
+          product.tags?.includes(tag) || 
+          product.category?.toLowerCase().includes(tag.toLowerCase()) ||
+          product.name?.toLowerCase().includes(tag.toLowerCase())
+        );
+      }
+    }
+    
+    // Special filter logic (featured, popular, deals, etc.)
+    let matchesSpecial = true;
+    if (specialFilter && homeConfig) {
+      const specialTags = homeConfig[specialFilter];
+      if (Array.isArray(specialTags) && specialTags.length > 0) {
+        matchesSpecial = specialTags.some(tag => 
+          product.tags?.includes(tag) || 
+          product.category?.toLowerCase().includes(tag.toLowerCase()) ||
+          product.name?.toLowerCase().includes(tag.toLowerCase())
+        );
+      }
+    }
+    
+    return matchesSearch && matchesCategory && matchesFestival && matchesSpecial;
   });
 
   // Sort products
@@ -69,7 +121,11 @@ export default function AllProductsPage() {
       {/* Search Header */}
       <div className="bg-gradient-to-br from-primary-500 to-fresh-500 text-white px-mobile py-6">
         <div className="space-y-4">
-          <h1 className="text-2xl font-bold">All Products</h1>
+          <h1 className="text-2xl font-bold">
+            {festivalFilter ? `${festivalFilter.charAt(0).toUpperCase()}${festivalFilter.slice(1)} Specials` : 
+             specialFilter ? `${specialFilter.charAt(0).toUpperCase()}${specialFilter.slice(1)} Products` :
+             'All Products'}
+          </h1>
           
           {/* Search Form */}
           <form onSubmit={handleSearch} className="space-y-3">

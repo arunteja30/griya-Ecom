@@ -5,8 +5,6 @@ import { createOrder as createOrderInDb } from '../firebaseApi';
 import { showToast } from '../components/Toast';
 import { useFirebaseObject } from '../hooks/useFirebase';
 import { createOrderOnServer, openRazorpayCheckout } from '../utils/razorpay';
-import * as locationService from '../utils/locationService';
-import { isLocationServiceable, fallbackPincodeServiceable } from '../utils/deliveryArea';
 
 export default function CheckoutPage() {
   const { cartItems = [], cartTotal = 0, clearCart } = useCart() || {};
@@ -16,63 +14,24 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
   const [error, setError] = useState(null);
-  const [detected, setDetected] = useState({ loading: false, available: false, city: '', pincode: '', weather: null, message: '' });
+  const [paymentMethod, setPaymentMethod] = useState('cod');
 
-  const MIN_ORDER = 350; // minimum order amount in INR
-
+  const MIN_ORDER = 350;
   const { data: siteSettings } = useFirebaseObject('/siteSettings');
-  const theme = siteSettings?.theme || {};
-  const cardStyle = { background: theme.cardBgColor || undefined, color: theme.cardTextColor || undefined, border: `1px solid ${theme.cardBorderColor || '#efefef'}` };
-  const primaryBtnBg = theme.cardButtonPrimaryBg || theme.primaryColor;
-  const accentBtnBg = theme.cardButtonAccentBg || theme.accentColor;
-  const focusRing = theme.accentColor || '#fb923c';
 
-  // fees fetched from site settings (flat INR amounts). Defaults to 0
-  const platformFee = Number(siteSettings?.platformFee || 0);
-  const surgeFee = Number(siteSettings?.surgeFee || 0);
-  const otherFee = Number(siteSettings?.otherFee || 0);
+  // Calculate fees
+  const platformFee = Number(siteSettings?.platformFee || 15);
   const deliveryFee = Number(siteSettings?.deliveryFee || 0);
-  const freeDeliveryMin = Number(siteSettings?.freeDeliveryMin || 0);
-  // if subtotal meets freeDeliveryMin, delivery is free
+  const freeDeliveryMin = Number(siteSettings?.freeDeliveryMin || 199);
   const deliveryFeeApplied = freeDeliveryMin > 0 && (cartTotal || 0) >= freeDeliveryMin ? 0 : deliveryFee;
-  const feesTotal = platformFee + surgeFee + otherFee + deliveryFeeApplied; // recalc with applied delivery
+  const feesTotal = platformFee + deliveryFeeApplied;
   const totalWithFees = (cartTotal || 0) + feesTotal;
 
   useEffect(() => {
-    // If cart becomes empty while on this page, redirect to /cart
     if (!cartItems || cartItems.length === 0) {
-      // do not navigate away immediately if an order was just placed
       if (!placedOrder) navigate('/cart');
     }
   }, [cartItems, navigate, placedOrder]);
-
-  // Try to detect location on mount and check serviceability
-  useEffect(() => {
-    let mounted = true;
-    async function detect() {
-      if (!navigator.geolocation) return;
-      setDetected((d) => ({ ...d, loading: true }));
-      try {
-        const pos = await locationService.getCurrentPosition({ timeout: 10000 });
-        if (!mounted) return;
-          const addr = await locationService.reverseGeocode(pos.lat, pos.lon);
-        if (!mounted) return;
-        const weather = await locationService.getWeather(pos.lat, pos.lon).catch(() => null);
-        const pincode = addr.postcode || '';
-        const serviceable = (typeof siteSettings?.deliveryRadiusKm !== 'undefined' && siteSettings?.storeLocation)
-          ? isLocationServiceable(pos.lat, pos.lon, siteSettings || {})
-          : fallbackPincodeServiceable(pincode, siteSettings || {});
-        if (!mounted) return;
-          setDetected({ loading: false, available: true, city: addr.city || '', pincode, weather, message: serviceable ? 'We deliver here' : 'Not in delivery area', lat: pos.lat, lon: pos.lon });
-      } catch (e) {
-        if (!mounted) return;
-        setDetected({ loading: false, available: false, city: '', pincode: '', weather: null, message: 'Location not available' });
-      }
-    }
-    detect();
-    return () => { mounted = false; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const validate = () => {
     if (!address.name.trim()) return 'Please enter full name';
@@ -88,70 +47,59 @@ export default function CheckoutPage() {
   const placeOrder = async () => {
     const v = validate();
     if (v) return setError(v);
-    // final serviceability check: prefer geofence if configured
-    const finalServiceable = (typeof siteSettings?.deliveryRadiusKm !== 'undefined' && siteSettings?.storeLocation && detected && detected.available)
-      ? isLocationServiceable(detected?.lat ?? null, detected?.lon ?? null, siteSettings || {})
-      : fallbackPincodeServiceable(address.pincode, siteSettings || {});
-    if (!finalServiceable) {
-      const msg = 'Sorry, we do not deliver to this address.';
-      setError(msg);
-      showToast(msg, 'error');
-      return;
-    }
+    
     setError(null);
     setLoading(true);
 
-    // Build simple order object (will be saved after successful payment)
     const order = {
       id: `order_${Date.now()}`,
-      items: cartItems.map((it) => ({ id: it.id, name: it.product?.name || it.name || 'Item', price: it.product?.price || it.price || 0, quantity: it.quantity || 1 })),
+      items: cartItems.map((it) => ({ 
+        id: it.id, 
+        name: it.product?.name || it.name || 'Item', 
+        price: it.product?.price || it.price || 0, 
+        quantity: it.quantity || 1 
+      })),
       subtotal: cartTotal,
-      fees: { platformFee, surgeFee, otherFee, deliveryFee, deliveryFeeApplied, feesTotal },
+      fees: { platformFee, deliveryFee, deliveryFeeApplied, feesTotal },
       total: totalWithFees,
       address: { ...address },
       createdAt: new Date().toISOString(),
     };
 
     try {
-      // Create an order on server to obtain Razorpay order id (paise)
       const amountPaise = Math.round((totalWithFees || 0) * 100);
       const serverResp = await createOrderOnServer(amountPaise);
-
-      const orderId = serverResp?.order_id || serverResp?.id || serverResp?.razorpay_order_id || serverResp?.orderId;
-      const rkey = siteSettings?.razorpayKey || import.meta.env.VITE_RAZORPAY_KEY || serverResp?.key || serverResp?.key_id;
+      const orderId = serverResp?.order_id || serverResp?.id || serverResp?.razorpay_order_id;
+      const rkey = siteSettings?.razorpayKey || import.meta.env.VITE_RAZORPAY_KEY || serverResp?.key;
 
       if (!rkey) {
-        console.warn('Razorpay key not found; falling back to saving order without payment');
         try {
           await createOrderInDb(order);
         } catch (dbErr) {
           console.warn('Failed to save order to Firebase:', dbErr);
-          showToast('Order placed but saving to database failed', 'warning');
+          showToast('Order placed but saving failed', 'warning');
         }
         clearCart();
         setPlacedOrder(order);
-        showToast('Order placed (no payment)');
+        showToast('Order placed');
         setLoading(false);
         return;
       }
 
-      // Open Razorpay modal
       await openRazorpayCheckout({
         key: rkey,
-        amountINR: cartTotal,
-        name: siteSettings?.brandName || 'Store',
+        amountINR: totalWithFees,
+        name: siteSettings?.brandName || 'FreshMart',
         description: 'Order Payment',
         prefill: { name: address.name, contact: address.phone },
         orderId,
         onSuccess: async (resp) => {
-          // resp contains razorpay_payment_id, razorpay_order_id, razorpay_signature
           const paymentInfo = {
-            razorpayPaymentId: resp?.razorpay_payment_id ?? resp?.payment_id ?? null,
-            razorpayOrderId: resp?.razorpay_order_id ?? resp?.order_id ?? null,
-            razorpaySignature: resp?.razorpay_signature ?? resp?.signature ?? null
+            razorpayPaymentId: resp?.razorpay_payment_id,
+            razorpayOrderId: resp?.razorpay_order_id,
+            razorpaySignature: resp?.razorpay_signature
           };
 
-          // Ensure no undefined values anywhere in the order object (Firebase rejects undefined)
           const finalOrder = { ...order, payment: paymentInfo };
           const safeOrder = JSON.parse(JSON.stringify(finalOrder, (_key, value) => (value === undefined ? null : value)));
 
@@ -159,24 +107,23 @@ export default function CheckoutPage() {
             await createOrderInDb(safeOrder);
           } catch (dbErr) {
             console.warn('Failed to save order to Firebase:', dbErr);
-            showToast('Payment succeeded but saving order failed', 'warning');
+            showToast('Payment succeeded but saving failed', 'warning');
           }
 
           clearCart();
           setPlacedOrder(finalOrder);
-          showToast('Payment successful, order placed', 'success');
+          showToast('Payment successful!', 'success');
           setLoading(false);
         },
         onFailure: (err) => {
           console.error('Payment failed', err);
           setError('Payment failed or cancelled');
-          showToast('Payment failed or cancelled', 'error');
+          showToast('Payment failed', 'error');
           setLoading(false);
         }
       });
-
     } catch (err) {
-      console.error('Failed to place order / start payment:', err);
+      console.error('Failed to place order:', err);
       setError('Failed to start payment');
       setLoading(false);
     }
@@ -184,7 +131,7 @@ export default function CheckoutPage() {
 
   // Build WhatsApp message and open chat
   const openWhatsApp = () => {
-    const whatsappNumber = String(siteSettings?.whatsapp || siteSettings?.whatapp || siteSettings?.phone || '');
+    const whatsappNumber = String(siteSettings?.whatsapp || siteSettings?.phone || '');
     const cleaned = whatsappNumber.replace(/[^0-9+]/g, '');
     if (!cleaned) {
       showToast('WhatsApp number not configured', 'error');
@@ -197,12 +144,10 @@ export default function CheckoutPage() {
     lines.push('Order details:');
     cartItems.forEach((item, idx) => {
       const p = item.product || item;
-      lines.push(`${idx + 1}. ${p.name} x ${item.quantity} - ₹${p.price || p.product?.price || 0}`);
+      lines.push(`${idx + 1}. ${p.name} x ${item.quantity} - ₹${p.price || 0}`);
     });
     lines.push('');
     if(platformFee) lines.push(`Platform fee: ₹${platformFee}`);
-    if(surgeFee) lines.push(`Surge fee: ₹${surgeFee}`);
-    if(otherFee) lines.push(`Other fee: ₹${otherFee}`);
     if(deliveryFeeApplied) lines.push(`Delivery fee: ₹${deliveryFeeApplied}`);
     else if(freeDeliveryMin > 0) lines.push(`Delivery: Free (orders ≥ ₹${freeDeliveryMin})`);
     lines.push(`Total: ₹${totalWithFees}`);
@@ -221,41 +166,48 @@ export default function CheckoutPage() {
 
   if (placedOrder) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-4">✅</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Order Placed Successfully!</h1>
-          <p className="text-gray-600">Thank you {placedOrder.address.name}, your order is confirmed</p>
-        </div>
-        
-        <div className="rounded-xl p-6 shadow-sm max-w-2xl mx-auto" style={cardStyle}>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center pb-4 border-b">
-              <span className="text-gray-600">Order ID</span>
-              <span className="font-mono text-sm bg-gray-100 px-3 py-1 rounded">{placedOrder.id}</span>
+      <div className="min-h-screen bg-gradient-to-b from-purple-50 via-green-50 to-white flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-6">
+            <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl text-white">✓</span>
             </div>
+            <h1 className="text-xl font-bold text-gray-800 mb-2">Order Placed Successfully!</h1>
+            <p className="text-sm text-gray-600">Thank you {placedOrder.address.name}, your order is confirmed</p>
+          </div>
+          
+          <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-purple-100 p-6 shadow-sm mb-6">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center pb-3 border-b border-purple-100">
+                <span className="text-sm text-gray-600">Order ID</span>
+                <span className="font-mono text-xs bg-purple-100 px-2 py-1 rounded">{placedOrder.id}</span>
+              </div>
 
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Total Amount</span>
-              <span className="text-xl font-bold text-gray-800">₹{placedOrder.total}</span>
-            </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Total Amount</span>
+                <span className="text-lg font-bold text-gray-800">₹{placedOrder.total}</span>
+              </div>
 
-            <div className="pt-4 border-t">
-              <div className="text-sm text-gray-600 mb-2">Delivery Address</div>
-              <div className="text-gray-800">
-                <div className="font-medium">{placedOrder.address.name}</div>
-                <div>{placedOrder.address.line1}</div>
-                <div>{placedOrder.address.city} - {placedOrder.address.pincode}</div>
-                <div className="text-sm text-gray-600 mt-1">📞 {placedOrder.address.phone}</div>
+              <div className="pt-3 border-t border-purple-100">
+                <div className="text-xs text-gray-500 mb-2">Delivery Address</div>
+                <div className="text-sm text-gray-800">
+                  <div className="font-medium">{placedOrder.address.name}</div>
+                  <div className="text-xs text-gray-600">{placedOrder.address.line1}</div>
+                  <div className="text-xs text-gray-600">{placedOrder.address.city} - {placedOrder.address.pincode}</div>
+                  <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                    <span>📞</span>
+                    <span>{placedOrder.address.phone}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex gap-3 mt-6 pt-6 border-t">
-            <Link to="/" className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 text-center rounded-lg font-medium transition-colors">
+          <div className="flex gap-3">
+            <Link to="/" className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 text-center rounded-xl font-medium transition-colors text-sm">
               Continue Shopping
             </Link>
-            <Link to="/groceries" className="flex-1 border border-gray-300 hover:border-gray-400 text-gray-700 py-3 text-center rounded-lg font-medium transition-colors">
+            <Link to="/groceries" className="flex-1 border border-purple-200 text-purple-600 py-3 text-center rounded-xl font-medium transition-colors text-sm hover:bg-purple-50">
               Browse More
             </Link>
           </div>
@@ -265,186 +217,186 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
-        {/* Delivery Information */}
-        <div className="lg:col-span-2">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">Checkout</h1>
-          {/* Detected location / weather banner */}
-          {detected && (
-            <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: detected.message === 'We deliver here' ? '#ecfdf5' : '#fff1f2', border: '1px solid #e6e6e6' }}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium">{detected.available ? `Location: ${detected.city || 'Unknown'}` : 'Location: not available'}</div>
-                  <div className="text-xs text-gray-600">{detected.pincode ? `Pincode: ${detected.pincode}` : ''} {detected.weather ? ` • ${detected.weather.temperature}°C, wind ${detected.weather.windspeed} m/s` : ''}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className={`text-sm font-medium ${detected.message === 'We deliver here' ? 'text-green-600' : 'text-red-600'}`}>{detected.message}</div>
-                  {detected.available && detected.pincode && (
-                    <button
-                      onClick={() => setAddress((a) => ({ ...a, pincode: detected.pincode, city: detected.city || a.city, line1: a.line1 }))}
-                      className="ml-2 px-3 py-1 bg-orange-500 text-white rounded text-sm"
-                    >
-                      Use Detected
-                    </button>
-                  )}
-                </div>
-              </div>
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 via-green-50 to-white relative">
+      {/* Header */}
+      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-purple-100">
+        <div className="px-4 py-3">
+          <h1 className="text-lg font-semibold text-gray-800">Checkout</h1>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="px-4 pb-32 pt-4 space-y-4">
+        {/* Order Summary Card */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-purple-100 p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-green-500 flex items-center justify-center">
+              <span className="text-white text-xs font-bold">1</span>
             </div>
-          )}
-          <div className="rounded-xl p-6 shadow-sm" style={cardStyle}>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                <input 
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                  value={address.name} 
-                  onChange={(e) => setAddress({...address, name: e.target.value})}
-                  placeholder="Enter your full name"
-                />
-                {error && error.toLowerCase().includes('name') && (
-                  <div className="mt-2 text-sm text-red-600">
-                    {error}
+            <h2 className="text-base font-semibold text-gray-800">Order Summary</h2>
+            <span className="text-sm text-gray-500">({cartItems.length} item{cartItems.length !== 1 ? 's' : ''})</span>
+          </div>
+          
+          <div className="space-y-3 max-h-48 overflow-y-auto">
+            {cartItems.map((item, index) => {
+              const product = item.product || item;
+              return (
+                <div key={index} className="flex items-center gap-3 py-2">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-green-100 rounded-lg flex items-center justify-center">
+                    {product.image ? (
+                      <img src={product.image} alt={product.name} className="w-10 h-10 object-cover rounded-lg" />
+                    ) : (
+                      <span className="text-purple-600 text-xs">📦</span>
+                    )}
                   </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                <input 
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                  value={address.phone} 
-                  onChange={(e) => setAddress({...address, phone: e.target.value.replace(/\D/g, '').slice(0,15)})} 
-                  inputMode="numeric" 
-                  placeholder="Enter mobile number"
-                />
-                {error && error.toLowerCase().includes('phone') && (
-                  <div className="mt-2 text-sm text-red-600">
-                    {error}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-800 text-sm truncate">{product.name}</h3>
+                    <p className="text-xs text-gray-500">
+                      ₹{product.price || 0} × {item.quantity}
+                    </p>
                   </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                <input 
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                  value={address.line1} 
-                  onChange={(e) => setAddress({...address, line1: e.target.value})}
-                  placeholder="House no, Building, Street, Area"
-                />
-                {error && error.toLowerCase().includes('address') && (
-                  <div className="mt-2 text-sm text-red-600">
-                    {error}
+                  <div className="text-sm font-semibold text-gray-800">
+                    ₹{(product.price || 0) * item.quantity}
                   </div>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                  <input 
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                    value={address.city} 
-                    onChange={(e) => setAddress({...address, city: e.target.value})}
-                    placeholder="City"
-                  />
-                  {error && error.toLowerCase().includes('city') && (
-                    <div className="mt-2 text-sm text-red-600">
-                      {error}
-                    </div>
-                  )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Pincode</label>
-                  <input 
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" 
-                    value={address.pincode} 
-                    onChange={(e) => setAddress({...address, pincode: e.target.value.replace(/\D/g, '').slice(0,6)})} 
-                    inputMode="numeric" 
-                    placeholder="Pincode"
-                  />
-                  {error && error.toLowerCase().includes('pincode') && (
-                    <div className="mt-2 text-sm text-red-600">
-                      {error}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
-        
-        {/* Order Summary */}
-        <div className="lg:col-span-1">
-          <div className="rounded-xl p-6 shadow-sm sticky top-6" style={cardStyle}>
-            <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
-            <div className="space-y-3 mb-6">
-              <div className="flex justify-between text-gray-600">
-                <span>Items ({cartItems.length})</span>
-                <span>₹{cartTotal}</span>
-              </div>
-              {platformFee > 0 && (
-                <div className="flex justify-between text-gray-600">
-                  <span>Platform fee</span>
-                  <span>₹{platformFee}</span>
-                </div>
-              )}
-              {surgeFee > 0 && (
-                <div className="flex justify-between text-gray-600">
-                  <span>Surge fee</span>
-                  <span>₹{surgeFee}</span>
-                </div>
-              )}
-              {otherFee > 0 && (
-                <div className="flex justify-between text-gray-600">
-                  <span>Other fee</span>
-                  <span>₹{otherFee}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-gray-600">
-                <span>Delivery</span>
-                {deliveryFeeApplied > 0 ? (
-                  <span>₹{deliveryFeeApplied}</span>
-                ) : (
-                  freeDeliveryMin > 0 ? (
-                    <span className="text-green-600">Free (orders ≥ ₹{freeDeliveryMin})</span>
-                  ) : (
-                    <span className="text-green-600">Free</span>
-                  )
-                )}
-              </div>
-              <div className="border-t pt-3">
-                <div className="flex justify-between font-semibold text-lg text-gray-800">
-                  <span>Total</span>
-                  <span>₹{totalWithFees}</span>
-                </div>
-              </div>
-              {(cartTotal || 0) < MIN_ORDER && (
-                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-                  Minimum order amount is ₹{MIN_ORDER}. Add ₹{MIN_ORDER - (cartTotal || 0)} more to proceed.
-                </div>
-              )}
-            </div>
 
-            <div className="space-y-3">
-              <button 
-                onClick={placeOrder} 
-                disabled={loading || !(cartItems && cartItems.length > 0) || (cartTotal || 0) < MIN_ORDER} 
-                className="w-full disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
-                style={{ background: primaryBtnBg, opacity: (cartTotal || 0) < MIN_ORDER ? 0.6 : 1 }}
-              >
-                {loading ? 'Processing...' : 'Place Order'}
-              </button>
-              <button 
-                onClick={openWhatsApp} 
-                disabled={loading || (cartTotal || 0) < MIN_ORDER}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12c0 2.68.93 5.16 2.78 7.07l-1.77 4.9 4.9-1.77C18.84 22.07 21 17.24 21 12c0-5.52-4.48-10-10-10zm1 17.93V19h-2v-1.07c-3.39-.48-6-3.1-6-6.43 0-3.54 2.91-6.43 6.43-6.43S19 8.46 19 12c0 3.33-2.54 6.1-5.83 6.93z"/>
-                </svg>
-                WhatsApp Order
-              </button>
+        {/* Delivery Address Card */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-purple-100 p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-green-500 flex items-center justify-center">
+              <span className="text-white text-xs font-bold">2</span>
             </div>
+            <h2 className="text-base font-semibold text-gray-800">Delivery Address</h2>
           </div>
+          
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3">
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={address.name}
+                onChange={(e) => setAddress({...address, name: e.target.value})}
+                className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+              <input
+                type="tel"
+                placeholder="Phone Number"
+                value={address.phone}
+                onChange={(e) => setAddress({...address, phone: e.target.value.replace(/\D/g, '').slice(0,15)})}
+                className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+              <textarea
+                placeholder="House No, Building Name, Area"
+                value={address.line1}
+                onChange={(e) => setAddress({...address, line1: e.target.value})}
+                className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[60px]"
+                rows={2}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  placeholder="City"
+                  value={address.city}
+                  onChange={(e) => setAddress({...address, city: e.target.value})}
+                  className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                <input
+                  type="text"
+                  placeholder="Pincode"
+                  value={address.pincode}
+                  onChange={(e) => setAddress({...address, pincode: e.target.value.replace(/\D/g, '').slice(0,6)})}
+                  className="w-full px-3 py-2.5 bg-white/50 border border-purple-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            {error && (
+              <div className="text-xs text-red-500 bg-red-50 p-2 rounded-lg">
+                {error}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bill Summary Card */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-purple-100 p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-green-500 flex items-center justify-center">
+              <span className="text-white text-xs font-bold">3</span>
+            </div>
+            <h2 className="text-base font-semibold text-gray-800">Bill Summary</h2>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Items ({cartItems.length})</span>
+              <span className="font-medium text-gray-800">₹{cartTotal}</span>
+            </div>
+            {platformFee > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Platform Fee</span>
+                <span className="font-medium text-gray-800">₹{platformFee}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Delivery Fee</span>
+              {deliveryFeeApplied > 0 ? (
+                <span className="font-medium text-gray-800">₹{deliveryFeeApplied}</span>
+              ) : (
+                freeDeliveryMin > 0 ? (
+                  <span className="font-medium text-green-600">Free (orders ≥ ₹{freeDeliveryMin})</span>
+                ) : (
+                  <span className="font-medium text-green-600">Free</span>
+                )
+              )}
+            </div>
+            <div className="border-t border-purple-200 pt-2 mt-3">
+              <div className="flex justify-between text-base font-semibold">
+                <span className="text-gray-800">Total Amount</span>
+                <span className="text-gray-900">₹{totalWithFees}</span>
+              </div>
+            </div>
+            {(cartTotal || 0) < MIN_ORDER && (
+              <div className="text-xs text-red-600 bg-red-50 p-3 rounded-lg mt-3">
+                Minimum order amount is ₹{MIN_ORDER}. Add ₹{MIN_ORDER - (cartTotal || 0)} more to proceed.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Fixed Bottom Actions */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-purple-100 p-4 z-30">
+        <div className="flex gap-3">
+          <button
+            onClick={openWhatsApp}
+            disabled={loading || !address.name || !address.phone || !address.line1 || !address.city || !address.pincode || (cartTotal || 0) < MIN_ORDER}
+            className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+          >
+            <span className="text-lg">📱</span>
+            <span className="text-sm">WhatsApp Order</span>
+          </button>
+          <button
+            onClick={placeOrder}
+            disabled={loading || !address.name || !address.phone || !address.line1 || !address.city || !address.pincode || (cartTotal || 0) < MIN_ORDER}
+            className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <>
+                <span className="text-lg">🛒</span>
+                <span className="text-sm">Place Order</span>
+              </>
+            )}
+          </button>
+        </div>
+        <div className="text-center mt-2">
+          <span className="text-xs text-gray-600">Total: </span>
+          <span className="text-sm font-bold text-purple-600">₹{totalWithFees}</span>
         </div>
       </div>
     </div>
