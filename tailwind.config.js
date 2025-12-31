@@ -10,43 +10,51 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Flipkart-like primary blue scale
+        // Modern purple-based palette with gradients
         primary: {
-          50: '#eef6ff',
-          100: '#d9eaff',
-          200: '#bcd9ff',
-          300: '#8fc2ff',
-          400: '#5aa9ff',
-          500: '#2874F0',
-          600: '#1f63d9',
-          700: '#194fb0',
-          800: '#123886',
-          900: '#0b2a66'
+          50: '#f3f1ff',
+          100: '#ede9fe',
+          200: '#ddd6fe',
+          300: '#c4b5fd',
+          400: '#a78bfa',
+          500: '#8b5cf6',
+          600: '#7c3aed',
+          700: '#6d28d9',
+          800: '#5b21b6',
+          900: '#4c1d95',
         },
-        // Flipkart-like yellow accent
+        // Fresh green accents
+        fresh: {
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          200: '#a7f3d0',
+          300: '#6ee7b7',
+          400: '#34d399',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',
+          900: '#064e3b',
+        },
+        // Modern grays
+        surface: {
+          50: '#f9fafb',
+          100: '#f3f4f6',
+          200: '#e5e7eb',
+          300: '#d1d5db',
+          400: '#9ca3af',
+          500: '#6b7280',
+          600: '#4b5563',
+          700: '#374151',
+          800: '#1f2937',
+          900: '#111827',
+        },
+        // Accent colors
         accent: {
-          50: '#fff8e6',
-          100: '#fff1cc',
-          200: '#ffe599',
-          300: '#ffd966',
-          400: '#ffcf33',
-          500: '#FFCC00',
-          600: '#e6b800',
-          700: '#b88f00',
-          800: '#8f6b00',
-          900: '#6b4d00'
-        },
-        neutral: {
-          50: '#fafafa',
-          100: '#f5f5f5',
-          200: '#e5e5e5',
-          300: '#d4d4d4',
-          400: '#a3a3a3',
-          500: '#737373',
-          600: '#525252',
-          700: '#404040',
-          800: '#262626',
-          900: '#171717',
+          coral: '#ff6b6b',
+          gold: '#ffd93d',
+          blue: '#4ecdc4',
+          purple: '#a8e6cf',
         },
         success: '#22c55e',
         warning: '#f59e0b',
@@ -95,7 +103,10 @@ module.exports = {
         'xl': '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
         '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
         'inner': 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-        'glow': '0 0 20px rgb(217 119 6 / 0.3)',
+        'glow': '0 0 20px rgba(139, 92, 246, 0.3)',
+        'glow-green': '0 0 20px rgba(16, 185, 129, 0.3)',
+        'float': '0 10px 40px rgba(0, 0, 0, 0.1)',
+        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

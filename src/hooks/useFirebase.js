@@ -10,22 +10,30 @@ export function useFirebaseList(path) {
 
   useEffect(() => {
     if (!path) return;
+    console.log('useFirebaseList: Starting to listen to path:', path);
     setLoading(true);
+    setError(null);
     const dbRef = ref(db, path);
     const unsubscribe = onValue(
       dbRef,
       (snap) => {
+        console.log('useFirebaseList: Got snapshot for path:', path, 'exists:', snap.exists());
+        if (snap.exists()) {
+          console.log('useFirebaseList: Data:', snap.val());
+        }
         setData(snap.exists() ? snap.val() : null);
         setLoading(false);
       },
       (err) => {
+        console.error('useFirebaseList: Error for path:', path, err);
         setError(err);
         setLoading(false);
       }
     );
 
     return () => {
-      try { off(dbRef); } catch (e) { /* ignore */ }
+      console.log('useFirebaseList: Cleaning up listener for path:', path);
+      try { off(dbRef); } catch (e) { console.error('useFirebaseList: Error cleaning up:', e); }
     };
   }, [path]);
 

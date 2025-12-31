@@ -1,246 +1,178 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { useCategoryBySlug } from "../hooks/useFirebase";
-import ProductCard from "../components/ProductCard";
-import Loader from "../components/Loader";
-import SectionTitle from "../components/SectionTitle";
-import FilterBar from "../components/FilterBar";
-import MobileFilterButton from "../components/MobileFilterButton";
-import { db } from '../firebase';
-import { ref, query, orderByKey, startAt, limitToFirst, get } from 'firebase/database';
+import React, { useState, useEffect } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
+import ProductCard from '../components/ProductCard';
+import { useFirebaseList } from '../hooks/useFirebase';
 
 export default function CategoryProductsPage() {
   const { categorySlug } = useParams();
-  const { data: category, loading: catLoading } = useCategoryBySlug(categorySlug);
-
-  const PAGE_SIZE = 24;
-  const [productIds, setProductIds] = useState([]);
-  const [lastKey, setLastKey] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [productsMap, setProductsMap] = useState({}); // id -> product
-
+  const location = useLocation();
+  const { data: products, loading: productsLoading } = useFirebaseList('/products');
+  const { data: categories, loading: categoriesLoading } = useFirebaseList('/categories');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
-  const [priceRange, setPriceRange] = useState('all');
-  const [filterInStock, setFilterInStock] = useState(false);
 
-  // fetch first page of ids when category loads
+  const productsArray = products ? Object.entries(products).map(([id, prod]) => ({ id, ...prod })) : [];
+  const categoriesArray = categories ? Object.entries(categories).map(([id, cat]) => ({ id, ...cat })) : [];
+  
+  // Find current category by slug/id
+  const currentCategory = categoriesArray.find(cat => cat.id === categorySlug || cat.slug === categorySlug);
+  const categoryName = currentCategory?.name || categorySlug;
+
+  // Debug logging
+  console.log('CategoryProductsPage Debug:', {
+    categorySlug,
+    currentCategory,
+    categoryName,
+    categoriesCount: categoriesArray.length,
+    productsCount: productsArray.length
+  });
+
+  // Get search term from URL params if available
   useEffect(() => {
-    let mounted = true;
-    async function fetchFirst(){
-      if(!category) return;
-      setLoading(true);
-      try{
-        const q = query(ref(db, `/categoryProducts/${category.id}`), orderByKey(), limitToFirst(PAGE_SIZE));
-        const snap = await get(q);
-        const val = snap.exists() ? snap.val() : null;
-        const ids = val ? Object.keys(val) : [];
-        if(!mounted) return;
-        setProductIds(ids);
-        setLastKey(ids.length ? ids[ids.length-1] : null);
-        setHasMore(ids.length === PAGE_SIZE);
-
-        // batch fetch product details
-        const prodSnapPromises = ids.map(id => get(ref(db, `/products/${id}`)));
-        const prodSnaps = await Promise.all(prodSnapPromises);
-        const map = {};
-        prodSnaps.forEach(s => { if(s.exists()) map[s.key] = s.val(); });
-        if(!mounted) return;
-        setProductsMap(map);
-      }catch(e){
-        console.error('Failed to load category products', e);
-      }finally{
-        if(mounted) setLoading(false);
-      }
+    const params = new URLSearchParams(location.search);
+    const query = params.get('q');
+    if (query) {
+      setSearchTerm(query);
     }
-    fetchFirst();
-    return ()=>{ mounted = false; };
-  }, [category]);
+  }, [location.search]);
 
-  const loadMore = async ()=>{
-    if(!hasMore || loadingMore || !category) return;
-    setLoadingMore(true);
-    try{
-      const q = query(ref(db, `/categoryProducts/${category.id}`), orderByKey(), startAt(lastKey), limitToFirst(PAGE_SIZE+1));
-      const snap = await get(q);
-      const val = snap.exists() ? snap.val() : null;
-      const ids = val ? Object.keys(val) : [];
-      let newIds = ids;
-      if(ids.length && ids[0] === lastKey) newIds = ids.slice(1);
-      const merged = [...productIds, ...newIds];
-      setProductIds(merged);
-      setLastKey(merged.length ? merged[merged.length-1] : null);
-      setHasMore(newIds.length === PAGE_SIZE);
+  // Filter products based on search and category
+  const filteredProducts = productsArray.filter(product => {
+    const matchesSearch = !searchTerm || 
+      product.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.brand?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // More flexible category matching
+    const matchesCategory = 
+      product.category === categoryName || 
+      product.categoryId === categorySlug ||
+      product.category === categorySlug ||
+      product.categoryId === currentCategory?.id ||
+      product.category === currentCategory?.id ||
+      (product.tags && Array.isArray(product.tags) && product.tags.includes(categorySlug)) ||
+      (product.tags && typeof product.tags === 'string' && product.tags.toLowerCase().includes(categorySlug.toLowerCase()));
+    
+    return matchesSearch && matchesCategory;
+  });
 
-      // fetch details for newIds
-      const prodSnapPromises = newIds.map(id => get(ref(db, `/products/${id}`)));
-      const prodSnaps = await Promise.all(prodSnapPromises);
-      setProductsMap(prev => {
-        const map = { ...prev };
-        prodSnaps.forEach(s => { if(s.exists()) map[s.key] = s.val(); });
-        return map;
-      });
-    }catch(e){
-      console.error('Failed to load more category products', e);
-    }finally{
-      setLoadingMore(false);
+  // Debug filtered products
+  console.log('CategoryProductsPage Filtered:', {
+    searchTerm,
+    filteredCount: filteredProducts.length,
+    sampleProducts: filteredProducts.slice(0, 3).map(p => ({ id: p.id, name: p.name, category: p.category, categoryId: p.categoryId }))
+  });
+
+  // Sort products
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'price-low':
+        return (a.price || 0) - (b.price || 0);
+      case 'price-high':
+        return (b.price || 0) - (a.price || 0);
+      case 'name':
+      default:
+        return (a.name || '').localeCompare(b.name || '');
     }
+  });
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // Search logic is handled by state change
   };
 
-  const loadedProducts = productIds.map(id => ({ id, ...productsMap[id] })).filter(Boolean);
-
-  const filteredAndSortedProducts = useMemo(() => {
-    if (!loadedProducts || !category) return [];
-    let products = [...loadedProducts];
-
-    if (searchTerm) {
-      const s = searchTerm.toLowerCase();
-      products = products.filter(p =>
-        (p.name && p.name.toLowerCase().includes(s)) ||
-        (p.description && p.description.toLowerCase().includes(s))
-      );
-    }
-
-    if (filterInStock) products = products.filter(p => p.inStock !== false);
-
-    if (priceRange !== 'all') {
-      products = products.filter(p => {
-        const price = p.price || 0;
-        switch (priceRange) {
-          case 'under50': return price < 50;
-          case '50-100': return price >= 50 && price <= 100;
-          case '100-200': return price > 100 && price <= 200;
-          case 'above200': return price > 200;
-          default: return true;
-        }
-      });
-    }
-
-    products.sort((a, b) => {
-      switch (sortBy) {
-        case 'name': return (a.name || '').localeCompare(b.name || '');
-        case 'price-low': return (a.price || 0) - (b.price || 0);
-        case 'price-high': return (b.price || 0) - (a.price || 0);
-        case 'rating': return (b.rating || 0) - (a.rating || 0);
-        case 'popular': return (b.orderCount || 0) - (a.orderCount || 0);
-        default: return 0;
-      }
-    });
-
-    return products;
-  }, [loadedProducts, searchTerm, sortBy, priceRange, filterInStock]);
-
-  if (catLoading || loading) return <Loader />;
-  if (!category) return <div className="text-center py-12">Category not found</div>;
+  if (productsLoading || categoriesLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-surface-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-8">
-      {/* Category Header */}
-      <div className="text-center space-y-3">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{category.name}</h1>
-        {category.description && (
-          <p className="text-gray-600 max-w-2xl mx-auto">{category.description}</p>
-        )}
-        <div className="flex items-center justify-center gap-4">
-          <div className="text-sm text-gray-500">{filteredAndSortedProducts.length} products available</div>
-          {(searchTerm || priceRange !== 'all' || filterInStock || sortBy !== 'name') && (
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setPriceRange('all');
-                setFilterInStock(false);
-                setSortBy('name');
-              }}
-              className="text-sm px-3 py-1 border rounded bg-white hover:bg-gray-50 transition-colors"
+    <div className="min-h-screen pb-safe">
+      {/* Search Header */}
+      <div className="bg-gradient-to-br from-primary-500 to-fresh-500 text-white px-mobile py-6">
+        <div className="space-y-4">
+          <h1 className="text-2xl font-bold">{categoryName} Products</h1>
+          
+          {/* Search Form */}
+          <form onSubmit={handleSearch} className="space-y-3">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder={`Search in ${categoryName}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 rounded-xl border-0 bg-white/20 backdrop-blur-sm text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="px-mobile py-4 border-b border-surface-200">
+        <div className="flex gap-4 overflow-x-auto scrollbar-hide">
+          {/* Sort Filter */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="flex-shrink-0 px-3 py-2 rounded-lg border border-surface-300 bg-white text-sm"
+          >
+            <option value="name">Sort by Name</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Results */}
+      <div className="px-mobile py-4">
+        {/* Results Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-surface-900">
+            {searchTerm ? `Results for "${searchTerm}" in ${categoryName}` : `${categoryName} Products`}
+          </h2>
+          <span className="text-sm text-surface-500">
+            {sortedProducts.length} result{sortedProducts.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+
+        {/* Products Grid */}
+        {sortedProducts.length > 0 ? (
+          <div className="product-grid">
+            {sortedProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-lg font-semibold text-surface-900 mb-2">No products found</h3>
+            <p className="text-surface-500 mb-6">
+              {searchTerm 
+                ? `No products match "${searchTerm}" in ${categoryName}. Try a different keyword.`
+                : `No products available in ${categoryName} category.`
+              }
+            </p>
+            <button 
+              onClick={() => setSearchTerm('')}
+              className="btn-primary"
             >
-              Clear filters
+              Clear Search
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-
-      {/* Search and Filters - Swiggy style */}
-      <div className="hidden md:block">
-        <FilterBar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          priceRange={priceRange}
-          setPriceRange={setPriceRange}
-          filterInStock={filterInStock}
-          setFilterInStock={setFilterInStock}
-          resultCount={filteredAndSortedProducts.length}
-          searchPlaceholder="Search products..."
-          onClearFilters={() => {
-            setSearchTerm('');
-            setPriceRange('all');
-            setFilterInStock(false);
-            setSortBy('name');
-          }}
-        />
-      </div>
-
-      {/* Mobile filter button */}
-      <MobileFilterButton
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        priceRange={priceRange}
-        setPriceRange={setPriceRange}
-        filterInStock={filterInStock}
-        setFilterInStock={setFilterInStock}
-        resultCount={filteredAndSortedProducts.length}
-        searchPlaceholder="Search products..."
-        onClearFilters={() => {
-          setSearchTerm('');
-          setPriceRange('all');
-          setFilterInStock(false);
-          setSortBy('name');
-        }}
-      />
-
-      {/* Products Grid - Swiggy style */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {filteredAndSortedProducts.map((p) => (
-          <ProductCard key={p.id} product={p} />
-        ))}
-      </div>
-
-      {/* No results state */}
-      {filteredAndSortedProducts.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">📦</div>
-          <h3 className="text-lg font-medium text-gray-600 mb-2">No products found</h3>
-          <p className="text-gray-500">Try adjusting your search or filters</p>
-          <button
-            onClick={() => {
-              setSearchTerm('');
-              setPriceRange('all');
-              setFilterInStock(false);
-              setSortBy('name');
-            }}
-            className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-          >
-            Clear All Filters
-          </button>
-        </div>
-      )}
-
-      {/* Load More button */}
-      {hasMore && (
-        <div className="text-center">
-          <button
-            onClick={loadMore}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-          >
-            {loadingMore ? 'Loading...' : 'Load More'}
-          </button>
-        </div>
-      )}
     </div>
   );
 }

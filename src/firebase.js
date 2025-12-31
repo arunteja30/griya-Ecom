@@ -21,6 +21,14 @@ export const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
 export const auth = getAuth(app);
 
+// Debug Firebase connection
+console.log('Firebase initialized:', {
+  app: !!app,
+  db: !!db,
+  auth: !!auth,
+  config: firebaseConfig.projectId
+});
+
 /*
 Notes:
 - Replace each <...> value with real credentials.

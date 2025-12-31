@@ -11,21 +11,22 @@ export default function BottomSheet({ isOpen = false, onClose = () => {}, childr
         onClick={onClose}
       />
 
-      {/* sheet container anchored to bottom and sliding up */}
-      <div className={`absolute inset-x-0 ${isOpen ? 'bottom-0' : '-bottom-full'} transition-all duration-300`}> 
-        <div className={`relative bg-white rounded-t-lg shadow-lg p-4 ${maxWidth} mx-auto`} style={{ maxHeight: '90vh', overflow: 'auto' }}>
-          <div className="flex items-start justify-between">
-            <div className="text-lg font-semibold">{title || 'Added to cart'}</div>
-            <button onClick={onClose} className="text-neutral-500 hover:text-neutral-800">Close</button>
+      {/* sheet container - 40% height from bottom */}
+      <div className={`absolute inset-x-0 bottom-0 ${isOpen ? 'translate-y-0' : 'translate-y-full'} transition-transform duration-300`}> 
+        <div className="bg-white rounded-t-2xl shadow-2xl" style={{ height: '40vh', minHeight: '300px' }}>
+          <div className="flex items-center justify-between p-4 border-b border-surface-200">
+            {/* Drag handle */}
+            <div className="w-12 h-1 bg-surface-300 rounded-full mx-auto absolute left-1/2 transform -translate-x-1/2 -top-3"></div>
+            <div className="text-lg font-semibold">{title || 'Select Option'}</div>
+            <button onClick={onClose} className="p-2 hover:bg-surface-100 rounded-full transition-colors">
+              <svg className="w-6 h-6 text-surface-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          <div className="mt-3">{children}</div>
-          {footer ? (
-            <div className="mt-4">{footer}</div>
-          ) : (
-            <div className="mt-4 flex gap-2">
-              <Link to="/cart" onClick={onClose} className="btn btn-primary flex-1 text-center">View Cart</Link>
-              <Link to="/checkout" onClick={onClose} className="btn btn-ghost flex-1 text-center">Checkout</Link>
-            </div>
+          <div className="flex-1 overflow-auto" style={{ height: 'calc(40vh - 80px)' }}>{children}</div>
+          {footer && (
+            <div className="p-4 border-t border-surface-200">{footer}</div>
           )}
         </div>
       </div>

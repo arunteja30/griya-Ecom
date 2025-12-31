@@ -1,479 +1,420 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import Loader from "../components/Loader";
-import { normalizeImageUrl } from "../utils/imageHelpers";
-import { useFirebaseList } from "../hooks/useFirebase";
-import { getCategories } from "../firebaseApi";
-import { useSiteSettings } from '../hooks/useRealtime';
-
-import RecommendationsSection from "../components/RecommendationsSection";
-import HomeSection from "../components/HomeSection";
-import BannerCarousel from "../components/BannerCarousel";
-import { useCart } from '../context/CartContext';
-import * as locationService from '../utils/locationService';
-import { isLocationServiceable, fallbackPincodeServiceable } from '../utils/deliveryArea';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import ProductCard from '../components/ProductCard';
+import { useFirebaseList } from '../hooks/useFirebase';
 
 export default function HomePage() {
-  const { data: siteSettings } = useSiteSettings();
-  const appBg = siteSettings?.theme?.appBackground;
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const { data: productsData } = useFirebaseList("/products");
-  const { data: bannersData } = useFirebaseList('/banners');
-  // read server-configured recommendation maps (optional)
-  const { data: homeConfig } = useFirebaseList('/homeConfig');
-  const { cartItems } = useCart();
-  const [checkingLocation, setCheckingLocation] = useState(true);
-  const [serviceable, setServiceable] = useState(null); // null = unknown/not-detected, true/false = result
-  const [detected, setDetected] = useState({ city: '', pincode: '', weather: null });
-  const [manualPincode, setManualPincode] = useState('');
+  const { data: categories, loading: categoriesLoading, error: categoriesError } = useFirebaseList('/categories');
+  const { data: products, loading: productsLoading, error: productsError } = useFirebaseList('/products');
+  const { data: homeConfig, loading: homeConfigLoading } = useFirebaseList('/homeConfig');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
-  useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    getCategories()
-      .then((data) => {
-        if (!mounted) return;
-        setCategories(data || []);
-        setLoading(false);
-      })
-      .catch((err) => {
-        if (!mounted) return;
-        console.error('Failed to load categories', err);
-        setError(err.message || 'Failed to load categories');
-        setLoading(false);
-      });
+  const categoriesArray = categories ? Object.entries(categories).map(([id, cat]) => ({ id, ...cat })) : [];
+  const productsArray = products ? Object.entries(products).map(([id, prod]) => ({ id, ...prod })) : [];
 
-    // detect location and check serviceability once siteSettings are available
-    async function detectAndCheck() {
-      try {
-        if (!navigator.geolocation) throw new Error('Geolocation not available');
-        // This will prompt the user for permission if not already granted
-        const pos = await locationService.getCurrentPosition({ timeout: 8000 }).catch((e) => { throw e; });
-        if (!mounted) return;
-        const addr = await locationService.reverseGeocode(pos.lat, pos.lon).catch(() => ({ city: '', postcode: '' }));
-        const weather = await locationService.getWeather(pos.lat, pos.lon).catch(() => null);
-        const pincode = addr.postcode || '';
-        // Prefer lat/lon geofence if configured; default radius is 5 km if not set on server
-        const radiusKm = Number(siteSettings?.deliveryRadiusKm ?? 5);
-        const svc = (siteSettings?.storeLocation)
-          ? isLocationServiceable(pos.lat, pos.lon, { ...siteSettings, deliveryRadiusKm: radiusKm })
-          : fallbackPincodeServiceable(pincode, siteSettings || {});
-        if (!mounted) return;
-        setDetected({ city: addr.city || '', pincode, weather, lat: pos.lat, lon: pos.lon });
-        setServiceable(Boolean(svc));
-      } catch (e) {
-        // detection failed; leave serviceable as null
-        console.warn('Location detection failed or denied', e);
-        setServiceable(null);
-      } finally {
-        if (mounted) setCheckingLocation(false);
-      }
-    }
+  // Debug logging
+  console.log('Categories:', { data: categories, loading: categoriesLoading, error: categoriesError });
+  console.log('Products:', { data: products, loading: productsLoading, error: productsError });
+  console.log('HomeConfig:', { data: homeConfig, loading: homeConfigLoading });
 
-    // Only start detecting after siteSettings loaded (so we can compare against server config)
-    if (siteSettings) {
-      detectAndCheck();
-    } else {
-      // poll or wait until siteSettings available; simple timeout fallback
-      const t = setInterval(() => {
-        if (siteSettings) {
-          clearInterval(t);
-          detectAndCheck();
-        }
-      }, 300);
-      // give up after 8s
-      setTimeout(() => { clearInterval(t); if (mounted) setCheckingLocation(false); }, 8000);
-    }
+  // Filter products based on search and category
+  const filteredProducts = productsArray.filter(product => {
+    const matchesSearch = !searchTerm || product.name?.toLowerCase().includes(searchTerm.toLowerCase()) || product.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory || product.categoryId === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
-    return () => { mounted = false; };
-  }, []);
-
-  // derive product lists from realtime products data
-  const productsList = React.useMemo(() => {
-    if (!productsData) return [];
-    return Object.entries(productsData).map(([id, v]) => ({ id, ...v }));
-  }, [productsData]);
-
-  const timeOfDay = React.useMemo(() => {
-    const h = new Date().getHours();
-    if (h < 11) return 'morning';
-    if (h < 16) return 'afternoon';
-    return 'evening';
-  }, []);
-
-  const timeBasedProducts = React.useMemo(() => {
-    const map = {
-      morning: ['breakfast', 'dairy', 'bakery'],
-      afternoon: ['lunch', 'snacks', 'beverages'],
-      evening: ['dinner', 'beverages', 'snacks']
-    };
-    const tags = map[timeOfDay] || [];
-    return productsList.filter(p => {
-      if (!p.tags) return false;
-      const t = Array.isArray(p.tags) ? p.tags : (String(p.tags).split(',') || []).map(s => s.trim());
-      return t.some(tag => tags.includes(String(tag).toLowerCase()));
-    }).slice(0, 8);
-  }, [productsList, timeOfDay]);
-
-  // day-of-week based recommendations (e.g., Monday -> healthy)
-  const dayOfWeek = React.useMemo(() => {
-    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-    return days[new Date().getDay()];
-  }, []);
-
-  // normalize server-provided day/festival maps (keys -> lowercase, values -> array)
-  const serverDays = React.useMemo(() => {
-    const raw = (homeConfig && homeConfig.days) ? homeConfig.days : {};
-    const out = {};
-    Object.entries(raw).forEach(([k, v]) => {
-      const kk = String(k || '').trim().toLowerCase();
-      if (!kk) return;
-      if (Array.isArray(v)) out[kk] = v.map(x => String(x).trim().toLowerCase()).filter(Boolean);
-      else out[kk] = String(v || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-    });
-    return out;
-  }, [homeConfig]);
-
-  const serverFestivals = React.useMemo(() => {
-    const raw = (homeConfig && homeConfig.festivals) ? homeConfig.festivals : {};
-    const out = {};
-    Object.entries(raw).forEach(([k, v]) => {
-      const kk = String(k || '').trim().toLowerCase();
-      if (!kk) return;
-      if (Array.isArray(v)) out[kk] = v.map(x => String(x).trim().toLowerCase()).filter(Boolean);
-      else out[kk] = String(v || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-    });
-    return out;
-  }, [homeConfig]);
-
-  // day-based products using serverDays (fall back to built-in mapping)
-  const dayBasedProducts = React.useMemo(() => {
-    const map = Object.keys(serverDays).length ? serverDays : {
-      monday: ['healthy', 'organic', 'salad'],
-      tuesday: ['italian', 'pasta', 'snacks'],
-      wednesday: ['quick', 'ready-to-eat', 'snacks'],
-      thursday: ['baking', 'dairy', 'bakery'],
-      friday: ['party', 'beverages', 'chips'],
-      saturday: ['grill', 'meat', 'seafood'],
-      sunday: ['family', 'bulk', 'groceries']
-    };
-    const tags = map[dayOfWeek] || [];
-    return productsList.filter(p => {
-      if (!p.tags) return false;
-      const t = Array.isArray(p.tags) ? p.tags : (String(p.tags).split(',') || []).map(s => s.trim().toLowerCase());
-      return t.some(tag => tags.includes(String(tag).toLowerCase()));
-    }).slice(0, 8);
-  }, [productsList, dayOfWeek, serverDays]);
-
-  // Build festival sections from serverFestivals. Render a section for every festival key that yields products.
-  const festivalSections = React.useMemo(() => {
-    const sections = [];
-    Object.entries(serverFestivals).forEach(([festKey, tags]) => {
-      if (!tags || !tags.length) return;
-      const prods = productsList.filter(p => {
-        if (!p.tags) return false;
-        const t = Array.isArray(p.tags) ? p.tags : (String(p.tags).split(',') || []).map(s => s.trim().toLowerCase());
-        return t.some(tag => tags.includes(String(tag).toLowerCase()));
-      }).slice(0, 8);
-      if (prods.length) sections.push({ key: festKey, title: `${festKey.charAt(0).toUpperCase()+festKey.slice(1)} `, products: prods });
-    });
-    return sections;
-  }, [productsList, serverFestivals]);
-
-  const popularProducts = React.useMemo(() => {
-    return [...productsList].sort((a, b) => (b.orderCount || 0) - (a.orderCount || 0)).slice(0, 8);
-  }, [productsList]);
-
-  const offers = React.useMemo(() => {
-    return productsList.filter(p => (p.discount || p.discountPercent || p.discountAmount) > 0).slice(0, 8);
-  }, [productsList]);
-
-  const quickBuys = React.useMemo(() => {
-    return productsList.filter(p => p.inStock !== false).slice(0, 8);
-  }, [productsList]);
-
-  const banners = React.useMemo(() => {
-    // bannersData may be an array or an object keyed by id
-    const global = [];
-    if (bannersData) {
-      if (Array.isArray(bannersData)) {
-        global.push(...bannersData.map((b, i) => ({ id: b.id || `b-${i}`, ...b })));
-      } else {
-        Object.entries(bannersData).forEach(([id, b]) => global.push({ id, ...b }));
-      }
-    }
-
-    // simple personalization: promote category of last cart item
-    const personalized = [];
-    try {
-      if (cartItems && cartItems.length) {
-        const last = cartItems[0];
-        const cat = last.product?.category || last.product?.categoryId;
-        if (cat) {
-          personalized.push({ id: 'p-cart-cat', title: 'Recommended for you', subtitle: last.product?.name, image: last.product?.image || last.product?.imageUrl, ctaLink: `/category/${cat}` });
-        }
-      }
-    } catch (e) {}
-
-    return [...personalized, ...global];
-  }, [bannersData, cartItems]);
-
-  // --- Home config driven sections ---
-  const showConfig = (homeConfig && homeConfig.show) ? homeConfig.show : {};
-
-  const getProductsFromConfig = (key) => {
-    const arr = homeConfig && homeConfig[key];
-    if (!arr || !arr.length) return null;
-    const norm = arr.map(x => String(x || '').trim().toLowerCase()).filter(Boolean);
-    if (!norm.length) return null;
-    const matched = productsList.filter(p => {
-      if (!p) return false;
-      if (p.id && norm.includes(String(p.id).toLowerCase())) return true;
-      const tags = Array.isArray(p.tags) ? p.tags.map(t => String(t||'').trim().toLowerCase()) : (String(p.tags||'').split(',').map(s=>s.trim().toLowerCase()));
-      return tags.some(t => norm.includes(t));
-    }).slice(0, 8);
-    return matched.length ? matched : null;
+  // Helper function to get products by tags
+  const getProductsByTags = (tags, limit = 8) => {
+    if (!tags || !Array.isArray(tags)) return [];
+    return productsArray.filter(product => {
+      if (!product.tags) return false;
+      const productTags = Array.isArray(product.tags) 
+        ? product.tags 
+        : String(product.tags).split(',').map(s => s.trim().toLowerCase());
+      return tags.some(tag => productTags.includes(String(tag).toLowerCase()));
+    }).slice(0, limit);
   };
 
-  const dealsProducts = getProductsFromConfig('deals') || offers;
-  const quickBuysProducts = getProductsFromConfig('quickBuys') || quickBuys;
-  const recommendedProducts = getProductsFromConfig('recommended');
-  const popularProductsFinal = getProductsFromConfig('popular') || popularProducts;
-  const showFestivals = showConfig.festivals !== false; // default true
-
-  // If still loading categories or checking location, show Loader
-  const restrictionsConfigured = Boolean((siteSettings?.storeLocation && (siteSettings?.deliveryRadiusKm || siteSettings?.deliveryRadius)) || siteSettings?.serviceablePincodes);
-
-  if (loading) return <Loader />;
-
-  // If restrictions are configured on server, wait for location check to finish before showing the content
-  if (restrictionsConfigured && checkingLocation) return <Loader />;
-
-  // If we determined not serviceable, show a message and allow manual pincode check
-  if (serviceable === false) {
-    return (
-      <main className="space-y-4 pb-6">
-        <section className="max-w-3xl mx-auto px-4 py-12 text-center">
-          <div className="text-4xl mb-4">📍</div>
-          <h2 className="text-2xl font-bold mb-2">We do not deliver to your area</h2>
-          <p className="text-gray-600 mb-4">Our service currently doesn't cover {detected.city || 'your location'} ({detected.pincode || 'unknown pincode'}).</p>
-          <div className="max-w-sm mx-auto flex gap-2">
-            <input value={manualPincode} onChange={(e) => setManualPincode(e.target.value.replace(/\D/g, '').slice(0,6))} placeholder="Enter pincode" className="w-full px-3 py-2 border rounded" />
-            <button onClick={() => {
-              const svc = fallbackPincodeServiceable(manualPincode, siteSettings || {});
-              setServiceable(Boolean(svc));
-              if (svc) setDetected((d) => ({ ...d, pincode: manualPincode }));
-            }} className="px-4 py-2 bg-orange-500 text-white rounded">Check</button>
-          </div>
-          <div className="mt-4 text-sm text-gray-500">Or you can still browse the store, but we may not deliver to your address.</div>
-          <div className="mt-4">
-            <button onClick={() => setServiceable(true)} className="px-4 py-2 border rounded">Continue anyway</button>
-          </div>
-        </section>
-      </main>
-    );
-  }
-
-  // If restrictions configured and serviceability is still unknown (e.g., user denied location and didn't enter pincode), prompt user
-  if (restrictionsConfigured && serviceable === null) {
-    return (
-      <main className="space-y-4 pb-6">
-        <section className="max-w-3xl mx-auto px-4 py-12 text-center">
-          <div className="text-4xl mb-4">📍</div>
-          <h2 className="text-2xl font-bold mb-2">Check delivery availability</h2>
-          <p className="text-gray-600 mb-4">We need to know your location to show if we deliver to your area. Please allow location access or enter your pincode.</p>
-          <div className="flex gap-2 justify-center mb-4">
-            <button onClick={async () => {
-              setCheckingLocation(true);
-              try {
-                const pos = await locationService.getCurrentPosition({ timeout: 8000 });
-                const addr = await locationService.reverseGeocode(pos.lat, pos.lon).catch(()=>({ postcode: '' }));
-                const weather = await locationService.getWeather(pos.lat, pos.lon).catch(()=>null);
-                const pincode = addr.postcode || '';
-                const radiusKm = Number(siteSettings?.deliveryRadiusKm ?? 5);
-                const svc = (siteSettings?.storeLocation)
-                  ? isLocationServiceable(pos.lat, pos.lon, { ...siteSettings, deliveryRadiusKm: radiusKm })
-                  : fallbackPincodeServiceable(pincode, siteSettings || {});
-                setDetected({ city: addr.city || '', pincode, weather, lat: pos.lat, lon: pos.lon });
-                setServiceable(Boolean(svc));
-              } catch (e) {
-                console.warn('Location detect failed', e);
-                setServiceable(null);
-              } finally { setCheckingLocation(false); }
-            }} className="px-4 py-2 bg-orange-500 text-white rounded">Detect my location</button>
-            <div className="flex items-center gap-2">
-              <input value={manualPincode} onChange={(e) => setManualPincode(e.target.value.replace(/\D/g, '').slice(0,6))} placeholder="Enter pincode" className="px-3 py-2 border rounded" />
-              <button onClick={() => {
-                const svc = fallbackPincodeServiceable(manualPincode, siteSettings || {});
-                setServiceable(Boolean(svc));
-                if (svc) setDetected((d) => ({ ...d, pincode: manualPincode }));
-              }} className="px-4 py-2 bg-orange-500 text-white rounded">Check</button>
-            </div>
-          </div>
-          <div className="text-sm text-gray-500">You can also continue browsing, but delivery may not be available to your address.</div>
-          <div className="mt-4">
-            <button onClick={() => setServiceable(true)} className="px-4 py-2 border rounded">Continue anyway</button>
-          </div>
-        </section>
-      </main>
-    );
-  }
+  // Dynamic sections from homeConfig
+  const showConfig = homeConfig?.show || {};
+  
+  // Get products for different sections
+  const featuredProducts = homeConfig?.featured ? getProductsByTags(homeConfig.featured) : productsArray.filter(p => p.featured).slice(0, 6);
+  const popularProducts = homeConfig?.popular ? getProductsByTags(homeConfig.popular) : productsArray.filter(p => p.popular || p.orderCount > 10).slice(0, 8);
+  const dealsProducts = homeConfig?.deals ? getProductsByTags(homeConfig.deals) : productsArray.filter(p => p.discount && p.discount > 0).slice(0, 8);
+  const quickBuyProducts = homeConfig?.quickBuys ? getProductsByTags(homeConfig.quickBuys) : productsArray.filter(p => p.inStock !== false).slice(0, 8);
+  const recommendedProducts = homeConfig?.recommended ? getProductsByTags(homeConfig.recommended) : productsArray.slice(0, 8);
+  
+  // Festival sections
+  const festivalSections = React.useMemo(() => {
+    if (!homeConfig?.festivals) return [];
+    const sections = [];
+    Object.entries(homeConfig.festivals).forEach(([festKey, tags]) => {
+      if (!tags || !Array.isArray(tags)) return;
+      const products = getProductsByTags(tags, 8);
+      if (products.length > 0) {
+        sections.push({
+          key: festKey,
+          title: `${festKey.charAt(0).toUpperCase()}${festKey.slice(1)} Specials`,
+          products
+        });
+      }
+    });
+    return sections;
+  }, [homeConfig, productsArray]);
 
   return (
-    <main className="space-y-4 pb-6">
-
-       {/* Banners */}
-      <section>
-        <BannerCarousel banners={banners} />
-      </section>
-     
-
-      {/* Hero Section (uses theme app background) */}
-     <section style={{ background: appBg || undefined }}>
-        <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen">
+      {/* Loading State */}
+      {(categoriesLoading || productsLoading || homeConfigLoading) && (
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="text-center space-y-4">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
-              Fresh Groceries Delivered Fast
-            </h1>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Order fresh groceries and daily essentials with quick delivery
+            <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p className="text-surface-600">Loading fresh groceries...</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Error State */}
+      {(categoriesError || productsError) && (
+        <div className="px-mobile py-6">
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
+            <p className="text-red-700 font-medium">Failed to load data</p>
+            <p className="text-red-600 text-sm mt-1">
+              {categoriesError?.message || productsError?.message || 'Please check your internet connection'}
             </p>
           </div>
         </div>
+      )}
+      {/* Hero Section with Search */}
+      <section className="bg-gradient-to-br from-primary-500 via-primary-600 to-fresh-500 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
+        <div className="px-mobile py-8 relative">
+          <div className="space-y-6">
+            {/* Hero Text */}
+            <div className="text-center space-y-3">
+              <h1 className="text-3xl sm:text-4xl font-bold">
+                Fresh Groceries
+                <br />
+                <span className="text-accent-gold">Delivered Fast</span>
+              </h1>
+              <p className="text-lg text-white/90">
+                Get fresh groceries delivered to your door in 30 minutes
+              </p>
+            </div>
+
+            {/* Search Bar */}
+            <div className="max-w-md mx-auto relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg className="h-6 w-6 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search for groceries..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-bar text-surface-900 shadow-float w-full"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                >
+                  <svg className="h-5 w-5 text-surface-400 hover:text-surface-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            {/* Quick Stats */}
+            <div className="flex justify-center gap-8 pt-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold">30min</div>
+                <div className="text-sm opacity-80">Delivery</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">1000+</div>
+                <div className="text-sm opacity-80">Products</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">24/7</div>
+                <div className="text-sm opacity-80">Support</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Wave Separator */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 120" className="w-full h-8 fill-surface-50">
+            <path d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,64C960,75,1056,85,1152,80C1248,75,1344,53,1392,42.7L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"></path>
+          </svg>
+        </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="max-w-7xl mx-auto px-4">
-        {error ? (
-          <div className="text-center py-12">
-            <div className="text-red-600 font-medium mb-2">Failed to load categories</div>
-            <div className="text-sm text-gray-600">{error}</div>
-          </div>
-        ) : categories && categories.length ? (
+      {/* Categories Stories - Hidden when searching */}
+      {!searchTerm && (
+        <section className="py-6 px-mobile">
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-800">Shop by Category</h2>
-            {/* compact grid: smaller cards/images on mobile */}
-            <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {categories.map((col) => (
+            <h2 className="text-xl font-bold text-surface-900">Shop by Category</h2>
+            <div className="grid grid-cols-4 gap-3">
+              <Link
+                to="/groceries"
+                className="group flex flex-col items-center space-y-2"
+              >
+                <div className="relative w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl group-hover:scale-105 transition-all duration-300 border border-white/30 hover:border-primary-300/50">
+                  {/* Glow effect */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary-400/30 to-primary-500/30 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+                  <svg className="w-8 h-8 text-primary-500 relative z-10 group-hover:scale-110 transition-transform duration-300 drop-shadow-sm" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
+                  </svg>
+                </div>
+                <span className="text-xs font-medium text-surface-900 text-center group-hover:text-primary-600 transition-colors drop-shadow-sm">All</span>
+              </Link>
+
+              {categoriesArray.map((category) => (
                 <Link
-                  key={col.id}
-                  to={`/category/${col.slug || col.id}`}
-                  className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100"
+                  key={category.id}
+                  to={`/category/${category.id}`}
+                  className="group flex flex-col items-center space-y-2"
                 >
-                  <div className="relative aspect-square bg-gradient-to-br from-orange-50 to-orange-100">
-                    <img
-                      src={normalizeImageUrl(col?.image || col?.imageUrl || '/placeholder.jpg')}
-                      alt={col?.title || col?.name || col.id}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/8 transition-colors duration-200" />
-                  </div>
-                  <div className="p-2 text-center">
-                    <div className="font-medium text-gray-800 text-xs group-hover:text-orange-600 transition-colors line-clamp-2">
-                      {col?.title || col?.name || col.id}
+                  <div className="relative w-16 h-16 bg-gradient-to-br from-primary-100 to-fresh-100 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg hover:shadow-xl group-hover:scale-105 transition-all duration-300 border border-white/30 hover:border-fresh-300/50">
+                    {/* Enhanced Glow effect */}
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary-400/30 to-fresh-400/30 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+                    {category.imageUrl || category.image ? (
+                      <img 
+                        src={category.imageUrl || category.image} 
+                        alt={category.name}
+                        className="w-full h-full object-cover rounded-2xl group-hover:scale-110 transition-transform duration-300"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className="w-8 h-8 bg-gradient-to-br from-fresh-400 to-fresh-500 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300 relative z-10" style={{display: category.imageUrl || category.image ? 'none' : 'flex'}}>
+                      <span className="text-white font-bold text-sm drop-shadow-sm">
+                        {category.name?.charAt(0)}
+                      </span>
                     </div>
                   </div>
+                  <span className="text-xs font-medium text-surface-900 text-center line-clamp-2 group-hover:text-primary-600 transition-colors drop-shadow-sm">
+                    {category.name}
+                  </span>
                 </Link>
               ))}
             </div>
           </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">🛒</div>
-            <p className="text-gray-600">No categories available</p>
+        </section>
+      )}
+
+      {/* Featured Products - Hidden when searching */}
+      {!searchTerm && showConfig.featured !== false && featuredProducts.length > 0 && (
+        <section className="py-6 px-mobile">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-surface-900">✨ Featured</h2>
+              <Link to="/collections" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                See all
+              </Link>
+            </div>
+            <div className="story-scroll">
+              {featuredProducts.map((product) => (
+                <div key={`featured-${product.id}`} className="w-32 flex-shrink-0">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
           </div>
-        )}
+        </section>
+      )}
+
+      {/* Festival Sections - Hidden when searching */}
+      {!searchTerm && festivalSections.map((section) => (
+        <section key={section.key} className="py-6 px-mobile">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-surface-900">{section.title}</h2>
+              <Link to={`/collections`} className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                See all
+              </Link>
+            </div>
+            <div className="story-scroll">
+              {section.products.map((product) => (
+                <div key={`${section.key}-${product.id}`} className="w-32 flex-shrink-0">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ))}
+
+      {/* Popular Products - Hidden when searching */}
+      {!searchTerm && showConfig.popular !== false && popularProducts.length > 0 && (
+        <section className="py-6 px-mobile">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-surface-900">🔥 Popular</h2>
+              <Link to="/collections" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                See all
+              </Link>
+            </div>
+            <div className="story-scroll">
+              {popularProducts.map((product) => (
+                <div key={`popular-${product.id}`} className="w-32 flex-shrink-0">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Deals & Offers - Hidden when searching */}
+      {!searchTerm && showConfig.deals !== false && dealsProducts.length > 0 && (
+        <section className="py-6 px-mobile">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-surface-900">💰 Best Deals</h2>
+              <Link to="/collections" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                See all
+              </Link>
+            </div>
+            <div className="story-scroll">
+              {dealsProducts.map((product) => (
+                <div key={`deals-${product.id}`} className="w-32 flex-shrink-0">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Quick Buys - Hidden when searching */}
+      {!searchTerm && showConfig.quickBuys !== false && quickBuyProducts.length > 0 && (
+        <section className="py-6 px-mobile">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-surface-900">⚡ Quick Buys</h2>
+              <Link to="/collections" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                See all
+              </Link>
+            </div>
+            <div className="story-scroll">
+              {quickBuyProducts.map((product) => (
+                <div key={`quickbuy-${product.id}`} className="w-32 flex-shrink-0">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Recommended for You - Hidden when searching */}
+      {!searchTerm && showConfig.recommended !== false && recommendedProducts.length > 0 && (
+        <section className="py-6 px-mobile">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-surface-900">👍 Recommended</h2>
+              <Link to="/collections" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                See all
+              </Link>
+            </div>
+            <div className="story-scroll">
+              {recommendedProducts.map((product) => (
+                <div key={`recommended-${product.id}`} className="w-32 flex-shrink-0">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Promotional Banner - Hidden when searching */}
+      {!searchTerm && (
+        <section className="py-6 px-mobile">
+          <div className="card-glass bg-gradient-to-r from-accent-coral/20 to-accent-gold/20 p-6 rounded-3xl border border-accent-coral/20">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold text-surface-900">Free Delivery</h3>
+                <p className="text-surface-600">On orders above ₹199</p>
+                <button className="btn-fresh text-sm px-6 py-2">
+                  Shop Now
+                </button>
+              </div>
+              <div className="text-6xl opacity-50">🚚</div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Search Results / All Products Grid */}
+      <section className="py-6 px-mobile pb-safe">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-surface-900">
+              {searchTerm 
+                ? `Search results for "${searchTerm}"` 
+                : selectedCategory === 'all' 
+                  ? 'All Products' 
+                  : `${selectedCategory} Products`
+              }
+            </h2>
+            {searchTerm ? (
+              <span className="text-sm text-surface-500">
+                {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''}
+              </span>
+            ) : (
+              <Link to="/groceries" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                See all
+              </Link>
+            )}
+          </div>
+
+          {filteredProducts.length > 0 ? (
+            <div className="story-scroll">
+              {filteredProducts.map((product) => (
+                <div key={`all-${product.id}`} className="w-32 flex-shrink-0">
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-lg font-semibold text-surface-900 mb-2">
+                {searchTerm ? 'No products found' : 'No products available'}
+              </h3>
+              <p className="text-surface-500 mb-6">
+                {searchTerm 
+                  ? `No products match your search "${searchTerm}". Try a different keyword or browse categories.`
+                  : selectedCategory === 'all'
+                    ? 'No products are available at the moment.'
+                    : `No products found in ${selectedCategory} category.`
+                }
+              </p>
+              <button 
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedCategory('all');
+                }}
+                className="btn-primary"
+              >
+                {searchTerm ? 'Clear Search' : 'Show All Products'}
+              </button>
+            </div>
+          )}
+        </div>
       </section>
-
-     
-
-      {/* Dynamic Home Sections */}
-      <section className="max-w-7xl mx-auto px-4 space-y-4">
-        {timeBasedProducts && timeBasedProducts.length > 0 && (
-          <HomeSection
-            title={timeOfDay === 'morning' ? 'Good Morning' : timeOfDay === 'afternoon' ? 'Good Afternoon' : 'Good Evening'}
-            subtitle="Handpicked for this time"
-            products={timeBasedProducts}
-            layout="carousel"
-            seeAllLink="/groceries"
-            limit={8}
-          />
-        )}
-
-        {dayBasedProducts && dayBasedProducts.length > 0 && (
-          <HomeSection
-            title={"Today's Picks"}
-            subtitle={`Best for ${dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1)}`}
-            products={dayBasedProducts}
-            layout="carousel"
-            seeAllLink="/groceries"
-             limit={8}
-           />
-         )}
-
-         {/* render festival sections configured on server (respect admin toggle) */}
-         {showFestivals && festivalSections && festivalSections.length > 0 && festivalSections.map(s => (
-           <HomeSection
-             key={`fest-${s.key}`}
-             title={s.title}
-             subtitle="Festive essentials"
-             products={s.products}
-             layout="grid"
-             limit={8}
-             seeAllLink={`/category/${encodeURIComponent(s.key)}`}
-           />
-         ))}
-
-         {/* Popular (configurable) */}
-         {showConfig.popular !== false && popularProductsFinal && popularProductsFinal.length > 0 && (
-           <HomeSection
-             title="Popular near you"
-             products={popularProductsFinal}
-             layout="carousel"
-             seeAllLink="/groceries"
-             limit={8}
-           />
-         )}
-
-         {/* Deals (configurable) */}
-         {showConfig.deals !== false && dealsProducts && dealsProducts.length > 0 && (
-           <HomeSection
-             title="Deals & Offers"
-             products={dealsProducts}
-             layout="grid"
-             seeAllLink="/category/Deals"
-             limit={8}
-           />
-         )}
-
-         {/* Recommended: prefer admin-provided list, else use RecommendationsSection */}
-         {showConfig.recommended !== false && (recommendedProducts && recommendedProducts.length > 0 ? (
-           <HomeSection
-             title="Recommended for You"
-             products={recommendedProducts}
-             layout="carousel"
-             seeAllLink="/groceries"
-             limit={8}
-           />
-         ) : (
-           <RecommendationsSection title="Recommended for You" limit={8} />
-         ))}
-
-         {/* Quick Buys (configurable) */}
-         {showConfig.quickBuys !== false && quickBuysProducts && quickBuysProducts.length > 0 && (
-           <HomeSection
-             title="Quick Buys"
-             subtitle="Everyday essentials"
-             products={quickBuysProducts}
-             layout="grid"
-             seeAllLink="/groceries"
-             limit={8}
-           />
-         )}
-      </section>
-
-    </main>
+    </div>
   );
 }

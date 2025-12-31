@@ -44,15 +44,45 @@ export function CartProvider({ children }) {
 
   const clearCart = () => setCartItems([]);
 
+  const updateCartQuantity = (productId, quantity) => {
+    if (quantity === 0) {
+      removeFromCart(productId);
+    } else {
+      updateQuantity(productId, quantity);
+    }
+  };
+
   const cartTotal = cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * (item.quantity || 0), 0);
 
+  // Transform cartItems to match expected cart format
+  const cart = cartItems.map(item => ({
+    id: item.id,
+    ...item.product,
+    quantity: item.quantity
+  }));
+
   return (
-    <CartContext.Provider value={{ cartItems, cartTotal, addToCart, updateQuantity, removeFromCart, clearCart }}>
+    <CartContext.Provider value={{ 
+      cart, 
+      cartItems, 
+      cartTotal, 
+      addToCart, 
+      updateQuantity, 
+      updateCartQuantity,
+      removeFromCart, 
+      clearCart 
+    }}>
       {children}
     </CartContext.Provider>
   );
 }
 
+// Custom hook to use cart context
 export function useCart() {
-  return useContext(CartContext);
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
 }
+

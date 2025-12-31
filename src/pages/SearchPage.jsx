@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { useFirebaseList } from '../hooks/useFirebase';
 
-export default function AllProductsPage() {
+export default function SearchPage() {
   const location = useLocation();
   const { data: products, loading: productsLoading } = useFirebaseList('/products');
   const { data: categories, loading: categoriesLoading } = useFirebaseList('/categories');
@@ -69,7 +69,7 @@ export default function AllProductsPage() {
       {/* Search Header */}
       <div className="bg-gradient-to-br from-primary-500 to-fresh-500 text-white px-mobile py-6">
         <div className="space-y-4">
-          <h1 className="text-2xl font-bold">All Products</h1>
+          <h1 className="text-2xl font-bold">Search Products</h1>
           
           {/* Search Form */}
           <form onSubmit={handleSearch} className="space-y-3">
