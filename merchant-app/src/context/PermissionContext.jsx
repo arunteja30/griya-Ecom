@@ -27,8 +27,13 @@ export const PermissionProvider = ({ children }) => {
 
     try {
       const merchantData = JSON.parse(savedMerchant);
+
+      // Use the saved merchant data immediately as a fallback so UI can
+      // render based on stored permissions while we subscribe to realtime updates.
+      setMerchant(merchantData);
+
       const firebaseKey = merchantData.firebaseKey;
-      
+
       if (!firebaseKey) {
         console.error('No firebaseKey found in merchant data');
         setLoading(false);
@@ -37,17 +42,21 @@ export const PermissionProvider = ({ children }) => {
 
       // Listen to merchant data changes using the Firebase auto-generated key
       const merchantRef = ref(db, `merchants/${firebaseKey}`);
-      const unsubscribe = onValue(merchantRef, (snapshot) => {
-        if (snapshot.exists()) {
-          setMerchant(snapshot.val());
-        } else {
-          setMerchant(null);
+      const unsubscribe = onValue(
+        merchantRef,
+        (snapshot) => {
+          if (snapshot.exists()) {
+            setMerchant(snapshot.val());
+          } else {
+            setMerchant(null);
+          }
+          setLoading(false);
+        },
+        (error) => {
+          console.error('Error loading merchant permissions:', error);
+          setLoading(false);
         }
-        setLoading(false);
-      }, (error) => {
-        console.error('Error loading merchant permissions:', error);
-        setLoading(false);
-      });
+      );
 
       return () => unsubscribe();
     } catch (error) {

@@ -155,6 +155,13 @@ export default function CartPage() {
                         </button>
                       </div>
 
+                      {/* Stock Warning */}
+                      {p.stock !== undefined && p.stock !== null && p.stock <= 5 && (
+                        <div className="mt-2 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                          {p.stock === 0 ? 'Out of stock' : `Only ${p.stock} left in stock`}
+                        </div>
+                      )}
+
                       {/* Price and Quantity Controls */}
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center bg-surface-100 rounded-lg">
@@ -171,8 +178,17 @@ export default function CartPage() {
                             {item.quantity}
                           </div>
                           <button 
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)} 
-                            className="w-8 h-8 flex items-center justify-center text-surface-600 hover:text-primary-600 transition-colors"
+                            onClick={() => {
+                              const newQty = item.quantity + 1;
+                              // Check stock limit before allowing increase
+                              if (p.stock === undefined || p.stock === null || newQty <= p.stock) {
+                                updateQuantity(item.id, newQty);
+                              } else {
+                                showToast(`Only ${p.stock} items available`, 'warning');
+                              }
+                            }}
+                            className="w-8 h-8 flex items-center justify-center text-surface-600 hover:text-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={p.stock !== undefined && p.stock !== null && item.quantity >= p.stock}
                             aria-label="Increase quantity"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

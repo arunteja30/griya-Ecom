@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NotificationService } from '../utils/notificationService';
+import { SoundNotification } from '../utils/soundNotification';
 
 export default function NotificationBell({ merchant }) {
   const [notifications, setNotifications] = useState([]);
@@ -12,13 +13,57 @@ export default function NotificationBell({ merchant }) {
     const unsubscribe = NotificationService.subscribeToMerchantNotifications(
       merchant.id,
       (newNotifications) => {
+        const prevUnreadCount = unreadCount;
+        const newUnreadCount = newNotifications.filter(n => !n.read).length;
+        
         setNotifications(newNotifications);
-        setUnreadCount(newNotifications.filter(n => !n.read).length);
+        setUnreadCount(newUnreadCount);
+        
+        // Trigger sound for new notifications
+        if (newUnreadCount > prevUnreadCount && prevUnreadCount >= 0) {
+          // Play sound based on notification type
+          const latestNotification = newNotifications.find(n => !n.read);
+          const soundType = latestNotification?.type || 'default';
+          
+          SoundNotification.playNotificationSound(soundType);
+          
+          // Add vibration for mobile devices
+          if (latestNotification?.type === 'new_order') {
+            SoundNotification.vibrate([300, 100, 300, 100, 300]);
+          } else {
+            SoundNotification.vibrate([150, 50, 150]);
+          }
+          
+          // Show browser notification if permission granted
+          if ('Notification' in window && Notification.permission === 'granted') {
+            if (latestNotification) {
+              const notification = new Notification(latestNotification.title, {
+                body: latestNotification.message,
+                icon: '/favicon.ico',
+                tag: 'merchant-notification',
+                requireInteraction: latestNotification.type === 'new_order',
+                silent: false
+              });
+              
+              // Auto close after 6 seconds for non-urgent notifications
+              if (latestNotification.type !== 'new_order') {
+                setTimeout(() => notification.close(), 6000);
+              }
+            }
+          }
+        }
       }
     );
 
     return unsubscribe;
-  }, [merchant?.id]);
+  }, [merchant?.id, unreadCount]);
+
+  // Request notification permission on component mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
 
   const handleMarkAsRead = async (notificationId) => {
     await NotificationService.markAsRead(notificationId, 'merchants');
@@ -57,15 +102,19 @@ export default function NotificationBell({ merchant }) {
     <div className="relative">
       <button
         onClick={() => setShowNotifications(!showNotifications)}
-        className="relative p-2 text-gray-500 hover:text-gray-700 transition-colors rounded-lg hover:bg-gray-100"
+        className={`relative p-2 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+          unreadCount > 0 
+            ? 'text-primary-600 hover:text-primary-800 bg-primary-50' 
+            : 'text-surface-400 hover:text-surface-600 hover:bg-surface-50'
+        }`}
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                 d="M15 17h5l-3.5-3.5a7 7 0 01-1.5-4.5V9a6 6 0 10-12 0v0c0 1.677-.46 3.346-1.5 4.5L0 17h5m5 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
-            {unreadCount > 99 ? '99+' : unreadCount}
+          <span className="absolute -top-1 -right-1 bg-danger-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium animate-pulse">
+            {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
@@ -76,23 +125,25 @@ export default function NotificationBell({ merchant }) {
             className="fixed inset-0 z-40"
             onClick={() => setShowNotifications(false)}
           />
-          <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden">
-            <div className="p-3 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-medium text-gray-900">Notifications</h3>
+          <div className="card absolute right-0 top-full mt-2 w-80 max-w-sm bg-white/95 backdrop-blur-md border border-surface-200 rounded-2xl shadow-float z-50 max-h-96 overflow-hidden">
+            <div className="p-4 border-b border-surface-200 flex items-center justify-between">
+              <h3 className="font-semibold text-surface-900 text-lg">🏪 Store Alerts</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
-                  className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+                  className="text-sm text-primary-600 hover:text-primary-800 font-medium"
                 >
                   Mark all read
                 </button>
               )}
             </div>
             
-            <div className="max-h-64 overflow-y-auto">
+            <div className="max-h-80 overflow-y-auto">
               {notifications.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  No notifications yet
+                <div className="p-6 text-center text-surface-500">
+                  <div className="text-4xl mb-3">🔔</div>
+                  <p className="font-medium">No notifications yet</p>
+                  <p className="text-sm mt-1">Order and payment alerts will appear here</p>
                 </div>
               ) : (
                 notifications.slice(0, 10).map((notification) => (

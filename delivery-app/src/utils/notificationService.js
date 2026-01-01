@@ -2,6 +2,46 @@ import { ref, push, update, onValue, off, get } from 'firebase/database';
 import { db } from '../firebase';
 
 export class NotificationService {
+  // Send driver-specific notification
+  static async sendDriverNotification(driverId, title, message, type = 'order_update', orderId = null, deliveryAddress = null) {
+    try {
+      const notification = {
+        type,
+        title,
+        message,
+        orderId,
+        deliveryAddress,
+        timestamp: new Date().toISOString(),
+        read: false,
+        priority: 'high'
+      };
+
+      await push(ref(db, `/notifications/drivers/${driverId}`), notification);
+      console.log(`Notification sent to driver ${driverId}`);
+    } catch (error) {
+      console.error('Error sending driver notification:', error);
+    }
+  }
+
+  // Send general driver notifications (all drivers)
+  static async sendGeneralDriverNotification(title, message, type = 'system_update') {
+    try {
+      const notification = {
+        type,
+        title,
+        message,
+        timestamp: new Date().toISOString(),
+        read: false,
+        priority: 'medium'
+      };
+
+      await push(ref(db, `/notifications/drivers/general`), notification);
+      console.log('General notification sent to all drivers');
+    } catch (error) {
+      console.error('Error sending general driver notification:', error);
+    }
+  }
+
   // Send customer-specific notification
   static async sendCustomerNotification(customerPhone, orderId, title, message, type = 'order_update') {
     try {

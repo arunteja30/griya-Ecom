@@ -3,7 +3,7 @@ import { usePermissions } from '../context/PermissionContext'
 
 const MobileNavigation = () => {
   const location = useLocation()
-  const { hasPermission } = usePermissions()
+  const { hasPermission, permissions } = usePermissions()
 
   const allNavItems = [
     {
@@ -63,25 +63,30 @@ const MobileNavigation = () => {
   // Filter nav items based on permissions
   const navItems = allNavItems.filter(item => {
     if (!item.permission) return true // Always show if no permission required
+
+    // If permission explicitly present in permissions object, use it.
+    if (permissions && Object.keys(permissions).length > 0) {
+      return permissions[item.permission] === true
+    }
+
+    // Fallback to hasPermission (which may use saved merchant immediately)
     return hasPermission(item.permission)
   })
 
   return (
     <nav className="mobile-nav">
-      <div className="flex">
-        {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`mobile-nav-item ${
-              location.pathname === item.path ? 'active' : ''
-            }`}
-          >
-            <div className="mb-1">{item.icon}</div>
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </div>
+      {navItems.map((item) => (
+        <Link
+          key={item.path}
+          to={item.path}
+          className={`nav-item ${
+            location.pathname === item.path ? 'active' : ''
+          }`}
+        >
+          <div className="mb-1">{item.icon}</div>
+          <span className="text-xs font-semibold">{item.label}</span>
+        </Link>
+      ))}
     </nav>
   )
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ref, get } from 'firebase/database'
 import { db } from '../firebase'
 import { usePermissions } from '../context/PermissionContext'
+import { SoundNotification } from '../utils/soundNotification'
 
 const Dashboard = ({ merchant }) => {
   const { hasPermission } = usePermissions()

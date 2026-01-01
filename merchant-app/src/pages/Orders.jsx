@@ -3,6 +3,7 @@ import { ref, get, update } from 'firebase/database'
 import { db } from '../firebase'
 import { useToast } from '../components/Toast'
 import { NotificationService } from '../utils/notificationService'
+import { SoundNotification } from '../utils/soundNotification'
 
 // Stock management functions
 const updateProductStock = async (productName, quantityToDeduct) => {
@@ -176,6 +177,15 @@ const Orders = () => {
         status: newStatus,
         updatedAt: new Date().toISOString()
       })
+
+      // Play success sound for order confirmation
+      if (newStatus === 'confirmed') {
+        SoundNotification.playSuccess();
+      } else if (newStatus === 'delivered') {
+        SoundNotification.playSuccess();
+      } else if (newStatus === 'cancelled') {
+        SoundNotification.playNotificationSound('warning');
+      }
 
       // Update stock when order is confirmed
       if (newStatus === 'confirmed' && currentOrder?.items) {

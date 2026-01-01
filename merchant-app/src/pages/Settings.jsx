@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { ref, get, set } from 'firebase/database'
 import { auth, db } from '../firebase'
@@ -271,7 +272,7 @@ const Settings = ({ merchant, onLogout }) => {
         </div>
         
         <div className="p-4 space-y-2">
-          <button className="w-full flex items-center justify-between p-3 text-left rounded-lg hover:bg-gray-50 transition-colors touch-target">
+          <Link to="/help" className="w-full flex items-center justify-between p-3 text-left rounded-lg hover:bg-gray-50 transition-colors touch-target">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                 <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,9 +287,9 @@ const Settings = ({ merchant, onLogout }) => {
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </button>
+          </Link>
 
-          <button className="w-full flex items-center justify-between p-3 text-left rounded-lg hover:bg-gray-50 transition-colors touch-target">
+          <Link to="/support" className="w-full flex items-center justify-between p-3 text-left rounded-lg hover:bg-gray-50 transition-colors touch-target">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                 <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -303,9 +304,9 @@ const Settings = ({ merchant, onLogout }) => {
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </button>
+          </Link>
 
-          <button className="w-full flex items-center justify-between p-3 text-left rounded-lg hover:bg-gray-50 transition-colors touch-target">
+          <Link to="/privacy" className="w-full flex items-center justify-between p-3 text-left rounded-lg hover:bg-gray-50 transition-colors touch-target">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                 <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,7 +321,7 @@ const Settings = ({ merchant, onLogout }) => {
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </button>
+          </Link>
         </div>
       </div>
 

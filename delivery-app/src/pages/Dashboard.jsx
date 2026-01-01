@@ -3,13 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ref, onValue, update } from 'firebase/database';
 import { db } from '../firebase';
 import { showToast } from '../utils/toast';
-import NotificationBell from '../components/NotificationBell';
+import MobileLayout from '../components/MobileLayout';
 import { NotificationService } from '../utils/notificationService';
 
 export default function Dashboard() {
   const [orders, setOrders] = useState({});
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('available'); // available, assigned, picked, completed
+  const [filter, setFilter] = useState('available');
   const [deliveryPerson, setDeliveryPerson] = useState(null);
   const navigate = useNavigate();
 
@@ -33,11 +33,6 @@ export default function Dashboard() {
     return () => unsubscribe();
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('deliveryPerson');
-    navigate('/login');
-  };
-
   const acceptOrder = async (orderId) => {
     try {
       const order = orders[orderId];
@@ -50,7 +45,39 @@ export default function Dashboard() {
       
       await update(ref(db), updates);
       
-      // Send notification to customer
+      // Send notification to driver about order assignment
+      await NotificationService.sendDriverNotification(
+        deliveryPerson.id,
+        '✅ Order Assigned!',
+        `You have successfully accepted order #${orderId.slice(-6)}. Please proceed to pickup location.`,
+        'order_assigned',
+        orderId,
+        order?.address ? `${order.address.line1}, ${order.address.city}` : null
+      );
+      
+      // Play success sound for driver
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Success sound - ascending notes
+        oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1); // E5
+        oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2); // G5
+        
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.4);
+      } catch (error) {
+        console.log('Audio feedback not supported');
+      }
+      
       if (order?.address?.phone) {
         await NotificationService.sendCustomerNotification(
           order.address.phone,
@@ -74,7 +101,6 @@ export default function Dashboard() {
         [`/orders/${orderId}/status`]: newStatus
       };
 
-      // Add timestamp for status changes
       const timestamp = new Date().toISOString();
       switch (newStatus) {
         case 'picked':
@@ -90,7 +116,6 @@ export default function Dashboard() {
 
       await update(ref(db), statusUpdates);
       
-      // Send customer notification based on status
       if (order?.address?.phone) {
         let title, message;
         
@@ -135,9 +160,6 @@ export default function Dashboard() {
       case 'assigned':
         return order.deliveryPersonId === deliveryPerson?.id && 
                (order.status === 'assigned' || order.status === 'picked' || order.status === 'in-transit');
-      case 'completed':
-        return order.deliveryPersonId === deliveryPerson?.id && 
-               (order.status === 'delivered' || order.status === 'cancelled');
       default:
         return true;
     }
@@ -147,18 +169,11 @@ export default function Dashboard() {
     return timeB - timeA;
   });
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-      case 'confirmed': return 'bg-yellow-100 text-yellow-800';
-      case 'assigned': return 'bg-blue-100 text-blue-800';
-      case 'picked': return 'bg-purple-100 text-purple-800';
-      case 'in-transit': return 'bg-indigo-100 text-indigo-800';
-      case 'delivered': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // Current active orders (for prominent display)
+  const currentOrders = Object.entries(orders).filter(([id, order]) => 
+    order.deliveryPersonId === deliveryPerson?.id && 
+    (order.status === 'assigned' || order.status === 'picked' || order.status === 'in-transit')
+  );
 
   const formatINR = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -168,238 +183,318 @@ export default function Dashboard() {
     }).format(amount || 0);
   };
 
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case 'pending':
+      case 'confirmed': 
+        return { 
+          class: 'status-available', 
+          emoji: '🔍', 
+          text: 'Available'
+        };
+      case 'assigned': 
+        return { 
+          class: 'status-assigned', 
+          emoji: '📋', 
+          text: 'Assigned'
+        };
+      case 'picked': 
+        return { 
+          class: 'status-picked', 
+          emoji: '📦', 
+          text: 'Picked Up'
+        };
+      case 'in-transit': 
+        return { 
+          class: 'status-in-transit', 
+          emoji: '🚚', 
+          text: 'In Transit'
+        };
+      case 'delivered': 
+        return { 
+          class: 'status-delivered', 
+          emoji: '✅', 
+          text: 'Delivered'
+        };
+      case 'cancelled': 
+        return { 
+          class: 'status-cancelled', 
+          emoji: '❌', 
+          text: 'Cancelled'
+        };
+      default: 
+        return { 
+          class: 'status-available', 
+          emoji: '🔍', 
+          text: status
+        };
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading orders...</p>
+      <MobileLayout activeTab="dashboard">
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-6 animate-pulse-glow"></div>
+            <p className="text-surface-600 text-lg">Loading orders...</p>
+          </div>
         </div>
-      </div>
+      </MobileLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">Delivery Dashboard</h1>
+    <MobileLayout activeTab="dashboard">
+      <div className="px-4 py-6 space-y-6">
+        {/* Current Orders Section (if any) */}
+        {currentOrders.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="mobile-title text-primary-600">🚚 Current Orders</h2>
+              <span className="bg-primary-100 text-primary-600 text-xs font-bold px-3 py-1 rounded-full">
+                {currentOrders.length}
+              </span>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <NotificationBell type="drivers" />
-              
-              <div className="text-sm text-gray-600">
-                <span className="font-medium">{deliveryPerson?.name}</span>
-                <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                  {deliveryPerson?.status}
-                </span>
-              </div>
-              
-              <Link to="/profile" className="text-gray-400 hover:text-gray-500">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </Link>
-              
-              <button onClick={handleLogout} className="text-gray-400 hover:text-gray-500">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
+            <div className="space-y-3">
+              {currentOrders.map(([orderId, order]) => {
+                const statusConfig = getStatusConfig(order.status);
+                return (
+                  <div key={orderId} className="bg-gradient-to-r from-primary-500 to-fresh-500 p-4 rounded-3xl text-white shadow-glow">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="font-bold text-lg">#{orderId.slice(-6)}</h3>
+                        <p className="text-white/90 text-sm">{order.address?.name}</p>
+                      </div>
+                      <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+                        <span className="text-sm font-semibold">{statusConfig.emoji} {statusConfig.text}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold">{formatINR(order.total || order.subtotal || 0)}</span>
+                      
+                      <div className="flex space-x-2">
+                        {order.status === 'assigned' && (
+                          <button
+                            onClick={() => updateOrderStatus(orderId, 'picked')}
+                            className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-white/30 transition-all"
+                          >
+                            📦 Pick Up
+                          </button>
+                        )}
+                        
+                        {order.status === 'picked' && (
+                          <button
+                            onClick={() => updateOrderStatus(orderId, 'in-transit')}
+                            className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-white/30 transition-all"
+                          >
+                            🚚 Start Delivery
+                          </button>
+                        )}
+                        
+                        {order.status === 'in-transit' && (
+                          <button
+                            onClick={() => updateOrderStatus(orderId, 'delivered')}
+                            className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-white/30 transition-all"
+                          >
+                            ✅ Delivered
+                          </button>
+                        )}
+                        
+                        <Link
+                          to={`/order/${orderId}`}
+                          className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-white/30 transition-all"
+                        >
+                          👀 Details
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-      </header>
+        )}
 
-      {/* Filter Tabs */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="card p-4 text-center">
+            <div className="text-3xl font-bold text-primary-600">
+              {Object.entries(orders).filter(([id, order]) => 
+                order.status === 'pending' || order.status === 'confirmed'
+              ).length}
+            </div>
+            <p className="text-sm font-medium text-surface-600">Available Orders</p>
+          </div>
+          
+          <div className="card p-4 text-center">
+            <div className="text-3xl font-bold text-fresh-600">
+              {Object.entries(orders).filter(([id, order]) => 
+                order.deliveryPersonId === deliveryPerson?.id && order.status === 'delivered' &&
+                new Date(order.deliveredAt).toDateString() === new Date().toDateString()
+              ).length}
+            </div>
+            <p className="text-sm font-medium text-surface-600">Today's Deliveries</p>
+          </div>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-1 border border-surface-200">
+          <div className="grid grid-cols-2 gap-1">
             <button
               onClick={() => setFilter('available')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-3 px-4 rounded-xl font-semibold text-sm transition-all ${
                 filter === 'available' 
-                  ? 'border-blue-500 text-blue-600' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'bg-primary-500 text-white shadow-soft' 
+                  : 'text-surface-600 hover:text-primary-600'
               }`}
             >
-              Available Orders ({filteredOrders.length})
+              🔍 Available ({Object.entries(orders).filter(([id, order]) => 
+                order.status === 'pending' || order.status === 'confirmed'
+              ).length})
             </button>
             <button
               onClick={() => setFilter('assigned')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-3 px-4 rounded-xl font-semibold text-sm transition-all ${
                 filter === 'assigned' 
-                  ? 'border-blue-500 text-blue-600' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'bg-primary-500 text-white shadow-soft' 
+                  : 'text-surface-600 hover:text-primary-600'
               }`}
             >
-              My Orders ({Object.entries(orders).filter(([id, order]) => 
-                order.deliveryPersonId === deliveryPerson?.id && 
-                (order.status === 'assigned' || order.status === 'picked' || order.status === 'in-transit')
-              ).length})
-            </button>
-            <button
-              onClick={() => setFilter('completed')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                filter === 'completed' 
-                  ? 'border-blue-500 text-blue-600' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Completed ({Object.entries(orders).filter(([id, order]) => 
-                order.deliveryPersonId === deliveryPerson?.id && 
-                (order.status === 'delivered' || order.status === 'cancelled')
-              ).length})
+              📋 My Orders ({currentOrders.length})
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Orders List */}
         {filteredOrders.length === 0 ? (
-          <div className="text-center py-12">
-            <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-3a3 3 0 100-6 3 3 0 000 6z" />
-            </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
-            <p className="text-gray-500">
+          <div className="text-center py-16">
+            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-surface-100 to-surface-200 rounded-3xl flex items-center justify-center">
+              <svg className="w-10 h-10 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-3a3 3 0 100-6 3 3 0 000 6z" />
+              </svg>
+            </div>
+            <h3 className="mobile-title mb-3">No orders found</h3>
+            <p className="mobile-subtitle max-w-sm mx-auto">
               {filter === 'available' && 'No new orders available for pickup'}
               {filter === 'assigned' && 'No orders currently assigned to you'}
-              {filter === 'completed' && 'No completed orders yet'}
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredOrders.map(([orderId, order]) => (
-              <div key={orderId} className="card p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">Order #{orderId.slice(-6)}</h3>
-                    <p className="text-sm text-gray-500">
-                      {new Date(order.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
+          <div className="space-y-4">
+            <h3 className="font-semibold text-surface-800 text-lg">
+              {filter === 'available' ? '🔍 Available Orders' : '📝 My Orders'}
+            </h3>
+            
+            <div className="space-y-3">
+              {filteredOrders.map(([orderId, order]) => {
+                const statusConfig = getStatusConfig(order.status);
+                return (
+                  <div key={orderId} className="card-order animate-fade-in">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-surface-900">#{orderId.slice(-6)}</h3>
+                        <p className="text-sm text-surface-500">
+                          {new Date(order.createdAt).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      <span className={`${statusConfig.class} status-badge`}>
+                        {statusConfig.emoji} {statusConfig.text}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 mb-4">
+                      <div className="bg-surface-50 rounded-xl p-3 border border-surface-200">
+                        <p className="text-xs font-semibold text-surface-600 uppercase tracking-wide mb-1">Customer</p>
+                        <p className="font-semibold text-surface-900">{order.address?.name || 'N/A'}</p>
+                        <p className="text-sm text-surface-600">{order.address?.phone || 'N/A'}</p>
+                      </div>
+
+                      <div className="bg-surface-50 rounded-xl p-3 border border-surface-200">
+                        <p className="text-xs font-semibold text-surface-600 uppercase tracking-wide mb-1">Delivery Address</p>
+                        <p className="text-sm text-surface-700 leading-relaxed">
+                          {order.address?.line1}, {order.address?.city} - {order.address?.pincode}
+                        </p>
+                      </div>
+
+                      <div className="flex justify-between items-center p-3 bg-gradient-to-r from-primary-50 to-fresh-50 rounded-xl border border-primary-200">
+                        <span className="text-sm font-semibold text-surface-700">Total Amount</span>
+                        <span className="text-xl font-bold text-primary-600">
+                          {formatINR(order.total || order.subtotal || 0)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      {filter === 'available' && (
+                        <>
+                          <button
+                            onClick={() => acceptOrder(orderId)}
+                            className="btn-primary flex-1"
+                          >
+                            ✅ Accept Order
+                          </button>
+                          <Link
+                            to={`/order/${orderId}`}
+                            className="btn-ghost flex-shrink-0 text-center"
+                          >
+                            👀 View Details
+                          </Link>
+                        </>
+                      )}
+
+                      {filter === 'assigned' && (
+                        <>
+                          {order.status === 'assigned' && (
+                            <button
+                              onClick={() => updateOrderStatus(orderId, 'picked')}
+                              className="btn-warning flex-1"
+                            >
+                              📦 Mark as Picked
+                            </button>
+                          )}
+
+                          {order.status === 'picked' && (
+                            <button
+                              onClick={() => updateOrderStatus(orderId, 'in-transit')}
+                              className="btn-primary flex-1"
+                            >
+                              🚚 Start Delivery
+                            </button>
+                          )}
+
+                          {order.status === 'in-transit' && (
+                            <button
+                              onClick={() => updateOrderStatus(orderId, 'delivered')}
+                              className="btn-fresh flex-1"
+                            >
+                              ✅ Mark as Delivered
+                            </button>
+                          )}
+
+                          <Link
+                            to={`/order/${orderId}`}
+                            className="btn-ghost flex-shrink-0 text-center"
+                          >
+                            Details
+                          </Link>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <span className={`status-badge ${getStatusColor(order.status)}`}>
-                    {order.status || 'pending'}
-                  </span>
-                </div>
-
-                <div className="space-y-3 mb-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Customer</p>
-                    <p className="text-sm text-gray-600">{order.address?.name || 'N/A'}</p>
-                    <p className="text-sm text-gray-600">{order.address?.phone || 'N/A'}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Delivery Address</p>
-                    <p className="text-sm text-gray-600">
-                      {order.address?.line1}, {order.address?.city} - {order.address?.pincode}
-                    </p>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-900">Total Amount</span>
-                    <span className="text-lg font-semibold text-gray-900">
-                      {formatINR(order.total || order.subtotal || 0)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex space-x-2">
-                  {filter === 'available' && (
-                    <>
-                      <button
-                        onClick={() => acceptOrder(orderId)}
-                        className="btn-primary flex-1"
-                      >
-                        Accept Order
-                      </button>
-                      <Link
-                        to={`/order/${orderId}`}
-                        className="btn-ghost flex-shrink-0"
-                      >
-                        View Details
-                      </Link>
-                    </>
-                  )}
-
-                  {filter === 'assigned' && order.status === 'assigned' && (
-                    <>
-                      <button
-                        onClick={() => updateOrderStatus(orderId, 'picked')}
-                        className="btn-warning flex-1"
-                      >
-                        Mark as Picked
-                      </button>
-                      <Link
-                        to={`/order/${orderId}`}
-                        className="btn-ghost flex-shrink-0"
-                      >
-                        Details
-                      </Link>
-                    </>
-                  )}
-
-                  {filter === 'assigned' && order.status === 'picked' && (
-                    <>
-                      <button
-                        onClick={() => updateOrderStatus(orderId, 'in-transit')}
-                        className="btn-primary flex-1"
-                      >
-                        Start Delivery
-                      </button>
-                      <Link
-                        to={`/order/${orderId}`}
-                        className="btn-ghost flex-shrink-0"
-                      >
-                        Details
-                      </Link>
-                    </>
-                  )}
-
-                  {filter === 'assigned' && order.status === 'in-transit' && (
-                    <>
-                      <button
-                        onClick={() => updateOrderStatus(orderId, 'delivered')}
-                        className="btn-success flex-1"
-                      >
-                        Mark as Delivered
-                      </button>
-                      <Link
-                        to={`/order/${orderId}`}
-                        className="btn-ghost flex-shrink-0"
-                      >
-                        Details
-                      </Link>
-                    </>
-                  )}
-
-                  {filter === 'completed' && (
-                    <Link
-                      to={`/order/${orderId}`}
-                      className="btn-ghost w-full"
-                    >
-                      View Details
-                    </Link>
-                  )}
-                </div>
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </MobileLayout>
   );
 }

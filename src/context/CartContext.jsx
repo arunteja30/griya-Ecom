@@ -26,16 +26,48 @@ export function CartProvider({ children }) {
   const addToCart = (product, qty = 1) => {
     const pid = getProductId(product);
     if (!pid) return;
+    
+    // Check if product has stock information
+    if (product.stock !== undefined && product.stock !== null) {
+      // Check if adding this quantity would exceed stock
+      const currentQty = cartItems.find(i => i.id === pid)?.quantity || 0;
+      const totalQty = currentQty + qty;
+      
+      if (totalQty > product.stock) {
+        // Return error or show warning - for now, we'll limit to available stock
+        const maxAddable = Math.max(0, product.stock - currentQty);
+        if (maxAddable === 0) {
+          return { success: false, message: 'Item is out of stock' };
+        }
+        qty = maxAddable;
+      }
+    }
+    
     setCartItems((prev) => {
       const existing = prev.find((i) => i.id === pid);
       if (existing) return prev.map((i) => i.id === pid ? { ...i, quantity: i.quantity + qty } : i);
       const productWithId = { ...product, id: pid };
       return [{ id: pid, product: productWithId, quantity: qty }, ...prev];
     });
+    
+    return { success: true };
   };
 
   const updateQuantity = (productId, quantity) => {
-    setCartItems((prev) => prev.map((i) => i.id === productId ? { ...i, quantity: Math.max(1, Number(quantity) || 1) } : i));
+    setCartItems((prev) => prev.map((i) => {
+      if (i.id === productId) {
+        const product = i.product;
+        let newQty = Math.max(1, Number(quantity) || 1);
+        
+        // Check stock limits
+        if (product.stock !== undefined && product.stock !== null) {
+          newQty = Math.min(newQty, product.stock);
+        }
+        
+        return { ...i, quantity: newQty };
+      }
+      return i;
+    }));
   };
 
   const removeFromCart = (productId) => {

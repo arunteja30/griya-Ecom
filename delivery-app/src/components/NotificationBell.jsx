@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SoundNotification } from '../utils/soundNotification';
 
 // Notification service for delivery app  
 class NotificationService {
@@ -63,7 +64,6 @@ export default function NotificationBell({ type = 'drivers' }) {
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [playNotificationSound, setPlayNotificationSound] = useState(false);
 
   useEffect(() => {
     let unsubscribe;
@@ -82,20 +82,39 @@ export default function NotificationBell({ type = 'drivers' }) {
 
     // Play notification sound for new notifications
     if (unread > prevUnreadCount && prevUnreadCount >= 0) {
-      setPlayNotificationSound(true);
+      // Play sound based on notification type
+      const latestNotification = notifications.find(n => !n.read);
+      const soundType = latestNotification?.type === 'order_available' ? 'new_order' : 
+                       latestNotification?.type || 'default';
+      
+      SoundNotification.playNotificationSound(soundType);
+      
+      // Add vibration for mobile devices
+      if (latestNotification?.type === 'new_order' || latestNotification?.type === 'order_available') {
+        SoundNotification.vibrate([200, 100, 200, 100, 200]);
+      } else {
+        SoundNotification.vibrate([100, 50, 100]);
+      }
+      
       // Show browser notification if permission granted
       if ('Notification' in window && Notification.permission === 'granted') {
-        const latestNotification = notifications.find(n => !n.read);
         if (latestNotification) {
-          new Notification(latestNotification.title, {
+          const notification = new Notification(latestNotification.title, {
             body: latestNotification.message,
             icon: '/favicon.ico',
-            tag: 'driver-order'
+            tag: 'driver-order',
+            requireInteraction: latestNotification.type === 'new_order' || latestNotification.type === 'order_available',
+            silent: false // Ensure sound plays
           });
+          
+          // Auto close after 8 seconds for non-urgent notifications
+          if (latestNotification.type !== 'new_order' && latestNotification.type !== 'order_available') {
+            setTimeout(() => notification.close(), 8000);
+          }
         }
       }
     }
-  }, [notifications]);
+  }, [notifications, unreadCount]);
 
   // Request notification permission on component mount
   useEffect(() => {
@@ -103,36 +122,6 @@ export default function NotificationBell({ type = 'drivers' }) {
       Notification.requestPermission();
     }
   }, []);
-
-  // Audio effect for notifications
-  useEffect(() => {
-    if (playNotificationSound) {
-      // Create audio context for notification sound
-      try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-        oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1);
-        oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.2);
-        
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.4);
-        
-        setPlayNotificationSound(false);
-      } catch (error) {
-        console.log('Audio notification not supported');
-        setPlayNotificationSound(false);
-      }
-    }
-  }, [playNotificationSound]);
 
   const handleMarkAsRead = async (notificationId) => {
     await NotificationService.markAsRead(notificationId, type);
@@ -146,9 +135,22 @@ export default function NotificationBell({ type = 'drivers' }) {
   const getNotificationIcon = (notificationType) => {
     switch (notificationType) {
       case 'new_order':
-        return '🛍️';
       case 'order_available':
+        return '📦';
+      case 'order_assigned':
+        return '✅';
+      case 'order_picked':
         return '🚗';
+      case 'order_delivered':
+        return '🎉';
+      case 'order_cancelled':
+        return '❌';
+      case 'payment_received':
+        return '💰';
+      case 'bonus_earned':
+        return '🎁';
+      case 'system_update':
+        return '📢';
       case 'order_status_update':
         return '📋';
       default:
@@ -174,19 +176,19 @@ export default function NotificationBell({ type = 'drivers' }) {
     <div className="relative">
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className={`relative p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+        className={`relative p-2 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 ${
           unreadCount > 0 
-            ? 'text-blue-600 hover:text-blue-800 bg-blue-50' 
-            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            ? 'text-primary-600 hover:text-primary-800 bg-primary-50' 
+            : 'text-surface-400 hover:text-surface-600 hover:bg-surface-50'
         }`}
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM13 3h-2l-2 2H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-3l-2-2z" />
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium animate-pulse">
-            {unreadCount > 99 ? '99+' : unreadCount}
+          <span className="absolute -top-1 -right-1 bg-danger-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium animate-pulse">
+            {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
@@ -198,13 +200,13 @@ export default function NotificationBell({ type = 'drivers' }) {
             onClick={() => setShowDropdown(false)}
           ></div>
           
-          <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-hidden">
-            <div className="p-3 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="font-semibold text-gray-900">Delivery Alerts</h3>
+          <div className="card absolute right-0 mt-2 w-80 max-w-sm bg-white/95 backdrop-blur-md border border-surface-200 rounded-2xl shadow-float z-50 max-h-96 overflow-hidden">
+            <div className="p-4 border-b border-surface-200 flex justify-between items-center">
+              <h3 className="font-semibold text-surface-900 text-lg">🚗 Delivery Alerts</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
-                  className="text-sm text-blue-600 hover:text-blue-800"
+                  className="text-sm text-primary-600 hover:text-primary-800 font-medium"
                 >
                   Mark all read
                 </button>
@@ -213,50 +215,55 @@ export default function NotificationBell({ type = 'drivers' }) {
 
             <div className="max-h-80 overflow-y-auto">
               {notifications.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">
-                  <div className="text-4xl mb-2">🚗</div>
-                  <p>No delivery alerts yet</p>
+                <div className="p-6 text-center text-surface-500">
+                  <div className="text-4xl mb-3">🔔</div>
+                  <p className="font-medium">No delivery alerts yet</p>
+                  <p className="text-sm mt-1">New order notifications will appear here</p>
                 </div>
               ) : (
                 notifications.slice(0, 10).map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
-                      !notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                    className={`p-4 border-b border-surface-100 hover:bg-surface-50 cursor-pointer transition-all ${
+                      !notification.read ? 'bg-primary-50/50 border-l-4 border-l-primary-500' : ''
                     }`}
                     onClick={() => handleMarkAsRead(notification.id)}
                   >
                     <div className="flex items-start space-x-3">
-                      <span className="text-2xl flex-shrink-0">
+                      <span className="text-xl flex-shrink-0 mt-1">
                         {getNotificationIcon(notification.type)}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start">
-                          <h4 className={`text-sm font-medium ${
-                            !notification.read ? 'text-gray-900' : 'text-gray-700'
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className={`text-sm font-semibold ${
+                            !notification.read ? 'text-surface-900' : 'text-surface-700'
                           }`}>
                             {notification.title}
                           </h4>
-                          <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
+                          <span className="text-xs text-surface-500 flex-shrink-0 ml-2">
                             {getTimeAgo(notification.timestamp)}
                           </span>
                         </div>
-                        <p className={`text-sm mt-1 ${
-                          !notification.read ? 'text-gray-800' : 'text-gray-600'
+                        <p className={`text-sm leading-relaxed ${
+                          !notification.read ? 'text-surface-800' : 'text-surface-600'
                         }`}>
                           {notification.message}
                         </p>
                         {notification.orderId && (
                           <div className="mt-2">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
-                              Order #{notification.orderId}
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary-100 text-primary-700 font-medium">
+                              Order #{notification.orderId.slice(-6)}
                             </span>
                           </div>
                         )}
                         {notification.deliveryAddress && (
-                          <div className="mt-1">
-                            <p className="text-xs text-gray-500">
-                              📍 {notification.deliveryAddress}
+                          <div className="mt-2">
+                            <p className="text-xs text-surface-600 flex items-center">
+                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              {notification.deliveryAddress}
                             </p>
                           </div>
                         )}
@@ -265,12 +272,12 @@ export default function NotificationBell({ type = 'drivers' }) {
                   </div>
                 ))
               )}
-            </div>
+              </div>
 
             {notifications.length > 10 && (
-              <div className="p-3 border-t border-gray-200 text-center">
-                <button className="text-sm text-blue-600 hover:text-blue-800">
-                  View all alerts
+              <div className="p-4 border-t border-surface-200 text-center">
+                <button className="text-sm text-primary-600 hover:text-primary-800 font-medium">
+                  View all {notifications.length} alerts
                 </button>
               </div>
             )}
