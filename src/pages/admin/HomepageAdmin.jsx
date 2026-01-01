@@ -3,6 +3,7 @@ import { db } from '../../firebase';
 import { ref, onValue, update } from 'firebase/database';
 import Loader from '../../components/Loader';
 import { showToast } from '../../components/Toast';
+import AdminCard from './AdminCard';
 
 export default function HomepageAdmin(){
   const [home, setHome] = useState(null);
@@ -47,23 +48,20 @@ export default function HomepageAdmin(){
 
   if(!home){
     return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Homepage sections</h2>
+      <AdminCard title="Homepage Sections" subtitle="Configure homepage content and layout">
         <div className="p-4 border rounded bg-yellow-50">
           <p className="mb-2">No homepage configuration found at <code>/home</code> in the Realtime Database.</p>
           <p className="text-sm text-gray-700">You can create the initial structure by adding a `home` node with a `hero` and `sections` object. Example payload is available in <code>seed/database.seed.json</code>.</p>
           <p className="mt-2 text-sm">If you are logged in as admin and still see this, ensure your database rules permit reading `/home` and that the admin user has the correct custom claim.</p>
         </div>
-      </div>
+      </AdminCard>
     );
   }
 
   const sections = home?.sections ?? {};
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Homepage sections</h2>
-
+    <AdminCard title="Homepage Sections" subtitle="Manage featured products and homepage content">
       {Object.keys(sections).length === 0 ? (
         <div className="p-4 border rounded bg-yellow-50">No sections found under <code>/home/sections</code>. Use the seed or create sections in the admin UI.</div>
       ) : (
@@ -88,6 +86,6 @@ export default function HomepageAdmin(){
           </div>
         ))
       )}
-    </div>
+    </AdminCard>
   );
 }

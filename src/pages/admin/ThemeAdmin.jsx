@@ -4,6 +4,7 @@ import { ref, set } from 'firebase/database';
 import { showToast } from '../../components/Toast';
 import ProductCard from '../../components/ProductCard';
 import { useFirebaseObject } from '../../hooks/useFirebase';
+import AdminCard from './AdminCard';
 
 export default function ThemeAdmin(){
   const { data: settings, loading } = useFirebaseObject('/siteSettings');
@@ -68,8 +69,7 @@ export default function ThemeAdmin(){
   if(loading) return <div className="p-4">Loading...</div>;
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Theme settings</h2>
+    <AdminCard title="Theme Settings" subtitle="Customize colors and appearance across the site">
       <p className="text-sm text-neutral-600 mb-4">Enter raw hex color values. Changes are saved to <code>/siteSettings/theme</code> and will apply after saving.</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -282,6 +282,6 @@ export default function ThemeAdmin(){
           </div>
         </div>
       </div>
-    </div>
+    </AdminCard>
   );
 }

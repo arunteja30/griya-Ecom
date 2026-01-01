@@ -4,6 +4,7 @@ import { ref, onValue, push, update, remove } from 'firebase/database';
 import Loader from '../../components/Loader';
 import Modal from '../../components/Modal';
 import { showToast } from '../../components/Toast';
+import AdminCard from './AdminCard';
 
 export default function TestimonialsAdmin(){
   const [testimonials, setTestimonials] = useState({});
@@ -54,9 +55,8 @@ export default function TestimonialsAdmin(){
   if(loading) return <Loader />;
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Testimonials</h2>
-      <div className="mb-4 grid grid-cols-2 gap-2">
+    <AdminCard title="Testimonials" subtitle="Manage customer testimonials and reviews">
+      <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-2">
         <div>
           <label className="block text-sm font-medium text-gray-700">Name</label>
           <input value={form.name} onChange={(e)=>setForm(f=>({...f, name:e.target.value}))} className="border p-2 w-full" placeholder="Name" />
@@ -90,6 +90,6 @@ export default function TestimonialsAdmin(){
           <button onClick={doDelete} className="px-4 py-2 bg-red-600 text-white rounded">Delete</button>
         </div>
       </Modal>
-    </div>
+    </AdminCard>
   );
 }

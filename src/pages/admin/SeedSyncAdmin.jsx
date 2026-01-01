@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ref, set, update, get } from 'firebase/database';
 import { db } from '../../firebase';
 import { showToast } from '../../components/Toast';
+import AdminCard from './AdminCard';
 
 export default function SeedSyncAdmin(){
   const [jsonText, setJsonText] = useState('');
@@ -73,8 +74,7 @@ export default function SeedSyncAdmin(){
   };
 
   return (
-    <div className="max-w-4xl bg-white p-6 rounded shadow">
-      <h2 className="text-lg font-semibold mb-4">Seed Sync</h2>
+    <AdminCard title="Seed Sync" subtitle="Import and export database content via JSON">
       <p className="text-sm text-gray-600 mb-4">Load a seed JSON file or paste it below, then click Import. Merge mode updates top-level keys instead of overwriting them.</p>
 
       <div className="flex items-center gap-3 mb-3">
@@ -104,6 +104,6 @@ export default function SeedSyncAdmin(){
         {status==='saved' && <span className="text-green-600">Imported</span>}
         {status==='error' && <span className="text-red-600">Error</span>}
       </div>
-    </div>
+    </AdminCard>
   );
 }

@@ -5,6 +5,7 @@ import Loader from '../../components/Loader';
 import Modal from '../../components/Modal';
 import { showToast } from '../../components/Toast';
 import { normalizeImageUrl } from '../../utils/imageHelpers';
+import AdminCard from './AdminCard';
 
 export default function GalleryAdmin(){
   const [gallery, setGallery] = useState({});
@@ -243,9 +244,7 @@ export default function GalleryAdmin(){
   if(loading) return <Loader />;
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Gallery Management</h2>
-      
+    <AdminCard title="Gallery Management" subtitle="Manage and organize media assets">
       {/* Tab Navigation */}
       <div className="mb-4 border-b border-gray-200">
         <nav className="flex space-x-8">
@@ -459,6 +458,6 @@ export default function GalleryAdmin(){
           <button onClick={doDelete} className="px-4 py-2 bg-red-600 text-white rounded">Delete</button>
         </div>
       </Modal>
-    </div>
+    </AdminCard>
   );
 }

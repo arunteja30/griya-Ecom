@@ -18,6 +18,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import SiteSettingsAdmin from "./pages/admin/SiteSettingsAdmin";
 import CategoriesAdmin from "./pages/admin/CategoriesAdmin";
 import ProductsAdmin from "./pages/admin/ProductsAdmin";
+import PromocodesAdmin from "./pages/admin/PromocodesAdmin";
 import HomepageAdmin from "./pages/admin/HomepageAdmin";
 import GalleryAdmin from "./pages/admin/GalleryAdmin";
 import TestimonialsAdmin from "./pages/admin/TestimonialsAdmin";
@@ -74,6 +75,7 @@ export default function App() {
           <Route path="/admin" element={<AdminRoute><AdminLayout><SiteSettingsAdmin /></AdminLayout></AdminRoute>} />
           <Route path="/admin/categories" element={<AdminRoute><AdminLayout><CategoriesAdmin /></AdminLayout></AdminRoute>} />
           <Route path="/admin/products" element={<AdminRoute><AdminLayout><ProductsAdmin /></AdminLayout></AdminRoute>} />
+          <Route path="/admin/promocodes" element={<AdminRoute><AdminLayout><PromocodesAdmin /></AdminLayout></AdminRoute>} />
           <Route path="/admin/home" element={<AdminRoute><AdminLayout><HomepageAdmin /></AdminLayout></AdminRoute>} />
           <Route path="/admin/gallery" element={<AdminRoute><AdminLayout><GalleryAdmin /></AdminLayout></AdminRoute>} />
           <Route path="/admin/banners" element={<AdminRoute><AdminLayout><BannersAdmin /></AdminLayout></AdminRoute>} />

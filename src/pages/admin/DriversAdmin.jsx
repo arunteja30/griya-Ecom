@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ref, onValue, update, push, remove } from 'firebase/database';
 import { db } from '../../firebase';
 import { showToast } from '../../components/Toast';
+import AdminCard from './AdminCard';
 
 export default function DriversAdmin() {
   const [drivers, setDrivers] = useState({});
@@ -158,13 +159,10 @@ export default function DriversAdmin() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Driver Management</h1>
-          <p className="text-gray-600">Manage delivery partners and their status</p>
-        </div>
+    <AdminCard
+      title="Driver Management"
+      subtitle="Manage delivery partners and their status"
+      actions={(
         <button
           onClick={() => {
             resetForm();
@@ -178,10 +176,10 @@ export default function DriversAdmin() {
           </svg>
           Add Driver
         </button>
-      </div>
-
+      )}
+    >
       {/* Search */}
-      <div className="max-w-md">
+      <div className="max-w-md mb-4">
         <input
           type="text"
           placeholder="Search drivers..."
@@ -420,6 +418,6 @@ export default function DriversAdmin() {
           </div>
         </div>
       )}
-    </div>
+    </AdminCard>
   );
 }

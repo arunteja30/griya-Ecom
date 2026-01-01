@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ref, onValue, update, push, remove } from 'firebase/database';
 import { db } from '../../firebase';
 import { showToast } from '../../components/Toast';
+import AdminCard from './AdminCard';
 
 export default function MerchantsAdmin() {
   const [merchants, setMerchants] = useState({});
@@ -184,13 +185,10 @@ export default function MerchantsAdmin() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Merchant Management</h1>
-          <p className="text-gray-600">Manage store owners and their permissions</p>
-        </div>
+    <AdminCard
+      title="Merchant Management"
+      subtitle="Manage store owners and their permissions"
+      actions={(
         <button
           onClick={() => {
             resetForm();
@@ -204,8 +202,8 @@ export default function MerchantsAdmin() {
           </svg>
           Add Merchant
         </button>
-      </div>
-
+      )}
+    >
       {/* Search */}
       <div className="max-w-md">
         <input
@@ -523,6 +521,6 @@ export default function MerchantsAdmin() {
           </div>
         </div>
       )}
-    </div>
+    </AdminCard>
   );
 }

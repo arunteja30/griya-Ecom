@@ -6,6 +6,8 @@ import { showToast } from '../components/Toast';
 import { useFirebaseObject } from '../hooks/useFirebase';
 import { createOrderOnServer, openRazorpayCheckout } from '../utils/razorpay';
 import { isStoreOpen, getStoreStatus } from '../utils/storeHours';
+import { ref, onValue, update } from 'firebase/database';
+import { db } from '../firebase';
 
 export default function CheckoutPage() {
   const { cartItems = [], cartTotal = 0, clearCart } = useCart() || {};
@@ -16,6 +18,13 @@ export default function CheckoutPage() {
   const [placedOrder, setPlacedOrder] = useState(null);
   const [error, setError] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  
+  // Promo code state
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState('');
+  const [discount, setDiscount] = useState(0);
 
   const MIN_ORDER = 350;
   const { data: siteSettings } = useFirebaseObject('/siteSettings');
@@ -26,13 +35,113 @@ export default function CheckoutPage() {
   const freeDeliveryMin = Number(siteSettings?.freeDeliveryMin || 199);
   const deliveryFeeApplied = freeDeliveryMin > 0 && (cartTotal || 0) >= freeDeliveryMin ? 0 : deliveryFee;
   const feesTotal = platformFee + deliveryFeeApplied;
-  const totalWithFees = (cartTotal || 0) + feesTotal;
+  const subtotalAfterDiscount = Math.max(0, (cartTotal || 0) - discount);
+  const totalWithFees = subtotalAfterDiscount + feesTotal;
 
   useEffect(() => {
     if (!cartItems || cartItems.length === 0) {
       if (!placedOrder) navigate('/cart');
     }
   }, [cartItems, navigate, placedOrder]);
+
+  // Promo code validation function
+  const validateAndApplyPromo = async () => {
+    if (!promoCode.trim()) {
+      setPromoError('Please enter a promo code');
+      return;
+    }
+
+    setPromoLoading(true);
+    setPromoError('');
+
+    try {
+      const promocodesRef = ref(db, 'promocodes');
+      onValue(promocodesRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const promocodes = snapshot.val();
+          const foundPromo = Object.entries(promocodes).find(([id, promo]) => 
+            promo.code?.toUpperCase() === promoCode.toUpperCase().trim()
+          );
+
+          if (!foundPromo) {
+            setPromoError('Invalid promo code');
+            setPromoLoading(false);
+            return;
+          }
+
+          const [promoId, promo] = foundPromo;
+          const now = Date.now();
+
+          // Check if promo is active
+          if (!promo.isActive) {
+            setPromoError('This promo code is not active');
+            setPromoLoading(false);
+            return;
+          }
+
+          // Check date validity
+          if (promo.startDate && now < promo.startDate) {
+            setPromoError('This promo code is not yet valid');
+            setPromoLoading(false);
+            return;
+          }
+
+          if (promo.endDate && now > promo.endDate) {
+            setPromoError('This promo code has expired');
+            setPromoLoading(false);
+            return;
+          }
+
+          // Check usage limits
+          if (promo.maxUses && (promo.usedCount || 0) >= promo.maxUses) {
+            setPromoError('This promo code has reached its usage limit');
+            setPromoLoading(false);
+            return;
+          }
+
+          // Check minimum order amount
+          if (promo.minOrderAmount && (cartTotal || 0) < promo.minOrderAmount) {
+            setPromoError(`Minimum order amount for this promo is ₹${promo.minOrderAmount}`);
+            setPromoLoading(false);
+            return;
+          }
+
+          // Calculate discount
+          let calculatedDiscount = 0;
+          if (promo.discountType === 'percent') {
+            calculatedDiscount = ((cartTotal || 0) * promo.discountValue) / 100;
+            if (promo.maxDiscountAmount) {
+              calculatedDiscount = Math.min(calculatedDiscount, promo.maxDiscountAmount);
+            }
+          } else {
+            calculatedDiscount = promo.discountValue;
+          }
+
+          // Apply discount
+          setDiscount(calculatedDiscount);
+          setAppliedPromo({ ...promo, id: promoId });
+          setPromoError('');
+          showToast(`Promo code applied! You saved ₹${calculatedDiscount.toFixed(2)}`, 'success');
+        } else {
+          setPromoError('Invalid promo code');
+        }
+        setPromoLoading(false);
+      }, { once: true });
+    } catch (error) {
+      console.error('Error validating promo code:', error);
+      setPromoError('Error validating promo code');
+      setPromoLoading(false);
+    }
+  };
+
+  // Remove promo code
+  const removePromo = () => {
+    setDiscount(0);
+    setAppliedPromo(null);
+    setPromoCode('');
+    setPromoError('');
+    showToast('Promo code removed', 'success');
+  };
 
   const validate = () => {
     if (!address.name.trim()) return 'Please enter full name';
@@ -110,6 +219,13 @@ export default function CheckoutPage() {
         merchantId: it.product?.merchantId || null
       })),
       subtotal: cartTotal,
+      discount: discount,
+      promoCode: appliedPromo ? {
+        code: appliedPromo.code,
+        discountType: appliedPromo.discountType,
+        discountValue: appliedPromo.discountValue,
+        appliedDiscount: discount
+      } : null,
       fees: { platformFee, deliveryFee, deliveryFeeApplied, feesTotal },
       total: totalWithFees,
       address: { ...address },
@@ -118,6 +234,14 @@ export default function CheckoutPage() {
     };
 
     try {
+      // Increment promo code usage if applied
+      if (appliedPromo) {
+        const promoRef = ref(db, `promocodes/${appliedPromo.id}`);
+        await update(promoRef, {
+          usedCount: (appliedPromo.usedCount || 0) + 1,
+          updatedAt: Date.now()
+        });
+      }
       const amountPaise = Math.round((totalWithFees || 0) * 100);
       const serverResp = await createOrderOnServer(amountPaise);
       const orderId = serverResp?.order_id || serverResp?.id || serverResp?.razorpay_order_id;
@@ -390,11 +514,82 @@ export default function CheckoutPage() {
           </div>
         </div>
 
+        {/* Promo Code Card */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-purple-100 p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-green-500 flex items-center justify-center">
+              <span className="text-white text-xs font-bold">🏷️</span>
+            </div>
+            <h2 className="text-base font-semibold text-gray-800">Promo Code</h2>
+          </div>
+          
+          {appliedPromo ? (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <span className="text-green-600 text-sm">✓</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-green-800 text-sm">{appliedPromo.code}</p>
+                    <p className="text-xs text-green-600">You saved ₹{discount.toFixed(2)}!</p>
+                  </div>
+                </div>
+                <button
+                  onClick={removePromo}
+                  className="text-green-600 hover:text-green-800 transition-colors p-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => {
+                    setPromoCode(e.target.value.toUpperCase());
+                    setPromoError('');
+                  }}
+                  placeholder="Enter promo code"
+                  className="flex-1 px-3 py-2 bg-white/50 border border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono uppercase"
+                />
+                <button
+                  onClick={validateAndApplyPromo}
+                  disabled={promoLoading || !promoCode.trim()}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center gap-1"
+                >
+                  {promoLoading ? (
+                    <>
+                      <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Applying
+                    </>
+                  ) : (
+                    'Apply'
+                  )}
+                </button>
+              </div>
+              {promoError && (
+                <div className="text-xs text-red-600 bg-red-50 p-2 rounded-lg">
+                  {promoError}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Bill Summary Card */}
         <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-purple-100 p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-green-500 flex items-center justify-center">
-              <span className="text-white text-xs font-bold">3</span>
+              <span className="text-white text-xs font-bold">4</span>
             </div>
             <h2 className="text-base font-semibold text-gray-800">Bill Summary</h2>
           </div>
@@ -404,6 +599,12 @@ export default function CheckoutPage() {
               <span className="text-gray-600">Items ({cartItems.length})</span>
               <span className="font-medium text-gray-800">₹{cartTotal}</span>
             </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-green-600">Discount ({appliedPromo?.code})</span>
+                <span className="font-medium text-green-600">-₹{discount.toFixed(2)}</span>
+              </div>
+            )}
             {platformFee > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Platform Fee</span>

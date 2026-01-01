@@ -4,6 +4,7 @@ import { ref, onValue, push, update, remove, set } from 'firebase/database';
 import Loader from '../../components/Loader';
 import Modal from '../../components/Modal';
 import { showToast } from '../../components/Toast';
+import AdminCard from './AdminCard';
 import ImagePicker from '../../components/ImagePicker';
 
 export default function CategoriesAdmin(){
@@ -109,8 +110,7 @@ export default function CategoriesAdmin(){
   if(loading) return <Loader />;
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Categories</h2>
+    <AdminCard title="Categories" subtitle="Create and manage product categories">
       <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
         {/* Row 1: Category ID and Slug */}
         <div>
@@ -301,6 +301,6 @@ export default function CategoriesAdmin(){
         onSelect={(url) => setImageUrl(url)}
         selectedUrl={imageUrl}
       />
-    </div>
+    </AdminCard>
   );
 }

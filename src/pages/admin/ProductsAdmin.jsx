@@ -6,6 +6,7 @@ import Modal from '../../components/Modal';
 import { showToast } from '../../components/Toast';
 import { normalizeImageUrl } from '../../utils/imageHelpers';
 import ImagePicker from '../../components/ImagePicker';
+import AdminCard from './AdminCard';
 
 export default function ProductsAdmin(){
   const [products, setProducts] = useState({});
@@ -325,96 +326,172 @@ export default function ProductsAdmin(){
   if(loading) return <Loader />;
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Products</h2>
-      {/* Filters */}
-      <div className="mb-4 flex items-center gap-2">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Search</label>
-          <input value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Search name or slug" className="border p-2 rounded w-72" />
+    <div className="space-y-6">
+      <AdminCard title="Products" subtitle="Manage your product catalog and inventory" actions={(
+        <div className="px-3 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 rounded-full text-sm font-medium">
+          {filteredProducts.length} Products
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Category</label>
-          <select value={categoryFilter} onChange={(e)=>setCategoryFilter(e.target.value)} className="border p-2 rounded">
-            <option value="">All categories</option>
-            {Object.entries(categories).map(([cid, c]) => (
-              <option key={cid} value={cid}>{c.name}</option>
-            ))}
-          </select>
+      )}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Search Products</label>
+            <input 
+              value={search} 
+              onChange={(e)=>setSearch(e.target.value)} 
+              placeholder="Search by name or slug..." 
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200" 
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+            <select 
+              value={categoryFilter} 
+              onChange={(e)=>setCategoryFilter(e.target.value)} 
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+            >
+              <option value="">All categories</option>
+              {Object.entries(categories).map(([cid, c]) => (
+                <option key={cid} value={cid}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Stock Status</label>
+            <select 
+              value={stockFilter} 
+              onChange={(e)=>setStockFilter(e.target.value)} 
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+            >
+              <option value="all">All products</option>
+              <option value="in">In stock</option>
+              <option value="out">Out of stock</option>
+            </select>
+          </div>
+          <button 
+            onClick={()=>{setSearch(''); setCategoryFilter(''); setStockFilter('all');}} 
+            className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all duration-200 font-medium"
+          >
+            Clear Filters
+          </button>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Stock</label>
-          <select value={stockFilter} onChange={(e)=>setStockFilter(e.target.value)} className="border p-2 rounded">
-            <option value="all">All stock</option>
-            <option value="in">In stock</option>
-            <option value="out">Out of stock</option>
-          </select>
-        </div>
-        <button onClick={()=>{setSearch(''); setCategoryFilter(''); setStockFilter('all');}} className="ml-auto text-sm text-neutral-600 self-end">Clear</button>
-      </div>
+      </AdminCard>
 
-      <div className="mb-6 md:flex md:gap-6">
-        {/* Left: products list with view toggle (swapped to left) */}
-        <div className="md:w-1/3 order-1">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-sm font-medium">Products ({filteredProducts.length})</div>
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={()=>setViewMode('list')} className={`px-2 py-1 rounded ${viewMode==='list' ? 'bg-gray-200' : ''}`}>List</button>
-              <button type="button" onClick={()=>setViewMode('grid')} className={`px-2 py-1 rounded ${viewMode==='grid' ? 'bg-gray-200' : ''}`}>Grid</button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left: products list with view toggle */}
+        <div className="lg:col-span-1">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900">Product List</h3>
+              <div className="flex items-center gap-2">
+                <div className="bg-gray-100 rounded-lg p-1">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                  >
+                    List
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                  >
+                    Grid
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {filteredProducts.map(([id, p]) => (
+                    <div key={id} className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 hover:shadow-md overflow-hidden">
+                      <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+                        {p.images?.[0] ? (
+                          <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-2">
+                        <h4 className="font-medium text-gray-900 mb-1 text-sm line-clamp-1">{p.name}</h4>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-gray-600 bg-gray-100 px-1 py-0.5 rounded">{categories[p.categoryId]?.name || 'Uncategorized'}</span>
+                          <span className="font-bold text-sm text-indigo-600">₹{p.price}</span>
+                        </div>
+                        {p.merchantId && <div className="text-xs text-blue-600 mb-2 bg-blue-50 px-1 py-0.5 rounded text-xs">M: {merchants[p.merchantId]?.name || p.merchantId}</div>}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex gap-1">
+                            <button onClick={() => { setEditing(id); const variantsObj = p.variants && !Array.isArray(p.variants) ? p.variants : (Array.isArray(p.variants) ? p.variants.reduce((acc, v) => { const vid = v.id || (v.label ? String(v.label).toLowerCase().replace(/\s+/g,'-') : `v-${Date.now()}`); acc[vid] = { id: vid, label: v.label, unit: v.unit || (v.label ? v.label.replace(/\s+/g,'') : ''), price: v.price }; return acc; }, {}) : {}); setForm({ ...p, variants: variantsObj }); }} className="px-2 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded text-xs font-medium transition-colors flex-1">Edit</button>
+                            <button onClick={() => copyToForm(p)} className="px-2 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded text-xs font-medium transition-colors flex-1">Copy</button>
+                            <button onClick={() => confirmDelete(id)} className="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded text-xs font-medium transition-colors flex-1">Del</button>
+                          </div>
+                          <div>
+                            {(!p.inStock || Number(p.stock || 0) <= 0) ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800">Out of stock</span>
+                            ) : (
+                              <span className="text-green-600">In stock — {p.stock || 0}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredProducts.map(([id, p]) => (
+                    <div key={id} className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 p-4 transition-all duration-200 hover:shadow-md">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="w-12 h-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                            {p.images?.[0] ? (
+                              <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900">{p.name}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-md">{categories[p.categoryId]?.name || 'Uncategorized'}</span>
+                              <span className="font-semibold text-indigo-600">₹{p.price}</span>
+                              {p.merchantId && <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md">{merchants[p.merchantId]?.name || p.merchantId}</span>}
+                            </div>
+                            <div className="mt-1">
+                              {(!p.inStock || Number(p.stock || 0) <= 0) ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800">Out of stock</span>
+                              ) : (
+                                <span className="text-green-600">In stock — {p.stock || 0}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => { setEditing(id); const variantsObj = p.variants && !Array.isArray(p.variants) ? p.variants : (Array.isArray(p.variants) ? p.variants.reduce((acc, v) => { const vid = v.id || (v.label ? String(v.label).toLowerCase().replace(/\s+/g,'-') : `v-${Date.now()}`); acc[vid] = { id: vid, label: v.label, unit: v.unit || (v.label ? v.label.replace(/\s+/g,'') : ''), price: v.price }; return acc; }, {}) : {}); setForm({ ...p, variants: variantsObj }); }} className="text-blue-600">Edit</button>
+                          <button onClick={() => confirmDelete(id)} className="text-red-600">Delete</button>
+                          <button onClick={() => copyToForm(p)} className="text-green-600">Copy</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {filteredProducts.map(([id, p]) => (
-                <div key={id} className="border p-3 rounded bg-white">
-                  <div className="w-full h-36 bg-gray-100 overflow-hidden mb-2">
-                    {p.images?.[0] ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No image</div>}
-                  </div>
-                  <div className="font-medium text-sm">{p.name}</div>
-                  <div className="text-xs text-gray-600">
-                    {categories[p.categoryId]?.name || 'Uncategorized'} • ₹{p.price}
-                    {p.merchantId && <span className="ml-1 text-blue-600">• {merchants[p.merchantId]?.name || p.merchantId}</span>}
-                  </div>
-                  <div className="flex items-center justify-between mt-3">
-                    <button onClick={() => { setEditing(id); const variantsObj = p.variants && !Array.isArray(p.variants) ? p.variants : (Array.isArray(p.variants) ? p.variants.reduce((acc, v) => { const vid = v.id || (v.label ? String(v.label).toLowerCase().replace(/\s+/g,'-') : `v-${Date.now()}`); acc[vid] = { id: vid, label: v.label, unit: v.unit || (v.label ? v.label.replace(/\s+/g,'') : ''), price: v.price }; return acc; }, {}) : {}); setForm({ ...p, variants: variantsObj }); }} className="text-blue-600 text-sm">Edit</button>
-                    <button onClick={()=>confirmDelete(id)} className="text-red-600 text-sm">Delete</button>
-                    <button onClick={()=>copyToForm(p)} className="text-green-600 text-sm">Copy</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {filteredProducts.map(([id, p])=> (
-                <div key={id} className="flex items-center justify-between border p-2 rounded bg-white">
-                  <div>
-                    <div className="font-medium">{p.name}</div>
-                    <div className="text-sm text-gray-600">
-                      {categories[p.categoryId]?.name || 'Uncategorized'} • ₹{p.price}
-                      {p.merchantId && <span className="ml-1 text-blue-600">• {merchants[p.merchantId]?.name || p.merchantId}</span>}
-                    </div>
-                    <div className="text-sm mt-1">
-                      {(!p.inStock || Number(p.stock || 0) <= 0) ? (
-                        <span className="text-red-600 font-semibold">Out of stock</span>
-                      ) : (
-                        <span className="text-green-600">In stock — {p.stock || 0}</span>
-                      )}
-                    </div>
-                  </div>
-                   <div className="flex gap-2">
-                     <button onClick={() => { setEditing(id); const variantsObj = p.variants && !Array.isArray(p.variants) ? p.variants : (Array.isArray(p.variants) ? p.variants.reduce((acc, v) => { const vid = v.id || (v.label ? String(v.label).toLowerCase().replace(/\s+/g,'-') : `v-${Date.now()}`); acc[vid] = { id: vid, label: v.label, unit: v.unit || (v.label ? v.label.replace(/\s+/g,'') : ''), price: v.price }; return acc; }, {}) : {}); setForm({ ...p, variants: variantsObj }); }} className="text-blue-600">Edit</button>
-                     <button onClick={()=>confirmDelete(id)} className="text-red-600">Delete</button>
-                     <button onClick={()=>copyToForm(p)} className="text-green-600">Copy</button>
-                   </div>
-                 </div>
-               ))}
-            </div>
-          )}
         </div>
 
         {/* Right: form (swapped to right) */}
-        <div className="md:w-2/3 bg-white p-8 rounded border order-2">
+        <div className="lg:w-full bg-white p-6 rounded border order-2">
           <div className="grid grid-cols-1 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700">Name</label>

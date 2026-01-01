@@ -3,6 +3,7 @@ import { useFirebaseList } from '../../hooks/useFirebase';
 import BannerForm from '../../components/BannerForm';
 import { db } from '../../firebase';
 import { ref, push, update, remove } from 'firebase/database';
+import AdminCard from './AdminCard';
 
 export default function BannersAdmin() {
   const { data: bannersData } = useFirebaseList('/banners');
@@ -58,9 +59,7 @@ export default function BannersAdmin() {
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Manage Banners</h2>
-
+    <AdminCard title="Manage Banners" subtitle="Create and manage promotional banners">
       <div className="mb-6">
         <h3 className="font-medium mb-2">Create new banner</h3>
         <BannerForm onSubmit={handleCreate} busy={busy} />
@@ -99,6 +98,6 @@ export default function BannersAdmin() {
           </div>
         </div>
       )}
-    </div>
+    </AdminCard>
   );
 }
