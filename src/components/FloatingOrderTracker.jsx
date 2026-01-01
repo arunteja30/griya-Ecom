@@ -6,7 +6,20 @@ import { OrderTrackingService } from '../utils/orderTrackingService';
 export default function FloatingOrderTracker() {
   const [activeOrders, setActiveOrders] = useState([]);
   const [showTracker, setShowTracker] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   const [currentOrder, setCurrentOrder] = useState(null);
+
+  // Expose toggle function globally for navbar
+  useEffect(() => {
+    window.toggleOrderTracker = () => {
+      setShowTracker(prev => !prev);
+      if (isHidden) setIsHidden(false);
+    };
+    
+    return () => {
+      delete window.toggleOrderTracker;
+    };
+  }, [isHidden]);
 
   // Load orders from localStorage on mount
   useEffect(() => {
@@ -92,6 +105,20 @@ export default function FloatingOrderTracker() {
     };
   }, []);
 
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'pending': return 'Order Received';
+      case 'confirmed': return 'Confirmed';
+      case 'preparing': return 'Preparing';
+      case 'ready': return 'Ready for Pickup';
+      case 'assigned': return 'Driver Assigned';
+      case 'picked': return 'Picked Up';
+      case 'in-transit': return 'On the Way';
+      case 'delivered': return 'Delivered';
+      default: return 'Processing';
+    }
+  };
+
   const getStatusIcon = (status) => {
     switch (status) {
       case 'pending': return '⏳';
@@ -133,31 +160,54 @@ export default function FloatingOrderTracker() {
     });
   };
 
-  // Don't show if no active orders
-  if (activeOrders.length === 0) {
+  // Don't show if no active orders or explicitly hidden
+  if (activeOrders.length === 0 || isHidden) {
     return null;
   }
 
+  const latestOrder = activeOrders[0];
+
   return (
     <>
-      {/* Floating Tracker Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <button
-          onClick={() => setShowTracker(!showTracker)}
-          className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white transition-all duration-300 hover:scale-110 ${getStatusColor(activeOrders[0]?.status)} relative`}
-        >
-          <span className="text-xl">{getStatusIcon(activeOrders[0]?.status)}</span>
-          {activeOrders.length > 1 && (
-            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
-              {activeOrders.length}
+      {/* Floating Status Bar */}
+      {!showTracker && (
+        <div className="fixed bottom-16 md:bottom-6 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg">
+          <div className="flex items-center justify-between p-3">
+            <div className="flex items-center gap-3">
+              <div className={`w-3 h-3 rounded-full ${getStatusColor(latestOrder?.status)}`}></div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">
+                  Order #{formatOrderId(latestOrder?.id)} • {getStatusText(latestOrder?.status)}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {activeOrders.length === 1 ? '1 active order' : `${activeOrders.length} active orders`}
+                </p>
+              </div>
             </div>
-          )}
-        </button>
-      </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowTracker(true)}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                View
+              </button>
+              <button
+                onClick={() => setIsHidden(true)}
+                className="text-gray-400 hover:text-gray-600 p-1"
+                title="Hide"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tracker Panel */}
       {showTracker && (
-        <div className="fixed bottom-24 right-6 z-40 w-80 max-h-96 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
+        <div className="fixed bottom-28 md:bottom-6 right-6 z-40 w-80 max-h-96 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-lg">Order Tracking</h3>

@@ -9,6 +9,7 @@ export default function CategoryProductsPage() {
   const location = useLocation();
   const { data: products, loading: productsLoading } = useAllProducts();
   const { data: categories, loading: categoriesLoading } = useFirebaseList('/categories');
+  const { data: categoryProducts, loading: categoryProductsLoading } = useFirebaseList(`/categoryProducts/${categorySlug}`);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
 
@@ -25,7 +26,8 @@ export default function CategoryProductsPage() {
     currentCategory,
     categoryName,
     categoriesCount: categoriesArray.length,
-    productsCount: productsArray.length
+    productsCount: productsArray.length,
+    categoryProductsIndex: categoryProducts ? Object.keys(categoryProducts) : null
   });
 
   // Get search term from URL params if available
@@ -44,15 +46,23 @@ export default function CategoryProductsPage() {
       product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.brand?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // More flexible category matching
-    const matchesCategory = 
-      product.category === categoryName || 
-      product.categoryId === categorySlug ||
-      product.category === categorySlug ||
-      product.categoryId === currentCategory?.id ||
-      product.category === currentCategory?.id ||
-      (product.tags && Array.isArray(product.tags) && product.tags.includes(categorySlug)) ||
-      (product.tags && typeof product.tags === 'string' && product.tags.toLowerCase().includes(categorySlug.toLowerCase()));
+    // Use category products index if available, fallback to category field matching
+    let matchesCategory = false;
+    
+    if (categoryProducts && Object.keys(categoryProducts).length > 0) {
+      // Use the categoryProducts index for accurate filtering
+      matchesCategory = Object.keys(categoryProducts).includes(product.id);
+    } else {
+      // Fallback to field-based category matching
+      matchesCategory = 
+        product.category === categoryName || 
+        product.categoryId === categorySlug ||
+        product.category === categorySlug ||
+        product.categoryId === currentCategory?.id ||
+        product.category === currentCategory?.id ||
+        (product.tags && Array.isArray(product.tags) && product.tags.includes(categorySlug)) ||
+        (product.tags && typeof product.tags === 'string' && product.tags.toLowerCase().includes(categorySlug.toLowerCase()));
+    }
     
     return matchesSearch && matchesCategory;
   });
@@ -61,7 +71,15 @@ export default function CategoryProductsPage() {
   console.log('CategoryProductsPage Filtered:', {
     searchTerm,
     filteredCount: filteredProducts.length,
-    sampleProducts: filteredProducts.slice(0, 3).map(p => ({ id: p.id, name: p.name, category: p.category, categoryId: p.categoryId }))
+    categoryProductsCount: categoryProducts ? Object.keys(categoryProducts).length : 0,
+    sampleProducts: filteredProducts.slice(0, 3).map(p => ({ 
+      id: p.id, 
+      name: p.name, 
+      category: p.category, 
+      categoryId: p.categoryId,
+      merchantId: p.merchantId,
+      _merchantSpecific: p._merchantSpecific
+    }))
   });
 
   // Sort products
@@ -82,7 +100,7 @@ export default function CategoryProductsPage() {
     // Search logic is handled by state change
   };
 
-  if (productsLoading || categoriesLoading) {
+  if (productsLoading || categoriesLoading || categoryProductsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">

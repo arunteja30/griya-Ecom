@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { useFirebaseList } from '../hooks/useFirebase';
 import { useAllProducts } from '../hooks/useAllProducts';
+import { SkeletonProductGrid } from '../components/skeletons/SkeletonComponents';
+import { SkeletonBox, SkeletonText } from '../components/skeletons/SkeletonBase';
 
 export default function AllProductsPage() {
   const location = useLocation();
@@ -108,10 +110,26 @@ export default function AllProductsPage() {
 
   if (productsLoading || categoriesLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-surface-600">Loading products...</p>
+      <div className="min-h-screen pb-safe">
+        {/* Search Header */}
+        <div className="bg-gradient-to-br from-primary-500 to-fresh-500 text-white px-mobile py-6">
+          <div className="space-y-4">
+            <SkeletonText className="w-48 h-8 bg-white/20" />
+            <SkeletonBox height="h-12" className="rounded-xl bg-white/20" />
+          </div>
+        </div>
+        
+        {/* Filter Bar */}
+        <div className="bg-white border-b border-surface-200 px-mobile py-3">
+          <div className="flex items-center gap-4">
+            <SkeletonBox width="w-32" height="h-8" className="rounded-lg" />
+            <SkeletonBox width="w-24" height="h-8" className="rounded-lg" />
+          </div>
+        </div>
+        
+        {/* Products Grid Skeleton */}
+        <div className="px-mobile py-6">
+          <SkeletonProductGrid count={12} />
         </div>
       </div>
     );

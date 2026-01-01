@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { useFirebaseList } from '../hooks/useFirebase';
+import { useAllProducts } from '../hooks/useAllProducts';
 
 export default function CategoryPage() {
   const { categoryId } = useParams();
   const location = useLocation();
-  const { data: products, loading: productsLoading } = useFirebaseList('/products');
+  const { data: products, loading: productsLoading } = useAllProducts();
   const { data: categories, loading: categoriesLoading } = useFirebaseList('/categories');
+  const { data: categoryProducts, loading: categoryProductsLoading } = useFirebaseList(`/categoryProducts/${categoryId}`);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
 
@@ -24,7 +26,8 @@ export default function CategoryPage() {
     currentCategory,
     categoryName,
     categoriesCount: categoriesArray.length,
-    productsCount: productsArray.length
+    productsCount: productsArray.length,
+    categoryProductsIndex: categoryProducts ? Object.keys(categoryProducts) : null
   });
 
   // Get search term from URL params if available
@@ -43,15 +46,23 @@ export default function CategoryPage() {
       product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.brand?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // More flexible category matching
-    const matchesCategory = 
-      product.category === categoryName || 
-      product.categoryId === categoryId ||
-      product.category === categoryId ||
-      product.categoryId === currentCategory?.name ||
-      product.category === currentCategory?.name ||
-      (product.tags && Array.isArray(product.tags) && product.tags.includes(categoryId)) ||
-      (product.tags && typeof product.tags === 'string' && product.tags.toLowerCase().includes(categoryId.toLowerCase()));
+    // Use category products index if available, fallback to category field matching
+    let matchesCategory = false;
+    
+    if (categoryProducts && Object.keys(categoryProducts).length > 0) {
+      // Use the categoryProducts index for accurate filtering
+      matchesCategory = Object.keys(categoryProducts).includes(product.id);
+    } else {
+      // Fallback to field-based category matching
+      matchesCategory = 
+        product.category === categoryName || 
+        product.categoryId === categoryId ||
+        product.category === categoryId ||
+        product.categoryId === currentCategory?.name ||
+        product.category === currentCategory?.name ||
+        (product.tags && Array.isArray(product.tags) && product.tags.includes(categoryId)) ||
+        (product.tags && typeof product.tags === 'string' && product.tags.toLowerCase().includes(categoryId.toLowerCase()));
+    }
     
     return matchesSearch && matchesCategory;
   });
@@ -60,7 +71,15 @@ export default function CategoryPage() {
   console.log('CategoryPage Filtered:', {
     searchTerm,
     filteredCount: filteredProducts.length,
-    sampleProducts: filteredProducts.slice(0, 3).map(p => ({ id: p.id, name: p.name, category: p.category, categoryId: p.categoryId }))
+    categoryProductsCount: categoryProducts ? Object.keys(categoryProducts).length : 0,
+    sampleProducts: filteredProducts.slice(0, 3).map(p => ({ 
+      id: p.id, 
+      name: p.name, 
+      category: p.category, 
+      categoryId: p.categoryId,
+      merchantId: p.merchantId,
+      _merchantSpecific: p._merchantSpecific
+    }))
   });
 
   // Sort products
@@ -81,7 +100,7 @@ export default function CategoryPage() {
     // Search logic is handled by state change
   };
 
-  if (productsLoading || categoriesLoading) {
+  if (productsLoading || categoriesLoading || categoryProductsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">

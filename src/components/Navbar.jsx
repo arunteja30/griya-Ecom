@@ -13,6 +13,8 @@ export default function Navbar() {
   const { cartItems = [] } = useContext(CartContext) || {};
   const location = useLocation();
   const [customerPhone, setCustomerPhone] = useState(null);
+  const [showOrderViewbox, setShowOrderViewbox] = useState(false);
+  const [trackedOrders, setTrackedOrders] = useState([]);
 
   useEffect(() => {
     const onScroll = () => setIsSticky(window.scrollY > 60);
@@ -26,6 +28,14 @@ export default function Navbar() {
     if (activeOrders.length > 0 && activeOrders[0].address?.phone) {
       setCustomerPhone(activeOrders[0].address.phone);
     }
+    setTrackedOrders(activeOrders);
+  }, []);
+
+  // Refresh tracked orders when OrderTrackingService updates
+  useEffect(() => {
+    const handler = () => setTrackedOrders(OrderTrackingService.getActiveOrders());
+    window.addEventListener('activeOrdersUpdate', handler);
+    return () => window.removeEventListener('activeOrdersUpdate', handler);
   }, []);
 
   // 🔧 Make sure headerNav is ALWAYS an array
@@ -135,6 +145,50 @@ export default function Navbar() {
 
               {/* Customer Notifications */}
               {customerPhone && <CustomerNotificationBell customerPhone={customerPhone} />}
+
+              {/* Order Tracker Icon */}
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    // toggle both global tracker and local viewbox
+                    if (window.toggleOrderTracker) window.toggleOrderTracker();
+                    setShowOrderViewbox(prev => !prev);
+                  }}
+                  className="relative p-2 rounded-xl bg-primary-50 hover:bg-primary-100 text-primary-700 transition-colors"
+                  title="Order Status"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+
+                {showOrderViewbox && trackedOrders.length > 0 && (
+                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
+                    <div className="p-3">
+                      <div className="text-sm font-semibold">Active Orders</div>
+                      <div className="mt-2 space-y-2">
+                        {trackedOrders.map((o) => (
+                          <div key={o.id} className="flex items-center justify-between">
+                            <div>
+                              <div className="text-sm font-medium">#{o.id?.slice(-8)}</div>
+                              <div className="text-xs text-gray-500">{o.address?.name || 'Customer'}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className={`text-xs font-semibold px-2 py-1 rounded-full text-white ${o.status ? (o.status === 'delivered' ? 'bg-green-600' : 'bg-blue-600') : 'bg-gray-400'}`}>
+                                {o.status || 'pending'}
+                              </div>
+                              <div className="text-xs text-gray-400">₹{o.total}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 text-right">
+                        <button onClick={() => { setShowOrderViewbox(false); }} className="text-sm text-gray-600">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Cart Button */}
               <Link to="/cart" className="relative group">

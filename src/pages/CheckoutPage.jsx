@@ -249,12 +249,22 @@ export default function CheckoutPage() {
 
       if (!rkey) {
         try {
+          // Save main order first
+          const mainOrderResult = await createOrderInDb(order);
+          const mainOrderId = mainOrderResult.key;
+          
+          // Update merchant orders with main order ID reference
+          const merchantOrdersWithRef = merchantOrders.map(mo => ({
+            ...mo,
+            mainOrderId: mainOrderId
+          }));
+          
           // Save merchant-specific orders
-          await createMerchantOrdersInDb(merchantOrders);
+          await createMerchantOrdersInDb(merchantOrdersWithRef);
           
           // Add order to floating tracker
           if (window.addOrderToTracking) {
-            window.addOrderToTracking(order);
+            window.addOrderToTracking({ ...order, id: mainOrderId });
           }
         } catch (dbErr) {
           console.warn('Failed to save order to Firebase:', dbErr);
@@ -291,12 +301,22 @@ export default function CheckoutPage() {
           }));
 
           try {
+            // Save main order first
+            const mainOrderResult = await createOrderInDb(finalOrder);
+            const mainOrderId = mainOrderResult.key;
+            
+            // Update merchant orders with main order ID reference and payment info
+            const merchantOrdersWithRef = merchantOrdersWithPayment.map(mo => ({
+              ...mo,
+              mainOrderId: mainOrderId
+            }));
+            
             // Save merchant-specific orders with payment info
-            await createMerchantOrdersInDb(merchantOrdersWithPayment);
+            await createMerchantOrdersInDb(merchantOrdersWithRef);
             
             // Add order to floating tracker
             if (window.addOrderToTracking) {
-              window.addOrderToTracking(safeOrder);
+              window.addOrderToTracking({ ...safeOrder, id: mainOrderId });
             }
           } catch (dbErr) {
             console.warn('Failed to save order to Firebase:', dbErr);

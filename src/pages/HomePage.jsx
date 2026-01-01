@@ -7,6 +7,8 @@ import { useServiceAreaSimple as useServiceArea } from "../hooks/useServiceAreaS
 import { useServiceStatus } from '../context/ServiceStatusContext';
 import Loader from "../components/Loader";
 import NotServiceableScreen from "../components/NotServiceableScreen";
+import { SkeletonBanner, SkeletonCategoryGrid, SkeletonProductGrid } from '../components/skeletons/SkeletonComponents';
+import { SkeletonBox, SkeletonText } from '../components/skeletons/SkeletonBase';
 
 export default function HomePage() {
   const serviceArea = useServiceArea();
@@ -21,14 +23,7 @@ export default function HomePage() {
   
   // Show loading while checking service area
   if (serviceArea.loading || serviceArea.isServiceable === null) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-surface-50 to-primary-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader />
-          <p className="mt-4 text-surface-600">Checking service availability...</p>
-        </div>
-      </div>
-    );
+    return <HomePageSkeleton />;
   }
 
   // Show not serviceable screen if area is not covered
@@ -313,26 +308,36 @@ function HomePageContent() {
       </section>
 
       {/* Categories Stories - Hidden when searching */}
-      {!searchTerm && (
+      {!searchTerm && (categoriesLoading || categoriesArray.length > 0) && (
         <section className="py-6 px-mobile">
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-surface-900">Shop by Category</h2>
-            <div className="grid grid-cols-4 gap-3">
-              <Link
-                to="/groceries"
-                className="group flex flex-col items-center space-y-2"
-              >
-                <div className="relative w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl group-hover:scale-105 transition-all border border-white/30 hover:border-primary-300/50">
-                  {/* Glow effect */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary-400/30 to-primary-500/30 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
-                  <svg className="w-8 h-8 text-primary-500 relative z-10 group-hover:scale-110 transition-transform drop-shadow-sm" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
-                  </svg>
-                </div>
-                <span className="text-xs font-medium text-surface-900 text-center group-hover:text-primary-600 transition-colors drop-shadow-sm">All</span>
-              </Link>
+            {categoriesLoading ? (
+              <div className="grid grid-cols-4 gap-3">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="flex flex-col items-center space-y-2">
+                    <SkeletonBox width="w-16" height="h-16" className="rounded-2xl" />
+                    <SkeletonBox width="w-12" height="h-3" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-3">
+                <Link
+                  to="/groceries"
+                  className="group flex flex-col items-center space-y-2"
+                >
+                  <div className="relative w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl group-hover:scale-105 transition-all border border-white/30 hover:border-primary-300/50">
+                    {/* Glow effect */}
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary-400/30 to-primary-500/30 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm"></div>
+                    <svg className="w-8 h-8 text-primary-500 relative z-10 group-hover:scale-110 transition-transform drop-shadow-sm" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
+                    </svg>
+                  </div>
+                  <span className="text-xs font-medium text-surface-900 text-center group-hover:text-primary-600 transition-colors drop-shadow-sm">All</span>
+                </Link>
 
-              {categoriesArray.map((category) => (
+                {categoriesArray.map((category) => (
                 <Link
                   key={category.id}
                   to={`/category/${category.id}`}
@@ -363,13 +368,16 @@ function HomePageContent() {
                   </span>
                 </Link>
               ))}
-            </div>
+              </div>
+            )}
           </div>
         </section>
       )}
 
       {/* Featured Products - Hidden when searching */}
-      {!searchTerm && showConfig.featured !== false && featuredProducts.length > 0 && (
+      {!searchTerm && showConfig.featured !== false && (
+        productsLoading || homeConfigLoading || featuredProducts.length > 0
+      ) && (
         <section className="py-6 px-mobile">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -378,13 +386,27 @@ function HomePageContent() {
                 See all
               </Link>
             </div>
-            <div className="story-scroll">
-              {featuredProducts.map((product) => (
-                <div key={`featured-${product.id}`} className="w-32 flex-shrink-0">
-                  <ProductCard product={product} />
-                </div>
-              ))}
-            </div>
+            {productsLoading || homeConfigLoading ? (
+              <div className="story-scroll">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="w-32 flex-shrink-0">
+                    <div className="space-y-2">
+                      <SkeletonBox height="h-32" className="rounded-xl" />
+                      <SkeletonBox width="w-24" height="h-4" />
+                      <SkeletonBox width="w-16" height="h-5" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : featuredProducts.length > 0 ? (
+              <div className="story-scroll">
+                {featuredProducts.map((product) => (
+                  <div key={`featured-${product.id}`} className="w-32 flex-shrink-0">
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         </section>
       )}
@@ -411,7 +433,9 @@ function HomePageContent() {
       ))}
 
       {/* Popular Products - Hidden when searching */}
-      {!searchTerm && showConfig.popular !== false && popularProducts.length > 0 && (
+      {!searchTerm && showConfig.popular !== false && (
+        productsLoading || homeConfigLoading || popularProducts.length > 0
+      ) && (
         <section className="py-6 px-mobile">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -420,17 +444,31 @@ function HomePageContent() {
                 See all
               </Link>
             </div>
-            <div className="story-scroll">
-              {popularProducts.map((product) => (
-                <div key={`popular-${product.id}`} className="w-32 flex-shrink-0">
-                  <ProductCard product={product} />
-                </div>
-              ))}
-            </div>
+            {productsLoading || homeConfigLoading ? (
+              <div className="story-scroll">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="w-32 flex-shrink-0">
+                    <div className="space-y-2">
+                      <SkeletonBox height="h-32" className="rounded-xl" />
+                      <SkeletonBox width="w-24" height="h-4" />
+                      <SkeletonBox width="w-16" height="h-5" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : popularProducts.length > 0 ? (
+              <div className="story-scroll">
+                {popularProducts.map((product) => (
+                  <div key={`popular-${product.id}`} className="w-32 flex-shrink-0">
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         </section>
       )}
-
+                    
       {/* Deals & Offers - Hidden when searching */}
       {!searchTerm && showConfig.deals !== false && dealsProducts.length > 0 && (
         <section className="py-6 px-mobile">
@@ -553,6 +591,62 @@ function HomePageContent() {
               </button>
             </div>
           )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// HomePage skeleton component
+function HomePageSkeleton() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 pb-safe">
+      {/* Banner skeleton */}
+      <section className="py-6 px-mobile">
+        <SkeletonBanner />
+      </section>
+      
+      {/* Search bar skeleton */}
+      <section className="px-mobile mb-6">
+        <SkeletonBox height="h-12" className="rounded-2xl" />
+      </section>
+      
+      {/* Categories skeleton */}
+      <section className="px-mobile mb-8">
+        <SkeletonText className="mb-4 w-32 h-6" />
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex-shrink-0">
+              <SkeletonBox width="w-16" height="h-16" className="rounded-2xl mb-2" />
+              <SkeletonBox width="w-12" height="h-3" className="mx-auto" />
+            </div>
+          ))}
+        </div>
+      </section>
+      
+      {/* Featured products skeleton */}
+      <section className="px-mobile mb-8">
+        <SkeletonText className="mb-4 w-40 h-6" />
+        <SkeletonProductGrid count={4} />
+      </section>
+      
+      {/* Popular products skeleton */}
+      <section className="px-mobile mb-8">
+        <SkeletonText className="mb-4 w-36 h-6" />
+        <SkeletonProductGrid count={6} />
+      </section>
+      
+      {/* Quick buy skeleton */}
+      <section className="px-mobile mb-8">
+        <SkeletonText className="mb-4 w-32 h-6" />
+        <div className="grid grid-cols-4 gap-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <SkeletonBox height="h-20" className="rounded-xl" />
+              <SkeletonBox width="w-16" height="h-3" className="mx-auto" />
+              <SkeletonBox width="w-12" height="h-4" className="mx-auto" />
+            </div>
+          ))}
         </div>
       </section>
     </div>

@@ -4,6 +4,8 @@ import { useFirebaseList } from "../hooks/useFirebase";
 import { useProductBySlugAll, useAllProducts } from "../hooks/useAllProducts";
 import { useCart } from "../context/CartContext";
 import ProductCard from "../components/ProductCard";
+import { SkeletonBox, SkeletonText } from '../components/skeletons/SkeletonBase';
+import { SkeletonProductCard } from '../components/skeletons/SkeletonComponents';
 
 export default function ProductDetailPage() {
   const { productSlug } = useParams();
@@ -55,10 +57,60 @@ export default function ProductDetailPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-surface-600">Loading product...</p>
+      <div className="min-h-screen bg-surface-50 pb-safe">
+        {/* Header Skeleton */}
+        <div className="sticky top-16 z-30 bg-white/95 backdrop-blur-md border-b border-surface-200/50 px-mobile py-3">
+          <div className="flex items-center gap-3">
+            <SkeletonBox width="w-6" height="h-6" className="rounded" />
+            <SkeletonBox width="w-32" height="h-6" />
+          </div>
+        </div>
+        
+        {/* Product Image Skeleton */}
+        <div className="px-mobile py-6">
+          <SkeletonBox height="h-80" className="rounded-2xl mb-4" />
+          <div className="flex gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonBox key={i} width="w-16" height="h-16" className="rounded-lg" />
+            ))}</div>
+        </div>
+        
+        {/* Product Info Skeleton */}
+        <div className="px-mobile space-y-6">
+          <div className="space-y-3">
+            <SkeletonText className="w-3/4 h-8" />
+            <SkeletonText lines={2} />
+            <div className="flex items-center gap-3">
+              <SkeletonBox width="w-20" height="h-8" />
+              <SkeletonBox width="w-24" height="h-6" />
+            </div>
+          </div>
+          
+          {/* Variants Skeleton */}
+          <div className="space-y-3">
+            <SkeletonBox width="w-16" height="h-6" />
+            <div className="flex gap-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonBox key={i} width="w-20" height="h-10" className="rounded-lg" />
+              ))}
+            </div>
+          </div>
+          
+          {/* Action Buttons Skeleton */}
+          <div className="flex gap-3">
+            <SkeletonBox width="w-32" height="h-12" className="rounded-xl" />
+            <SkeletonBox height="h-12" className="rounded-xl flex-1" />
+          </div>
+        </div>
+        
+        {/* Related Products Skeleton */}
+        <div className="px-mobile py-8">
+          <SkeletonBox width="w-40" height="h-6" className="mb-4" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonProductCard key={i} />
+            ))}
+          </div>
         </div>
       </div>
     );

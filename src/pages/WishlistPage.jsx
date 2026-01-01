@@ -2,9 +2,33 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useWishlist } from '../context/WishlistContext';
 import ProductCard from '../components/ProductCard';
+import { SkeletonProductGrid } from '../components/skeletons/SkeletonComponents';
+import { SkeletonBox, SkeletonText } from '../components/skeletons/SkeletonBase';
 
 export default function WishlistPage() {
-  const { wishlist, clearWishlist, wishlistCount } = useWishlist();
+  const { wishlist, clearWishlist, wishlistCount, loading } = useWishlist();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pb-safe">
+        {/* Header Skeleton */}
+        <div className="px-mobile py-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <SkeletonBox width="w-32" height="h-8" />
+              <SkeletonBox width="w-24" height="h-4" />
+            </div>
+            <SkeletonBox width="w-16" height="h-6" />
+          </div>
+        </div>
+        
+        {/* Products Grid Skeleton */}
+        <div className="px-mobile">
+          <SkeletonProductGrid count={6} />
+        </div>
+      </div>
+    );
+  }
 
   if (wishlistCount === 0) {
     return (

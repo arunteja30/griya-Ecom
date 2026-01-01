@@ -7,6 +7,8 @@ import { showToast } from "../components/Toast";
 import { normalizeImageUrl } from '../utils/imageHelpers';
 import { useFirebaseObject, useFirebaseList } from '../hooks/useFirebase';
 import { isStoreOpen, getStoreStatus } from '../utils/storeHours';
+import { SkeletonCartItem } from '../components/skeletons/SkeletonLayouts';
+import { SkeletonBox, SkeletonText } from '../components/skeletons/SkeletonBase';
 
 export default function CartPage() {
   const { cartItems = [], cartTotal = 0, updateQuantity, removeFromCart, clearCart } = useCart() || {};
@@ -36,7 +38,32 @@ export default function CartPage() {
 
 
 
-  if (!cartItems) return <Loader />;
+  if (!cartItems) return (
+    <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100">
+      {/* Header */}
+      <div className="sticky top-16 z-30 bg-white/95 backdrop-blur-md border-b border-surface-200/50">
+        <div className="px-mobile py-3 flex items-center justify-between">
+          <SkeletonBox width="w-20" height="h-6" />
+          <SkeletonBox width="w-16" height="h-6" />
+        </div>
+      </div>
+      
+      {/* Cart Items Skeleton */}
+      <div className="px-mobile py-6 space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <SkeletonCartItem key={i} />
+        ))}
+      </div>
+      
+      {/* Summary Skeleton */}
+      <div className="px-mobile py-4">
+        <div className="bg-white rounded-2xl p-4 space-y-3">
+          <SkeletonText lines={4} />
+          <SkeletonBox height="h-12" className="rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100">

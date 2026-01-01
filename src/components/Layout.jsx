@@ -5,6 +5,7 @@ import { useWishlist } from "../context/WishlistContext";
 import { useLocation } from "../context/LocationContext";
 import { useServiceStatus } from "../context/ServiceStatusContext";
 import { useFirebaseObject } from "../hooks/useFirebase";
+import { OrderTrackingService } from "../utils/orderTrackingService";
 import { getStoreStatus } from "../utils/storeHours";
 
 export default function Layout() {
@@ -20,6 +21,36 @@ export default function Layout() {
   
   // Get store status
   const storeStatus = getStoreStatus(siteSettings);
+  const [latestOrderStatus, setLatestOrderStatus] = useState(null);
+
+  useEffect(() => {
+    const update = () => {
+      const orders = OrderTrackingService.getActiveOrders();
+      setLatestOrderStatus(orders.length > 0 ? orders[0].status : null);
+    };
+    update();
+    window.addEventListener('activeOrdersUpdate', update);
+    return () => window.removeEventListener('activeOrdersUpdate', update);
+  }, []);
+
+  const statusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-400';
+      case 'confirmed': return 'bg-blue-500';
+      case 'preparing': return 'bg-purple-500';
+      case 'ready': return 'bg-green-500';
+      case 'assigned': return 'bg-indigo-500';
+      case 'picked': return 'bg-orange-500';
+      case 'in-transit': return 'bg-cyan-500';
+      case 'delivered': return 'bg-green-600';
+      case 'cancelled': return 'bg-red-500';
+      default: return 'bg-gray-400';
+    }
+  };
+
+    const isRunningStatus = (status) => {
+      return ['pending', 'confirmed', 'preparing', 'assigned', 'picked', 'in-transit'].includes(status);
+    };
 
   // Update document title and favicon based on site settings
   useEffect(() => {
@@ -183,13 +214,27 @@ export default function Layout() {
             {/* Header Actions */}
             <div className="flex items-center gap-3">
               {/* Notifications */}
-              <button className="relative p-2.5 rounded-2xl bg-surface-100 hover:bg-surface-200 transition-colors">
+              <button aria-label="Order status" onClick={() => window.toggleOrderTracker && window.toggleOrderTracker()} className="relative p-2.5 rounded-2xl bg-surface-100 hover:bg-surface-200 transition-colors">
                 <svg className="w-5 h-5 text-surface-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5V3h5v14z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 16V8a2 2 0 00-1-1.73L13 3 4 6.27A2 2 0 003 8v8a2 2 0 001 1.73L11 21l8-3.27A2 2 0 0021 16z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 9l5 3 5-3" />
                 </svg>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-accent-coral rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
+                {latestOrderStatus ? (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center">
+                    <div className="relative">
+                      {isRunningStatus(latestOrderStatus) && (
+                        <span className="absolute -inset-1 flex items-center justify-center">
+                          <span className={`${statusColor(latestOrderStatus)} opacity-60 animate-ping block h-4 w-4 rounded-full`} />
+                        </span>
+                      )}
+                      <div className={`${statusColor(latestOrderStatus)} w-3 h-3 rounded-full`}></div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-accent-coral rounded-full flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                )}
               </button>
             </div>
           </div>

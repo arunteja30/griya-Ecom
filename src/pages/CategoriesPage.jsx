@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useFirebaseList } from '../hooks/useFirebase';
+import { SkeletonCategoryGrid } from '../components/skeletons/SkeletonComponents';
+import { SkeletonBox, SkeletonText } from '../components/skeletons/SkeletonBase';
 
 export default function CategoriesPage() {
   const { data: categories, loading, error } = useFirebaseList('/categories');
@@ -15,10 +17,31 @@ export default function CategoriesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-surface-600">Loading categories...</p>
+      <div className="min-h-screen pb-safe">
+        {/* Hero Header */}
+        <section className="relative bg-gradient-to-br from-primary-500 via-primary-600 to-fresh-500 text-white overflow-hidden">
+          <div className="px-mobile py-16 relative">
+            <div className="text-center space-y-6 relative">
+              <div className="space-y-2">
+                <h1 className="text-4xl font-bold tracking-tight">
+                  Shop by 
+                  <br />
+                  <span className="text-accent-gold">Categories</span>
+                </h1>
+                <p className="text-lg text-white/90">
+                  Browse all product categories
+                </p>
+              </div>
+              <div className="max-w-md mx-auto">
+                <SkeletonBox height="h-12" className="rounded-2xl bg-white/20" />
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Categories Grid Skeleton */}
+        <div className="px-mobile py-8">
+          <SkeletonCategoryGrid count={12} />
         </div>
       </div>
     );
