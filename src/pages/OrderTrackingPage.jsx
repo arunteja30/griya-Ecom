@@ -95,6 +95,7 @@ export default function OrderTrackingPage() {
       case 'confirmed': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'preparing': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'ready': return 'bg-green-100 text-green-800 border-green-200';
+      case 'handed-to-driver': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
       case 'assigned': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
       case 'picked': return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'in-transit': return 'bg-cyan-100 text-cyan-800 border-cyan-200';
@@ -111,6 +112,7 @@ export default function OrderTrackingPage() {
       case 'confirmed': return '✅';
       case 'preparing': return '👨‍🍳';
       case 'ready': return '📦';
+      case 'handed-to-driver': return '🚗📦';
       case 'assigned': return '🚗';
       case 'picked': return '📦➡️';
       case 'in-transit': return '🚚';
@@ -118,6 +120,23 @@ export default function OrderTrackingPage() {
       case 'cancelled': return '❌';
       case 'rejected': return '❌';
       default: return '❓';
+    }
+  };
+
+  const getCustomerStatusText = (status) => {
+    switch (status) {
+      case 'pending': return 'Order Accepted';
+      case 'confirmed': return 'Confirmed';
+      case 'preparing': return 'Packing Your Order';
+      case 'ready': return 'Ready for Pickup';
+      case 'handed-to-driver': return 'Handed to Driver';
+      case 'assigned': return 'Driver Assigned';
+      case 'picked': return 'Picked Up';
+      case 'in-transit': return 'On the Way';
+      case 'delivered': return 'Delivered';
+      case 'cancelled': return 'Cancelled';
+      case 'rejected': return 'Rejected';
+      default: return 'Processing';
     }
   };
 
@@ -206,7 +225,7 @@ export default function OrderTrackingPage() {
                     </div>
                     <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(order.status)} mt-3 md:mt-0`}>
                       <span className="mr-2">{getStatusIcon(order.status)}</span>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      {getCustomerStatusText(order.status)}
                     </div>
                   </div>
 

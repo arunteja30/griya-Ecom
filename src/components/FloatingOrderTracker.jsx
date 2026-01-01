@@ -107,10 +107,11 @@ export default function FloatingOrderTracker() {
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'pending': return 'Order Received';
+      case 'pending': return 'Order Accepted';
       case 'confirmed': return 'Confirmed';
-      case 'preparing': return 'Preparing';
+      case 'preparing': return 'Packing Your Order';
       case 'ready': return 'Ready for Pickup';
+      case 'handed-to-driver': return 'Handed to Driver';
       case 'assigned': return 'Driver Assigned';
       case 'picked': return 'Picked Up';
       case 'in-transit': return 'On the Way';
@@ -125,6 +126,7 @@ export default function FloatingOrderTracker() {
       case 'confirmed': return '✅';
       case 'preparing': return '👨‍🍳';
       case 'ready': return '📦';
+      case 'handed-to-driver': return '🚗📦';
       case 'assigned': return '🚗';
       case 'picked': return '📦➡️';
       case 'in-transit': return '🚚';
@@ -139,6 +141,7 @@ export default function FloatingOrderTracker() {
       case 'confirmed': return 'bg-blue-500';
       case 'preparing': return 'bg-purple-500';
       case 'ready': return 'bg-green-500';
+      case 'handed-to-driver': return 'bg-indigo-500';
       case 'assigned': return 'bg-indigo-500';
       case 'picked': return 'bg-orange-500';
       case 'in-transit': return 'bg-cyan-500';

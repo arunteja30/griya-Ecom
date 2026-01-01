@@ -6,14 +6,18 @@ import { NotificationService } from '../utils/notificationService'
 import { SoundNotification } from '../utils/soundNotification'
 
 // Stock management functions
-const updateProductStock = async (productName, quantityToDeduct) => {
+const updateProductStock = async (productName, quantityToDeduct, merchantId) => {
   try {
-    // Get all products to find the one with matching name
-    const productsRef = ref(db, '/products')
+    if (!merchantId) {
+      throw new Error('Merchant ID not provided')
+    }
+    
+    // Get merchant-specific products
+    const productsRef = ref(db, `/merchantProducts/${merchantId}`)
     const snapshot = await get(productsRef)
     
     if (!snapshot.exists()) {
-      throw new Error('No products found')
+      throw new Error('No merchant products found')
     }
     
     const products = snapshot.val()
@@ -29,15 +33,15 @@ const updateProductStock = async (productName, quantityToDeduct) => {
     })
     
     if (!targetProduct) {
-      console.warn(`Product "${productName}" not found for stock update`)
+      console.warn(`Product "${productName}" not found for merchant ${merchantId}`)
       return
     }
     
     const currentStock = parseInt(targetProduct.stock) || 0
     const newStock = Math.max(0, currentStock - quantityToDeduct)
     
-    // Update stock and inStock status
-    const productUpdateRef = ref(db, `/products/${targetProductId}`)
+    // Update stock in merchant-specific path
+    const productUpdateRef = ref(db, `/merchantProducts/${merchantId}/${targetProductId}`)
     await update(productUpdateRef, {
       stock: newStock,
       inStock: newStock > 0,
@@ -52,13 +56,17 @@ const updateProductStock = async (productName, quantityToDeduct) => {
   }
 }
 
-const checkStockAvailability = async (orderItems) => {
+const checkStockAvailability = async (orderItems, merchantId) => {
   try {
-    const productsRef = ref(db, '/products')
+    if (!merchantId) {
+      return { available: false, message: 'Merchant ID not provided' }
+    }
+    
+    const productsRef = ref(db, `/merchantProducts/${merchantId}`)
     const snapshot = await get(productsRef)
     
     if (!snapshot.exists()) {
-      return { available: false, message: 'No products found' }
+      return { available: false, message: 'No products found for this merchant' }
     }
     
     const products = snapshot.val()
@@ -105,51 +113,56 @@ const checkStockAvailability = async (orderItems) => {
   }
 }
 
-const Orders = () => {
+const Orders = ({ merchant }) => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [dateFilter, setDateFilter] = useState('all') // all | today | last7 | last30 | custom
+  const [customStart, setCustomStart] = useState('')
+  const [customEnd, setCustomEnd] = useState('')
   const [expandedOrder, setExpandedOrder] = useState(null)
   const { showToast } = useToast()
 
-  const orderStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled']
+  const orderStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'handed-to-driver', 'delivered', 'cancelled']
   const statusLabels = {
     pending: 'Pending',
     confirmed: 'Confirmed',
     preparing: 'Preparing',
-    ready: 'Ready for Pickup',
+    'ready': 'Ready for Pickup',
+    'handed-to-driver': 'Handed to Driver',
     delivered: 'Delivered',
     cancelled: 'Cancelled'
   }
 
   useEffect(() => {
-    loadOrders()
-  }, [])
+    if (merchant?.id) {
+      loadOrders()
+    }
+  }, [merchant])
 
   const loadOrders = async () => {
     try {
       console.log('Loading orders for merchant:', merchant)
-      const ordersRef = ref(db, '/orders')
-      const snapshot = await get(ordersRef)
+      
+      if (!merchant?.id) {
+        console.error('No merchant ID found')
+        showToast('Merchant not found', 'error')
+        return
+      }
+      
+      // Load orders from merchant-specific path
+      const merchantOrdersRef = ref(db, `/merchantOrders/${merchant.id}`)
+      const snapshot = await get(merchantOrdersRef)
       const ordersData = snapshot.val() || {}
       
-      console.log('All orders loaded:', Object.keys(ordersData).length)
+      console.log('Merchant orders loaded:', Object.keys(ordersData).length)
       
-      // Filter orders for current merchant
+      // Convert to array and sort by creation date
       const ordersList = Object.entries(ordersData)
-        .filter(([_, order]) => {
-          const matches = order.merchantId === merchant?.id || 
-                         order.merchant?.id === merchant?.id ||
-                         order.merchant === merchant?.id
-          if (matches) {
-            console.log('Found merchant order:', order)
-          }
-          return matches
-        })
         .map(([id, order]) => ({ id, ...order }))
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       
-      console.log('Merchant orders found:', ordersList.length)
+      console.log('Final orders list:', ordersList.length)
       setOrders(ordersList)
     } catch (error) {
       console.error('Error loading orders:', error)
@@ -161,12 +174,18 @@ const Orders = () => {
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      const orderRef = ref(db, `/orders/${orderId}`)
+      if (!merchant?.id) {
+        showToast('Merchant not found', 'error')
+        return
+      }
+      
+      // Update order in merchant-specific path
+      const orderRef = ref(db, `/merchantOrders/${merchant.id}/${orderId}`)
       const currentOrder = orders.find(order => order.id === orderId)
       
       // Check stock availability before confirming order
       if (newStatus === 'confirmed' && currentOrder?.items) {
-        const stockCheck = await checkStockAvailability(currentOrder.items)
+        const stockCheck = await checkStockAvailability(currentOrder.items, merchant.id)
         if (!stockCheck.available) {
           showToast(`Cannot confirm order: ${stockCheck.message}`, 'error')
           return
@@ -192,7 +211,7 @@ const Orders = () => {
         try {
           const stockUpdates = []
           for (const item of currentOrder.items) {
-            const result = await updateProductStock(item.name, item.quantity)
+            const result = await updateProductStock(item.name, item.quantity, merchant.id)
             if (result) {
               stockUpdates.push({
                 product: item.name,
@@ -225,9 +244,33 @@ const Orders = () => {
           : order
       ))
 
-      // Trigger notifications based on status change
+      // Send customer notifications for all status changes
+      if (currentOrder && (currentOrder.customerPhone || currentOrder.address?.phone)) {
+        const customerPhone = currentOrder.customerPhone || currentOrder.address?.phone
+        const statusMessages = {
+          confirmed: `Your order #${currentOrder.id} has been confirmed and is being prepared.`,
+          preparing: `Your order #${currentOrder.id} is now being prepared. We'll notify you when it's ready!`,
+          ready: `Great news! Your order #${currentOrder.id} is ready for pickup/delivery.`,
+          'handed-to-driver': `Your order #${currentOrder.id} has been handed to the delivery driver and is on its way to you!`,
+          delivered: `Your order #${currentOrder.id} has been delivered successfully. Thank you for your order!`,
+          cancelled: `We're sorry, but your order #${currentOrder.id} has been cancelled. Please contact us for details.`
+        }
+
+        const statusMessage = statusMessages[newStatus]
+        if (statusMessage) {
+          await NotificationService.notifyCustomerOrderStatus(
+            customerPhone,
+            currentOrder.id,
+            newStatus,
+            statusMessage
+          )
+          console.log(`Customer notified of ${newStatus} status for order ${currentOrder.id}`)
+        }
+      }
+
+      // Trigger additional notifications based on status change
       if (currentOrder) {
-        // When order is ready, notify drivers
+        // When order is ready, notify drivers for potential pickup
         if (newStatus === 'ready') {
           await NotificationService.notifyDriversOrderReady({
             id: currentOrder.id,
@@ -284,19 +327,57 @@ const Orders = () => {
     }).format(amount || 0)
   }
 
+  const isInDateRange = (order) => {
+    if (dateFilter === 'all') return true
+    
+    const createdAt = order.createdAt
+    if (!createdAt) return false
+    
+    const createdTs = new Date(createdAt).getTime()
+    if (isNaN(createdTs)) return false
+    
+    const now = Date.now()
+    let startTs = 0
+    let endTs = now
+    
+    if (dateFilter === 'today') {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      startTs = today.getTime()
+    } else if (dateFilter === 'last7') {
+      startTs = now - 7 * 24 * 60 * 60 * 1000
+    } else if (dateFilter === 'last30') {
+      startTs = now - 30 * 24 * 60 * 60 * 1000
+    } else if (dateFilter === 'custom') {
+      if (customStart) {
+        const start = new Date(customStart)
+        start.setHours(0, 0, 0, 0)
+        startTs = start.getTime()
+      }
+      if (customEnd) {
+        const end = new Date(customEnd)
+        end.setHours(23, 59, 59, 999)
+        endTs = end.getTime()
+      }
+    }
+    
+    return createdTs >= startTs && createdTs <= endTs
+  }
+
   const filteredOrders = orders.filter(order => {
-    if (filter === 'all') return true
-    return order.status === filter
+    const statusMatch = filter === 'all' ? true : order.status === filter
+    return statusMatch && isInDateRange(order)
   })
 
   const getNextStatus = (currentStatus) => {
-    const currentIndex = orderStatuses.indexOf(currentStatus)
-    if (currentIndex === -1 || currentIndex >= orderStatuses.length - 2) return null
-    return orderStatuses[currentIndex + 1]
+    const merchantControlledStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'handed-to-driver']
+    const currentIndex = merchantControlledStatuses.indexOf(currentStatus)
+    if (currentIndex === -1 || currentIndex >= merchantControlledStatuses.length - 1) return null
+    return merchantControlledStatuses[currentIndex + 1]
   }
 
   const canAdvanceStatus = (status) => {
-    return status !== 'delivered' && status !== 'cancelled'
+    return ['pending', 'confirmed', 'preparing', 'ready'].includes(status)
   }
 
   if (loading) {
@@ -360,6 +441,86 @@ const Orders = () => {
         </button>
       </div>
 
+      {/* Date Filter */}
+      <div className="space-y-3">
+        <div className="flex space-x-2 overflow-x-auto">
+          <button
+            onClick={() => setDateFilter('all')}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+              dateFilter === 'all'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            All Time
+          </button>
+          <button
+            onClick={() => setDateFilter('today')}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+              dateFilter === 'today'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Today
+          </button>
+          <button
+            onClick={() => setDateFilter('last7')}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+              dateFilter === 'last7'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Last 7 Days
+          </button>
+          <button
+            onClick={() => setDateFilter('last30')}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+              dateFilter === 'last30'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Last 30 Days
+          </button>
+          <button
+            onClick={() => setDateFilter('custom')}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
+              dateFilter === 'custom'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Custom Range
+          </button>
+        </div>
+
+        {/* Custom Date Range */}
+        {dateFilter === 'custom' && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
+              <input
+                type="date"
+                value={customStart}
+                onChange={(e) => setCustomStart(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">End Date</label>
+              <input
+                type="date"
+                value={customEnd}
+                onChange={(e) => setCustomEnd(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Orders List */}
       <div className="space-y-4">
         {filteredOrders.length === 0 ? (
@@ -412,7 +573,7 @@ const Orders = () => {
                     <p className="text-sm text-gray-600">{order.address?.mobile}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-gray-900">{formatCurrency(order.total)}</p>
+                    <p className="font-semibold text-gray-900">{formatCurrency(order.subtotal || order.total)}</p>
                     <p className="text-sm text-gray-600">{order.items?.length || 0} items</p>
                   </div>
                 </div>
@@ -476,8 +637,8 @@ const Orders = () => {
                     {/* Order Summary */}
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex justify-between items-center">
-                        <span className="font-medium text-gray-900">Total Amount</span>
-                        <span className="font-bold text-lg text-gray-900">{formatCurrency(order.total)}</span>
+                        <span className="font-medium text-gray-900">Product Amount</span>
+                        <span className="font-bold text-lg text-gray-900">{formatCurrency(order.subtotal || order.total)}</span>
                       </div>
                     </div>
                   </div>

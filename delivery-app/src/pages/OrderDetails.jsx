@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ref, get, update } from 'firebase/database';
+import { ref, get, update, push } from 'firebase/database';
 import { db } from '../firebase';
 import { showToast } from '../utils/toast';
 
@@ -67,6 +67,74 @@ export default function OrderDetails() {
         case 'delivered':
           statusUpdates[`/orders/${orderId}/deliveredAt`] = timestamp;
           break;
+      }
+
+      // Update main order in /orders path
+      await update(ref(db), statusUpdates);
+      
+      // Also update merchant-specific orders if they exist
+      if (order?.merchantOrders && Array.isArray(order.merchantOrders)) {
+        const merchantUpdates = {};
+        
+        // Update each merchant order
+        for (const merchantOrder of order.merchantOrders) {
+          if (merchantOrder.merchantId && merchantOrder.id) {
+            merchantUpdates[`/merchantOrders/${merchantOrder.merchantId}/${merchantOrder.id}/status`] = newStatus;
+            merchantUpdates[`/merchantOrders/${merchantOrder.merchantId}/${merchantOrder.id}/updatedAt`] = timestamp;
+            
+            if (newStatus === 'delivered') {
+              merchantUpdates[`/merchantOrders/${merchantOrder.merchantId}/${merchantOrder.id}/deliveredAt`] = timestamp;
+            }
+          }
+        }
+        
+        if (Object.keys(merchantUpdates).length > 0) {
+          await update(ref(db), merchantUpdates);
+          console.log('Updated merchant orders:', merchantUpdates);
+        }
+      }
+      
+      // Send notifications when delivered
+      if (newStatus === 'delivered') {
+        try {
+          // Notify customer
+          if (order?.address?.phone) {
+            const customerNotification = {
+              type: 'order_delivered',
+              title: 'Order Delivered',
+              message: `Your order #${orderId} has been delivered successfully. Thank you for your order!`,
+              orderId: orderId,
+              timestamp: timestamp,
+              read: false,
+              priority: 'high'
+            };
+            
+            await ref(db, `/notifications/customers/${order.address.phone}`).push(customerNotification);
+            console.log('Customer notification sent for delivery');
+          }
+          
+          // Notify merchants
+          if (order?.merchantOrders && Array.isArray(order.merchantOrders)) {
+            for (const merchantOrder of order.merchantOrders) {
+              if (merchantOrder.merchantId) {
+                const merchantNotification = {
+                  type: 'order_delivered',
+                  title: 'Order Delivered',
+                  message: `Order #${merchantOrder.id} has been delivered to the customer.`,
+                  orderId: merchantOrder.id,
+                  timestamp: timestamp,
+                  read: false,
+                  priority: 'medium'
+                };
+                
+                await ref(db, '/notifications/merchants').push(merchantNotification);
+                console.log(`Merchant notification sent for delivery to merchant ${merchantOrder.merchantId}`);
+              }
+            }
+          }
+        } catch (notificationError) {
+          console.error('Error sending delivery notifications:', notificationError);
+        }
       }
 
       await update(ref(db), statusUpdates);

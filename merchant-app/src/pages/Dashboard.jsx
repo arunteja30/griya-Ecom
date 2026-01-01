@@ -21,38 +21,57 @@ const Dashboard = ({ merchant }) => {
 
   const loadDashboardData = async () => {
     try {
-      // Load orders only if has permission
-      if (hasPermission('orders')) {
-        const ordersRef = ref(db, '/orders')
-        const ordersSnapshot = await get(ordersRef)
+      console.log('Loading dashboard data for merchant:', merchant)
+      console.log('Merchant permissions:', merchant?.permissions)
+      console.log('Has orders permission:', hasPermission('orders'))
+      console.log('Has products permission:', hasPermission('products'))
+      
+      // Load orders (try even if permission check fails as fallback)
+      if ((hasPermission('orders') || !merchant?.permissions) && merchant?.id) {
+        console.log('Loading orders for merchant ID:', merchant.id)
+        const merchantOrdersRef = ref(db, `/merchantOrders/${merchant.id}`)
+        const ordersSnapshot = await get(merchantOrdersRef)
         const orders = ordersSnapshot.val() || {}
         
-        const ordersList = Object.entries(orders).filter(([_, order]) => 
-          order.merchantId === merchant?.id
-        )
+        console.log('Orders data:', orders)
+        const ordersList = Object.entries(orders).map(([id, order]) => ({ id, ...order }))
         
         const today = new Date().toDateString()
         const currentMonth = new Date().getMonth()
         
-        const todayOrders = ordersList.filter(([_, order]) => 
+        const todayOrders = ordersList.filter(order => 
           new Date(order.createdAt).toDateString() === today
         )
         
-        const monthlyOrders = ordersList.filter(([_, order]) => 
+        const monthlyOrders = ordersList.filter(order => 
           new Date(order.createdAt).getMonth() === currentMonth
         )
         
-        const pendingOrders = ordersList.filter(([_, order]) => 
+        const pendingOrders = ordersList.filter(order => 
           order.status === 'pending' || order.status === 'confirmed'
         )
 
         // Recent orders
         const recent = ordersList
-          .sort(([a], [b]) => new Date(b.createdAt) - new Date(a.createdAt))
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
           .slice(0, 5)
-          .map(([id, order]) => ({ id, ...order }))
 
         setRecentOrders(recent)
+        
+        // Calculate revenue with debugging
+        const todayRevenue = todayOrders.reduce((sum, order) => {
+          const orderAmount = order.subtotal || order.total || order.totalAmount || 0
+          console.log('Order amount for revenue:', orderAmount, 'Order:', order)
+          return sum + orderAmount
+        }, 0)
+        
+        const monthRevenue = monthlyOrders.reduce((sum, order) => {
+          const orderAmount = order.subtotal || order.total || order.totalAmount || 0
+          return sum + orderAmount
+        }, 0)
+        
+        console.log('Today revenue calculated:', todayRevenue)
+        console.log('Month revenue calculated:', monthRevenue)
         
         setStats(prev => ({
           ...prev,
@@ -62,18 +81,20 @@ const Dashboard = ({ merchant }) => {
             total: ordersList.length
           },
           revenue: {
-            today: todayOrders.reduce((sum, [_, order]) => sum + (order.totalAmount || 0), 0),
-            month: monthlyOrders.reduce((sum, [_, order]) => sum + (order.totalAmount || 0), 0)
+            today: todayRevenue,
+            month: monthRevenue
           }
         }))
       }
       
-      // Load products only if has permission
-      if (hasPermission('products')) {
-        const productsRef = ref(db, `/merchants/${merchant?.id}/products`)
+      // Load products (try even if permission check fails as fallback)
+      if ((hasPermission('products') || !merchant?.permissions) && merchant?.id) {
+        console.log('Loading products for merchant ID:', merchant.id)
+        const productsRef = ref(db, `/merchantProducts/${merchant.id}`)
         const productsSnapshot = await get(productsRef)
         const products = productsSnapshot.val() || {}
         
+        console.log('Products data:', products)
         const productsList = Object.values(products)
         const outOfStockProducts = productsList.filter(product => 
           !product.inStock || (product.stock !== undefined && product.stock <= 0)
@@ -144,7 +165,7 @@ const Dashboard = ({ merchant }) => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4">
-        {hasPermission('orders') && (
+        {(hasPermission('orders') || !merchant?.permissions) && (
           <>
             <div className="card p-4">
               <div className="flex items-center justify-between">
@@ -190,7 +211,7 @@ const Dashboard = ({ merchant }) => {
           </>
         )}
 
-        {hasPermission('products') && (
+        {(hasPermission('products') || !merchant?.permissions) && (
           <div className="card p-4">
             <div className="flex items-center justify-between">
               <div>

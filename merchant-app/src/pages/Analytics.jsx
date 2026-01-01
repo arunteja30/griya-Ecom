@@ -31,15 +31,15 @@ const Analytics = ({ merchant }) => {
       return;
     }
 
-    // Listen to orders data
-    const ordersRef = ref(db, 'orders');
+    // Listen to merchant-specific orders data
+    const ordersRef = ref(db, `/merchantOrders/${merchantId}`);
     const unsubscribe = onValue(ordersRef, (snapshot) => {
       if (snapshot.exists()) {
         const ordersData = snapshot.val();
-        console.log('Orders data loaded:', Object.keys(ordersData).length, 'orders');
+        console.log('Merchant orders data loaded:', Object.keys(ordersData).length, 'orders');
         calculateAnalytics(ordersData, merchantId);
       } else {
-        console.log('No orders data found');
+        console.log('No orders data found for merchant');
         setAnalytics({
           totalOrders: 0,
           totalRevenue: 0,
@@ -59,34 +59,22 @@ const Analytics = ({ merchant }) => {
     console.log('Calculating analytics for merchant:', merchantId);
     
     const allOrders = Object.entries(ordersData);
-    console.log('All orders:', allOrders.length);
+    console.log('All orders for this merchant:', allOrders.length);
     
-    // Debug: Log all order merchantIds to see what we're working with
-    allOrders.forEach(([id, order]) => {
-      console.log(`Order ${id}:`, {
-        merchantId: order.merchantId,
-        merchant: order.merchant,
-        totalAmount: order.totalAmount,
-        status: order.status
-      });
-    });
+    // Since we're already loading from `/merchantOrders/${merchantId}`, no filtering needed
+    const merchantOrders = allOrders;
     
-    // Filter orders for this merchant - check multiple possible merchant ID fields
-    const merchantOrders = allOrders.filter(([_, order]) => {
-      const matches = order.merchantId === merchantId || 
-                     order.merchant?.id === merchantId || 
-                     order.merchant === merchantId;
-      if (matches) {
-        console.log('Found matching order:', order);
-      }
-      return matches;
-    });
-    
-    console.log('Merchant orders found:', merchantOrders.length);
+    console.log('Processing merchant orders:', merchantOrders.length);
 
     const totalOrders = merchantOrders.length;
-    const totalRevenue = merchantOrders.reduce((sum, [_, order]) => sum + (order.totalAmount || 0), 0);
+    const totalRevenue = merchantOrders.reduce((sum, [_, order]) => {
+      const amount = order.subtotal || order.total || 0;
+      console.log('Order amount:', amount, 'Order:', order);
+      return sum + amount;
+    }, 0);
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    console.log('Calculated totals:', { totalOrders, totalRevenue, averageOrderValue });
 
     // Calculate top products
     const productCounts = {};
@@ -143,7 +131,7 @@ const Analytics = ({ merchant }) => {
         const orderDate = new Date(order.createdAt);
         const key = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
         if (months[key]) {
-          months[key].revenue += order.totalAmount || 0;
+          months[key].revenue += order.subtotal || order.total || 0;
         }
       }
     });

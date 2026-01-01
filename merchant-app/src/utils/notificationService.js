@@ -29,7 +29,7 @@ export class NotificationService {
         message: `Order #${orderData.id} is ready at ${orderData.storeName || 'store'}`,
         orderId: orderData.id,
         merchantId: orderData.merchantId,
-        orderTotal: orderData.total,
+        orderTotal: orderData.subtotal || orderData.total,
         timestamp,
         read: false,
         priority: 'high'

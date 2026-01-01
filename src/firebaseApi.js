@@ -63,9 +63,33 @@ export async function createOrder(order) {
           
           return Promise.reject(new Error(`Some items are no longer available: ${unavailableItems}`));
         }
+        
+        // Decrement inventory after confirming availability
+        console.log('Decrementing inventory for order items:', order.items);
+        const decrementResult = await InventoryService.decrementInventoryOnCheckout(order.items);
+        
+        if (!decrementResult.success) {
+          console.error('Failed to decrement inventory:', decrementResult);
+          
+          // If some items failed to decrement, we should not proceed
+          if (decrementResult.outOfStockCount > 0) {
+            const outOfStockItems = decrementResult.details.outOfStock
+              .map(item => `${item.productName} (requested: ${item.requestedQuantity}, available: ${item.availableStock})`)
+              .join(', ');
+            return Promise.reject(new Error(`Items became out of stock during order processing: ${outOfStockItems}`));
+          }
+          
+          if (decrementResult.failureCount > 0) {
+            // Log failures but continue - may be network issues
+            console.warn('Some inventory updates failed but proceeding with order');
+          }
+        } else {
+          console.log('Successfully decremented inventory for all items');
+        }
+        
       } catch (inventoryError) {
-        console.warn('Inventory check failed:', inventoryError);
-        // Continue with order creation but log the issue
+        console.error('Inventory processing failed:', inventoryError);
+        return Promise.reject(new Error(`Inventory error: ${inventoryError.message}`));
       }
     }
 

@@ -62,6 +62,27 @@ export class NotificationService {
     }
   }
 
+  // Send merchant-specific notification for order delivery
+  static async notifyMerchantOrderDelivered(merchantId, orderId) {
+    try {
+      const notification = {
+        type: 'order_delivered',
+        title: 'Order Delivered',
+        message: `Order #${orderId} has been delivered to the customer.`,
+        orderId,
+        merchantId,
+        timestamp: new Date().toISOString(),
+        read: false,
+        priority: 'medium'
+      };
+
+      await push(ref(db, '/notifications/merchants'), notification);
+      console.log(`Delivery notification sent to merchant ${merchantId}`);
+    } catch (error) {
+      console.error('Error sending merchant delivery notification:', error);
+    }
+  }
+
   static subscribeToCustomerNotifications(customerPhone, callback) {
     const notificationsRef = ref(db, `/notifications/customers/${customerPhone}`);
     onValue(notificationsRef, (snapshot) => {

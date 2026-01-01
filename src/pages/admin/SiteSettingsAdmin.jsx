@@ -356,6 +356,28 @@ export default function SiteSettingsAdmin() {
               />
             </div>
             
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Default City</label>
+              <input 
+                value={form.defaultCity||''} 
+                onChange={(e)=>setForm({...form, defaultCity: e.target.value})} 
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors" 
+                placeholder="Enter default city name" 
+              />
+              <p className="text-xs text-gray-500 mt-1">This will be auto-filled in customer checkout forms</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Default Pincode</label>
+              <input 
+                value={form.defaultPincode||''} 
+                onChange={(e)=>setForm({...form, defaultPincode: e.target.value})} 
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors" 
+                placeholder="Enter default pincode" 
+              />
+              <p className="text-xs text-gray-500 mt-1">This will be auto-filled in customer checkout forms</p>
+            </div>
+            
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Footer Text</label>
               <input 

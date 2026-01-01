@@ -44,6 +44,35 @@ export default function CheckoutPage() {
     }
   }, [cartItems, navigate, placedOrder]);
 
+  // Auto-populate city and pincode from site settings
+  useEffect(() => {
+    if (siteSettings && (!address.city || !address.pincode)) {
+      const defaultCity = siteSettings.defaultCity || '';
+      const defaultPincode = siteSettings.defaultPincode || '';
+      
+      // If no default pincode is set, use the first serviceable pincode
+      let pincode = defaultPincode;
+      if (!pincode && siteSettings.serviceablePincodes) {
+        if (Array.isArray(siteSettings.serviceablePincodes) && siteSettings.serviceablePincodes.length > 0) {
+          pincode = siteSettings.serviceablePincodes[0];
+        } else if (typeof siteSettings.serviceablePincodes === 'string') {
+          const pincodes = siteSettings.serviceablePincodes.split(/[\n,]/).map(p => p.trim()).filter(Boolean);
+          if (pincodes.length > 0) {
+            pincode = pincodes[0];
+          }
+        }
+      }
+      
+      if (defaultCity || pincode) {
+        setAddress(prev => ({
+          ...prev,
+          city: prev.city || defaultCity,
+          pincode: prev.pincode || pincode
+        }));
+      }
+    }
+  }, [siteSettings, address.city, address.pincode]);
+
   // Promo code validation function
   const validateAndApplyPromo = async () => {
     if (!promoCode.trim()) {

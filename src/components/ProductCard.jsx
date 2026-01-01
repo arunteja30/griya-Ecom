@@ -36,6 +36,18 @@ export default function ProductCard({ product }) {
   const cartQuantity = currentCartItem?.quantity || 0;
 
   const handleAddToCart = async () => {
+    // Check stock availability before adding
+    if (product.inStock === false || product.stock === 0) {
+      console.log('Product is out of stock');
+      return;
+    }
+    
+    // Check if adding one more would exceed stock limit
+    if (product.stock !== undefined && cartQuantity >= product.stock) {
+      console.log('Stock limit reached');
+      return;
+    }
+    
     setIsLoading(true);
     try {
       // construct a variant-aware product object for the cart
@@ -49,7 +61,11 @@ export default function ProductCard({ product }) {
         originalPrice: selectedVariant && selectedVariant.price && product.originalPrice ? Number(product.originalPrice) : product.originalPrice,
         unit: selectedVariant?.label || product.unit
       };
-      await addToCart(itemForCart, 1);
+      
+      const result = await addToCart(itemForCart, 1);
+      if (result && !result.success) {
+        console.log('Add to cart failed:', result.message);
+      }
     } catch (error) {
       console.error('Failed to add to cart:', error);
     } finally {
@@ -150,6 +166,33 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
+        {/* Stock Status */}
+        {(product.stock !== undefined || product.inStock === false) && (
+          <div className="flex items-center gap-1">
+            <div className={`w-1.5 h-1.5 rounded-full ${
+              product.inStock === false || product.stock === 0 
+                ? 'bg-red-500' 
+                : product.stock <= 5 
+                ? 'bg-yellow-500' 
+                : 'bg-green-500'
+            }`}></div>
+            <span className={`text-[8px] font-medium ${
+              product.inStock === false || product.stock === 0 
+                ? 'text-red-600' 
+                : product.stock <= 5 
+                ? 'text-yellow-600' 
+                : 'text-green-600'
+            }`}>
+              {product.inStock === false || product.stock === 0 
+                ? 'Out of Stock' 
+                : product.stock <= 5 
+                ? `Only ${product.stock} left` 
+                : 'In Stock'
+              }
+            </span>
+          </div>
+        )}
+
         {/* Add to Cart Button */}
         {cartQuantity === 0 ? (
           <div className="flex gap-1 w-full">
@@ -157,17 +200,20 @@ export default function ProductCard({ product }) {
               <button
                 onClick={() => openVariantSelector(product)}
                 className="btn-primary text-[9px] px-1.5 py-0.5 w-full"
+                disabled={product.stock === 0 || product.inStock === false}
               >
-                Choose
+                {product.stock === 0 || product.inStock === false ? 'Out of Stock' : 'Choose'}
               </button>
             ) : (
               <button
                 onClick={handleAddToCart}
-                disabled={isLoading}
-                className="btn-primary text-[9px] px-1.5 py-0.5 w-full"
+                disabled={isLoading || product.stock === 0 || product.inStock === false}
+                className="btn-primary text-[9px] px-1.5 py-0.5 w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                ) : product.stock === 0 || product.inStock === false ? (
+                  'Out of Stock'
                 ) : (
                   'Add'
                 )}
@@ -191,7 +237,7 @@ export default function ProductCard({ product }) {
               </div>
               <button
                 onClick={handleAddToCart}
-                disabled={isLoading}
+                disabled={isLoading || (product.stock !== undefined && cartQuantity >= product.stock) || product.inStock === false}
                 className="flex-1 h-8 flex items-center justify-center text-primary-600 hover:bg-primary-200 rounded-r-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (

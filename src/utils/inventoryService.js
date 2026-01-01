@@ -18,7 +18,13 @@ export class InventoryService {
       // Process each item in the cart
       for (const item of cartItems) {
         try {
-          const productRef = ref(db, `/products/${item.id}`);
+          // Determine the correct path based on whether item is merchant-specific
+          let productRef;
+          if (item.merchantId || item._merchantSpecific) {
+            productRef = ref(db, `/merchantProducts/${item.merchantId}/${item.id}`);
+          } else {
+            productRef = ref(db, `/products/${item.id}`);
+          }
           
           // Use Firebase transaction to ensure atomic updates
           const result = await runTransaction(productRef, (currentProduct) => {
@@ -99,7 +105,14 @@ export class InventoryService {
       const availabilityResults = [];
 
       for (const item of cartItems) {
-        const productRef = ref(db, `/products/${item.id}`);
+        // Determine the correct path based on whether item is merchant-specific
+        let productRef;
+        if (item.merchantId || item._merchantSpecific) {
+          productRef = ref(db, `/merchantProducts/${item.merchantId}/${item.id}`);
+        } else {
+          productRef = ref(db, `/products/${item.id}`);
+        }
+        
         const snapshot = await get(productRef);
         const product = snapshot.val();
 
@@ -158,7 +171,13 @@ export class InventoryService {
 
       for (const item of orderItems) {
         try {
-          const productRef = ref(db, `/products/${item.id}`);
+          // Determine the correct path based on whether item is merchant-specific
+          let productRef;
+          if (item.merchantId || item._merchantSpecific) {
+            productRef = ref(db, `/merchantProducts/${item.merchantId}/${item.id}`);
+          } else {
+            productRef = ref(db, `/products/${item.id}`);
+          }
           
           const result = await runTransaction(productRef, (currentProduct) => {
             if (currentProduct === null) {

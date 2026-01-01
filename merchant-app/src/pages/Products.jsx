@@ -453,7 +453,7 @@ const Products = ({ merchant }) => {
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-3 gap-2">
         {filteredProducts.length === 0 ? (
           <div className="col-span-full card p-8 text-center">
             <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -465,7 +465,7 @@ const Products = ({ merchant }) => {
           filteredProducts.map((product) => (
             <div key={product.id} className="card overflow-hidden">
               {product.imageUrl && (
-                <div className="aspect-video bg-gray-100">
+                <div className="relative aspect-[2/1] bg-gray-100">
                   <img
                     src={product.imageUrl}
                     alt={product.name}
@@ -479,87 +479,84 @@ const Products = ({ merchant }) => {
                 </div>
               )}
               
-              <div className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">{product.name}</h3>
+              <div className="p-1.5 space-y-0.5">
+                <div className="flex items-start justify-between mb-1">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-[10px] truncate leading-tight">{product.name}</h3>
                     {product.description && (
-                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{product.description}</p>
+                      <p className="text-[8px] text-gray-600 line-clamp-1">{product.description}</p>
                     )}
                   </div>
-                  <div className="flex items-center space-x-1 ml-2">
+                  <div className="flex items-center space-x-0.5 ml-1 flex-shrink-0">
                     <button
                       onClick={() => openEditModal(product)}
-                      className="p-2 text-gray-400 hover:text-blue-600 touch-target"
+                      className="p-1 text-gray-400 hover:text-blue-600 touch-target"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                     </button>
                     <button
                       onClick={() => openCopyModal(product)}
-                      className="p-2 text-gray-400 hover:text-green-600 touch-target"
+                      className="p-1 text-gray-400 hover:text-green-600 touch-target"
                       title="Copy Product"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
                     </button>
                     <button
                       onClick={() => deleteProduct(product.id)}
-                      className="p-2 text-gray-400 hover:text-red-600 touch-target"
+                      className="p-1 text-gray-400 hover:text-red-600 touch-target"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-lg text-gray-900">{formatCurrency(product.price)}</span>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center space-x-0.5">
+                    <span className="font-bold text-[10px] text-gray-900">{formatCurrency(product.price)}</span>
                     {product.originalPrice && product.originalPrice > product.price && (
-                      <span className="text-sm text-gray-500 line-through">{formatCurrency(product.originalPrice)}</span>
+                      <span className="text-[8px] text-gray-500 line-through">{formatCurrency(product.originalPrice)}</span>
                     )}
                   </div>
-                  <span className="text-sm text-gray-600">per {product.unit}</span>
+                  <span className="text-[8px] text-gray-600">/{product.unit}</span>
                 </div>
 
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Stock:</span>
-                    <span className={`font-semibold text-sm px-2 py-1 rounded-full ${
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center space-x-0.5">
+                    <div className={`w-1 h-1 rounded-full ${
                       product.stock === 0 
-                        ? 'bg-red-100 text-red-800' 
+                        ? 'bg-red-500' 
                         : product.stock <= 5 
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}>
+                        ? 'bg-yellow-500'
+                        : 'bg-green-500'
+                    }`}></div>
+                    <span className="text-[8px] font-medium text-gray-600">
                       {product.stock || 0}
-                      {product.stock <= 5 && product.stock > 0 && (
-                        <span className="ml-1 text-xs">⚠️</span>
-                      )}
                     </span>
                   </div>
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  <span className={`px-1 py-0.5 text-[7px] font-medium rounded ${
                     product.inStock && product.stock > 0
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    {product.inStock && product.stock > 0 ? 'Available' : 'Out of Stock'}
+                    {product.inStock && product.stock > 0 ? 'In' : 'Out'}
                   </span>
                 </div>
 
                 <button
                   onClick={() => toggleStock(product)}
-                  className={`w-full py-2 px-4 rounded-lg font-medium transition-colors touch-target ${
+                  className={`w-full py-1 px-2 rounded text-[7px] font-medium transition-colors touch-target ${
                     product.inStock
                       ? 'bg-red-100 text-red-700 hover:bg-red-200'
                       : 'bg-green-100 text-green-700 hover:bg-green-200'
                   }`}
                 >
-                  Mark as {product.inStock ? 'Out of Stock' : 'In Stock'}
+                  {product.inStock ? 'Mark Out' : 'Mark In'}
                 </button>
               </div>
             </div>

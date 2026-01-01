@@ -9,8 +9,11 @@ import AdminCard from './AdminCard';
 
 export default function OrdersAdmin(){
   const [orders, setOrders] = useState({});
+  const [merchantOrders, setMerchantOrders] = useState({});
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+  const [showMerchantOrders, setShowMerchantOrders] = useState(false);
+  const [earnings, setEarnings] = useState({ today: 0, last7: 0, month: 0, total: 0 });
   // filters
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -23,11 +26,63 @@ export default function OrdersAdmin(){
 
    useEffect(()=>{
      const r = ref(db, '/orders');
-     return onValue(r, snap=>{
+     const unsubscribeOrders = onValue(r, snap=>{
        setOrders(snap.val() || {});
        setLoading(false);
      });
+
+     // Load all merchant orders
+     const merchantOrdersRef = ref(db, '/merchantOrders');
+     const unsubscribeMerchantOrders = onValue(merchantOrdersRef, snap=>{
+       const data = snap.val() || {};
+       // Flatten merchant orders from all merchants
+       const flattenedOrders = {};
+       Object.entries(data).forEach(([merchantId, orders]) => {
+         Object.entries(orders || {}).forEach(([orderId, order]) => {
+           flattenedOrders[`${merchantId}_${orderId}`] = {
+             ...order,
+             merchantId,
+             originalOrderId: orderId
+           };
+         });
+       });
+       setMerchantOrders(flattenedOrders);
+       calculateEarnings(flattenedOrders);
+     });
+
+     return () => {
+       unsubscribeOrders();
+       unsubscribeMerchantOrders();
+     };
    },[]);
+
+   const calculateEarnings = (merchantOrdersData) => {
+     const now = Date.now();
+     const today = new Date(); today.setHours(0,0,0,0); 
+     const todayStart = today.getTime();
+     const last7Start = now - 7 * 24 * 60 * 60 * 1000;
+     const thisMonth = new Date(); thisMonth.setDate(1); thisMonth.setHours(0,0,0,0);
+     const monthStart = thisMonth.getTime();
+
+     let todayEarnings = 0, last7Earnings = 0, monthEarnings = 0, totalEarnings = 0;
+
+     Object.values(merchantOrdersData).forEach(order => {
+       const amount = order.subtotal || order.total || 0;
+       const createdAt = new Date(order.createdAt).getTime();
+
+       totalEarnings += amount;
+       if (createdAt >= todayStart) todayEarnings += amount;
+       if (createdAt >= last7Start) last7Earnings += amount;
+       if (createdAt >= monthStart) monthEarnings += amount;
+     });
+
+     setEarnings({
+       today: todayEarnings,
+       last7: last7Earnings,
+       month: monthEarnings,
+       total: totalEarnings
+     });
+   };
 
    const updateStatus = async (id, status)=>{
      try{
@@ -83,7 +138,8 @@ export default function OrdersAdmin(){
    if(loading) return <Loader />;
 
    // prepare, sort and filter orders for display
-   const itemsSorted = Object.entries(orders).sort((a,b)=>{
+   const currentOrders = showMerchantOrders ? merchantOrders : orders;
+   const itemsSorted = Object.entries(currentOrders).sort((a,b)=>{
      const da = new Date(a[1].createdAt || 0).getTime();
      const dbt = new Date(b[1].createdAt || 0).getTime();
      return dbt - da;
@@ -121,11 +177,12 @@ export default function OrdersAdmin(){
      if(statusFilter && (o.status || '') !== statusFilter) return false;
      if(search){
        const q = String(search).trim().toLowerCase();
-       const orderIdMatch = String(o.orderId || id).toLowerCase().includes(q);
+       const orderIdMatch = String(o.orderId || o.originalOrderId || id).toLowerCase().includes(q);
        const customerName = String(o.customer?.name || o.address?.name || '').toLowerCase();
        const customerPhone = String(o.customer?.phone || o.customer?.contact || o.address?.phone || o.address?.contact || '').toLowerCase();
        const itemsText = (o.items || []).map(it => (it.name || it.title || it.id || it.productId || '')).join(' ').toLowerCase();
-       if(orderIdMatch || customerName.includes(q) || customerPhone.includes(q) || itemsText.includes(q)) return true;
+       const merchantIdMatch = showMerchantOrders && String(o.merchantId || '').toLowerCase().includes(q);
+       if(orderIdMatch || customerName.includes(q) || customerPhone.includes(q) || itemsText.includes(q) || merchantIdMatch) return true;
        return false;
      }
     // date filter
@@ -137,6 +194,56 @@ export default function OrdersAdmin(){
 
    return (
      <AdminCard title="Orders Management" subtitle="Track and manage customer orders efficiently">
+       {/* Earnings Dashboard */}
+       <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+         <div className="flex items-center justify-between mb-4">
+           <h3 className="text-lg font-semibold text-gray-900">Merchant Earnings Overview</h3>
+           <div className="flex gap-2">
+             <button
+               onClick={() => setShowMerchantOrders(false)}
+               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                 !showMerchantOrders 
+                   ? 'bg-blue-600 text-white' 
+                   : 'bg-white text-gray-600 hover:bg-gray-50'
+               }`}
+             >
+               Regular Orders
+             </button>
+             <button
+               onClick={() => setShowMerchantOrders(true)}
+               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                 showMerchantOrders 
+                   ? 'bg-blue-600 text-white' 
+                   : 'bg-white text-gray-600 hover:bg-gray-50'
+               }`}
+             >
+               Merchant Orders
+             </button>
+           </div>
+         </div>
+         
+         {showMerchantOrders && (
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+             <div className="bg-white p-4 rounded-lg border border-gray-200">
+               <div className="text-sm text-gray-600 mb-1">Today</div>
+               <div className="text-xl font-bold text-gray-900">{fmt(earnings.today)}</div>
+             </div>
+             <div className="bg-white p-4 rounded-lg border border-gray-200">
+               <div className="text-sm text-gray-600 mb-1">Last 7 Days</div>
+               <div className="text-xl font-bold text-gray-900">{fmt(earnings.last7)}</div>
+             </div>
+             <div className="bg-white p-4 rounded-lg border border-gray-200">
+               <div className="text-sm text-gray-600 mb-1">This Month</div>
+               <div className="text-xl font-bold text-gray-900">{fmt(earnings.month)}</div>
+             </div>
+             <div className="bg-white p-4 rounded-lg border border-gray-200">
+               <div className="text-sm text-gray-600 mb-1">Total Earnings</div>
+               <div className="text-xl font-bold text-gray-900">{fmt(earnings.total)}</div>
+             </div>
+           </div>
+         )}
+       </div>
+
        {/* Enhanced Filters Section */}
        <div className="mb-6 p-4 bg-gray-50 rounded-xl border">
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
@@ -146,7 +253,7 @@ export default function OrdersAdmin(){
                <input 
                  value={search} 
                  onChange={(e)=>setSearch(e.target.value)} 
-                 placeholder="Order ID, customer name, phone..." 
+                 placeholder={showMerchantOrders ? "Order ID, customer name, phone, merchant ID..." : "Order ID, customer name, phone..."} 
                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" 
                />
                <svg className="absolute left-3 top-3 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,7 +348,7 @@ export default function OrdersAdmin(){
               </div>
               <div className="text-sm text-gray-500">
                 Total Value: {fmt(items.reduce((sum, [_, order]) => {
-                  const amount = order.amount ?? order.total ?? (order.items ? order.items.reduce((s,it)=>s + ((it.price||0)*(it.quantity||1)), 0) : 0);
+                  const amount = showMerchantOrders ? (order.subtotal || order.total || 0) : (order.amount ?? order.total ?? (order.items ? order.items.reduce((s,it)=>s + ((it.price||0)*(it.quantity||1)), 0) : 0));
                   return sum + amount;
                 }, 0))}
               </div>
@@ -285,7 +392,7 @@ export default function OrdersAdmin(){
               {items.map(([id, o]) => {
                 const customer = o.customer || o.address || {};
                 const shipping = o.shipping || o.address || {};
-                const amount = o.amount ?? o.total ?? (o.items ? o.items.reduce((s,it)=>s + ((it.price||0)*(it.quantity||1)), 0) : 0);
+                const amount = showMerchantOrders ? (o.subtotal || o.total || 0) : (o.amount ?? o.total ?? (o.items ? o.items.reduce((s,it)=>s + ((it.price||0)*(it.quantity||1)), 0) : 0));
                 const status = o.status || 'pending';
                 
                 const getStatusStyle = (status) => {
@@ -305,7 +412,17 @@ export default function OrdersAdmin(){
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-gray-900 truncate">{customer?.name || 'Guest Customer'}</h3>
-                          <p className="text-sm text-gray-500 mt-1">#{o.orderId || id}</p>
+                          <p className="text-sm text-gray-500 mt-1">#{o.orderId || o.originalOrderId || id}</p>
+                          {showMerchantOrders && o.merchantId && (
+                            <div className="flex items-center mt-1">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800">
+                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                                Merchant: {o.merchantId}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset ${getStatusStyle(status)}`}>
                           {status.charAt(0).toUpperCase() + status.slice(1)}

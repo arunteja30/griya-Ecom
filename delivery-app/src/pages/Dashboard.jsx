@@ -114,7 +114,30 @@ export default function Dashboard() {
           break;
       }
 
+      // Update main order in /orders path
       await update(ref(db), statusUpdates);
+      
+      // Also update merchant-specific orders if they exist
+      if (order?.merchantOrders && Array.isArray(order.merchantOrders)) {
+        const merchantUpdates = {};
+        
+        // Update each merchant order
+        for (const merchantOrder of order.merchantOrders) {
+          if (merchantOrder.merchantId && merchantOrder.id) {
+            merchantUpdates[`/merchantOrders/${merchantOrder.merchantId}/${merchantOrder.id}/status`] = newStatus;
+            merchantUpdates[`/merchantOrders/${merchantOrder.merchantId}/${merchantOrder.id}/updatedAt`] = timestamp;
+            
+            if (newStatus === 'delivered') {
+              merchantUpdates[`/merchantOrders/${merchantOrder.merchantId}/${merchantOrder.id}/deliveredAt`] = timestamp;
+            }
+          }
+        }
+        
+        if (Object.keys(merchantUpdates).length > 0) {
+          await update(ref(db), merchantUpdates);
+          console.log('Updated merchant orders from Dashboard:', merchantUpdates);
+        }
+      }
       
       if (order?.address?.phone) {
         let title, message;
@@ -131,6 +154,22 @@ export default function Dashboard() {
           case 'delivered':
             title = 'Order Delivered!';
             message = `Your order #${orderId} has been successfully delivered. Thank you for your order!`;
+            
+            // Also notify merchants when delivered
+            if (order?.merchantOrders && Array.isArray(order.merchantOrders)) {
+              for (const merchantOrder of order.merchantOrders) {
+                if (merchantOrder.merchantId) {
+                  try {
+                    await NotificationService.notifyMerchantOrderDelivered(
+                      merchantOrder.merchantId, 
+                      merchantOrder.id
+                    );
+                  } catch (merchantNotifyError) {
+                    console.error('Error notifying merchant:', merchantNotifyError);
+                  }
+                }
+              }
+            }
             break;
           default:
             title = 'Order Update';
@@ -273,7 +312,12 @@ export default function Dashboard() {
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold">{formatINR(order.total || order.subtotal || 0)}</span>
+                      <span className="text-2xl font-bold">
+                        {order.status === 'pending' || order.status === 'confirmed' || order.status === 'ready' ? 
+                          formatINR(order.fees?.deliveryFee || order.deliveryFee || 0) : 
+                          formatINR(order.total || order.subtotal || 0)
+                        }
+                      </span>
                       
                       <div className="flex space-x-2">
                         {order.status === 'assigned' && (
@@ -425,9 +469,15 @@ export default function Dashboard() {
                       </div>
 
                       <div className="flex justify-between items-center p-3 bg-gradient-to-r from-primary-50 to-fresh-50 rounded-xl border border-primary-200">
-                        <span className="text-sm font-semibold text-surface-700">Total Amount</span>
+                        <span className="text-sm font-semibold text-surface-700">
+                          {filter === 'available' ? 'Delivery Fee' : 
+                           (order.paymentMethod === 'cod' || order.payment?.method === 'cod') ? 'Total Amount (COD)' : 'Total Amount'}
+                        </span>
                         <span className="text-xl font-bold text-primary-600">
-                          {formatINR(order.total || order.subtotal || 0)}
+                          {filter === 'available' ? 
+                            formatINR(order.fees?.deliveryFee || order.deliveryFee || 0) :
+                            formatINR(order.total || order.subtotal || 0)
+                          }
                         </span>
                       </div>
                     </div>
