@@ -274,6 +274,18 @@ export default function ProductsAdmin(){
     return true;
   });
 
+  // Debug log - temporary for troubleshooting
+  console.log('Products debug:', { 
+    productsCount: Object.keys(products || {}).length, 
+    filteredCount: filteredProducts.length,
+    loading, 
+    search, 
+    categoryFilter, 
+    stockFilter,
+    sampleProduct: Object.values(products || {})[0],
+    productsKeys: Object.keys(products || {}).slice(0, 3) // first 3 product IDs
+  });
+
   const confirmDelete = (id)=>{
     setToDelete(id);
     setShowDelete(true);
@@ -403,7 +415,28 @@ export default function ProductsAdmin(){
             </div>
 
             <div className="p-6">
-              {viewMode === 'grid' ? (
+              {filteredProducts.length === 0 ? (
+                <div className="text-center py-12">
+                  <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+                  <p className="text-gray-500 mb-4">
+                    {Object.keys(products || {}).length === 0 
+                      ? "No products in database yet. Add your first product using the form on the right."
+                      : search || categoryFilter || stockFilter !== 'all' 
+                        ? "No products match your current filters. Try adjusting your search criteria."
+                        : "No products to display."
+                    }
+                  </p>
+                  <button 
+                    onClick={() => {setSearch(''); setCategoryFilter(''); setStockFilter('all');}} 
+                    className="btn-primary"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              ) : viewMode === 'grid' ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                   {filteredProducts.map(([id, p]) => (
                     <div key={id} className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 hover:shadow-md overflow-hidden">

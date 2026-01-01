@@ -7,7 +7,6 @@ import AdminCard from './AdminCard';
 export default function DriversAdmin() {
   const [drivers, setDrivers] = useState({});
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
   const [editingDriver, setEditingDriver] = useState(null);
   const [search, setSearch] = useState('');
 
@@ -80,8 +79,9 @@ export default function DriversAdmin() {
         showToast('Driver added successfully', 'success');
       }
 
-      setShowModal(false);
-      resetForm();
+      if (!editingDriver) {
+        resetForm();
+      }
     } catch (error) {
       console.error('Error saving driver:', error);
       showToast('Failed to save driver', 'error');
@@ -90,8 +90,16 @@ export default function DriversAdmin() {
 
   const handleEdit = (id, driver) => {
     setEditingDriver(id);
-    setForm(driver);
-    setShowModal(true);
+    setForm({
+      id: driver.id || '',
+      name: driver.name || '',
+      phone: driver.phone || '',
+      email: driver.email || '',
+      vehicle: driver.vehicle || '',
+      licenseNumber: driver.licenseNumber || '',
+      status: driver.status || 'available',
+      password: driver.password || 'delivery123'
+    });
   };
 
   const handleDelete = async (id) => {
@@ -123,7 +131,8 @@ export default function DriversAdmin() {
   const filteredDrivers = Object.entries(drivers).filter(([id, driver]) => {
     return driver.name?.toLowerCase().includes(search.toLowerCase()) ||
            driver.phone?.includes(search) ||
-           driver.id?.toLowerCase().includes(search.toLowerCase());
+           driver.id?.toLowerCase().includes(search.toLowerCase()) ||
+           driver.vehicle?.toLowerCase().includes(search.toLowerCase());
   });
 
   const getStatusColor = (status) => {
@@ -162,32 +171,35 @@ export default function DriversAdmin() {
     <AdminCard
       title="Driver Management"
       subtitle="Manage delivery partners and their status"
-      actions={(
-        <button
-          onClick={() => {
-            resetForm();
-            setForm(prev => ({ ...prev, id: generateId() }));
-            setShowModal(true);
-          }}
-          className="btn-primary"
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Driver
-        </button>
-      )}
     >
-      {/* Search */}
-      <div className="max-w-md mb-4">
-        <input
-          type="text"
-          placeholder="Search drivers..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+      {/* 2-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Drivers List */}
+        <div className="lg:col-span-2">
+          {/* Header with Search and Add Button */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="max-w-md flex-1">
+              <input
+                type="text"
+                placeholder="Search drivers..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <button
+              onClick={() => {
+                resetForm();
+                setForm(prev => ({ ...prev, id: generateId() }));
+              }}
+              className="ml-4 btn-primary"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Driver
+            </button>
+          </div>
 
       {/* Drivers List */}
       {filteredDrivers.length === 0 ? (
@@ -201,7 +213,6 @@ export default function DriversAdmin() {
             onClick={() => {
               resetForm();
               setForm(prev => ({ ...prev, id: generateId() }));
-              setShowModal(true);
             }}
             className="btn-primary"
           >
@@ -293,131 +304,135 @@ export default function DriversAdmin() {
           </div>
         </div>
       )}
+        </div>
 
-      {/* Add/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-semibold">
-                  {editingDriver ? 'Edit Driver' : 'Add New Driver'}
-                </h2>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+        {/* Right Column - Add/Edit Form */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold">
+                {editingDriver ? 'Edit Driver' : 'Add New Driver'}
+              </h2>
+              <button
+                onClick={() => resetForm()}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="grid gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Driver ID *</label>
+                <input
+                  type="text"
+                  value={form.id}
+                  onChange={(e) => setForm({...form, id: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => setForm({...form, name: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                <input
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => setForm({...form, phone: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({...form, email: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
+                <select
+                  value={form.vehicle}
+                  onChange={(e) => setForm({...form, vehicle: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                  <option value="">Select Vehicle</option>
+                  <option value="Bike">Bike</option>
+                  <option value="Car">Car</option>
+                  <option value="Van">Van</option>
+                </select>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Driver ID *</label>
-                  <input
-                    type="text"
-                    value={form.id}
-                    onChange={(e) => setForm({...form, id: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                  <input
-                    type="text"
-                    value={form.name}
-                    onChange={(e) => setForm({...form, name: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
-                  <input
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => setForm({...form, phone: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm({...form, email: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
-                  <select
-                    value={form.vehicle}
-                    onChange={(e) => setForm({...form, vehicle: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select Vehicle</option>
-                    <option value="Bike">Bike</option>
-                    <option value="Car">Car</option>
-                    <option value="Van">Van</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">License Number</label>
-                  <input
-                    type="text"
-                    value={form.licenseNumber}
-                    onChange={(e) => setForm({...form, licenseNumber: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select
-                    value={form.status}
-                    onChange={(e) => setForm({...form, status: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="available">Available</option>
-                    <option value="busy">Busy</option>
-                    <option value="offline">Offline</option>
-                    <option value="disabled">Disabled</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                  <input
-                    type="text"
-                    value={form.password}
-                    onChange={(e) => setForm({...form, password: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">License Number</label>
+                <input
+                  type="text"
+                  value={form.licenseNumber}
+                  onChange={(e) => setForm({...form, licenseNumber: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
 
-              <div className="flex justify-end space-x-3 mt-6">
-                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50">
-                  Cancel
-                </button>
-                <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                  {editingDriver ? 'Update Driver' : 'Add Driver'}
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={form.status}
+                  onChange={(e) => setForm({...form, status: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="available">Available</option>
+                  <option value="busy">Busy</option>
+                  <option value="offline">Offline</option>
+                  <option value="disabled">Disabled</option>
+                </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input
+                  type="text"
+                  value={form.password}
+                  onChange={(e) => setForm({...form, password: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button 
+                onClick={() => resetForm()}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+              >
+                Clear
+              </button>
+              <button 
+                onClick={handleSave} 
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                {editingDriver ? 'Update Driver' : 'Add Driver'}
+              </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
     </AdminCard>
   );
 }
