@@ -44,6 +44,14 @@ export default function CartPage() {
       <div className="sticky top-16 z-30 bg-white/95 backdrop-blur-md border-b border-surface-200/50">
         <div className="px-mobile py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <button 
+              onClick={() => navigate(-1)} 
+              className="text-surface-600 hover:text-surface-900 transition-colors p-1 -ml-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
             <h1 className="text-xl font-bold text-surface-900">Cart</h1>
             {cartItems.length > 0 && (
               <span className="badge-primary px-2 py-1 text-xs">

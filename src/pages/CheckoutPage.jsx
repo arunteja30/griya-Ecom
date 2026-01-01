@@ -411,10 +411,19 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 via-green-50 to-white relative">
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-purple-100">
-        <div className="px-4 py-3">
-          <h1 className="text-lg font-semibold text-gray-800">Checkout</h1>
+      {/* Header Toolbar */}
+      <div className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
+        <div className="px-4 py-4 flex items-center gap-3">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="text-gray-600 hover:text-gray-900 transition-colors p-2 -ml-2 rounded-full hover:bg-gray-100"
+            aria-label="Go back"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <h1 className="text-xl font-semibold text-gray-900">Checkout</h1>
         </div>
       </div>
 
