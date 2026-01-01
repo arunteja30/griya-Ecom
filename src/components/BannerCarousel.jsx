@@ -74,13 +74,6 @@ export default function BannerCarousel({ banners = [] }) {
         {/* Controls */}
         <button aria-label="Previous banner" onClick={goPrev} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/60 z-40 pointer-events-auto">‹</button>
         <button aria-label="Next banner" onClick={goNext} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/60 z-40 pointer-events-auto">›</button>
-
-        {/* Indicators */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-4 flex items-center gap-2 z-40 pointer-events-auto">
-          {visible.map((_, i) => (
-            <button key={`banner-ind-${i}`} onClick={() => setIndex(i)} className={`w-2 h-2 rounded-full ${i === index ? 'bg-white' : 'bg-white/50'}`} />
-          ))}
-        </div>
       </div>
     </div>
   );

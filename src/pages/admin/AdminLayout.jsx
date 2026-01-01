@@ -18,6 +18,7 @@ export default function AdminLayout({ children }) {
 
   const navItems = [
     { path: '/admin', label: 'Site Settings', icon: '⚙️' },
+    { path: '/admin/analytics', label: 'Analytics', icon: '📊' },
     { path: '/admin/theme', label: 'Theme', icon: '🎨' },
     { path: '/admin/categories', label: 'Categories', icon: '📦' },
     { path: '/admin/products', label: 'Products', icon: '🛍️' },

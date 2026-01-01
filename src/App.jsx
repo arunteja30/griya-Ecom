@@ -15,6 +15,9 @@ import ContactPage from "./pages/ContactPage";
 import AdminRoute from "./components/AdminRoute";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
+import AnalyticsAdmin from "./pages/admin/AnalyticsAdmin";
+import MerchantDetailsAdmin from "./pages/admin/MerchantDetailsAdmin";
+import DriverDetailsAdmin from "./pages/admin/DriverDetailsAdmin";
 import SiteSettingsAdmin from "./pages/admin/SiteSettingsAdmin";
 import CategoriesAdmin from "./pages/admin/CategoriesAdmin";
 import ProductsAdmin from "./pages/admin/ProductsAdmin";
@@ -73,6 +76,9 @@ export default function App() {
           {/* Admin routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminRoute><AdminLayout><SiteSettingsAdmin /></AdminLayout></AdminRoute>} />
+          <Route path="/admin/analytics" element={<AdminRoute><AdminLayout><AnalyticsAdmin /></AdminLayout></AdminRoute>} />
+          <Route path="/admin/merchant/:merchantId" element={<AdminRoute><AdminLayout><MerchantDetailsAdmin /></AdminLayout></AdminRoute>} />
+          <Route path="/admin/driver/:driverId" element={<AdminRoute><AdminLayout><DriverDetailsAdmin /></AdminLayout></AdminRoute>} />
           <Route path="/admin/categories" element={<AdminRoute><AdminLayout><CategoriesAdmin /></AdminLayout></AdminRoute>} />
           <Route path="/admin/products" element={<AdminRoute><AdminLayout><ProductsAdmin /></AdminLayout></AdminRoute>} />
           <Route path="/admin/promocodes" element={<AdminRoute><AdminLayout><PromocodesAdmin /></AdminLayout></AdminRoute>} />

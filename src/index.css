@@ -113,7 +113,7 @@
 
   /* Story/Category Horizontal Scroll */
   .story-scroll {
-    @apply flex gap-2 overflow-x-auto scrollbar-hide pb-2;
+    @apply flex gap-2 overflow-x-auto scrollbar-hide;
   }
   
   .story-item {
