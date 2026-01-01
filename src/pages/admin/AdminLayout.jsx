@@ -22,6 +22,8 @@ export default function AdminLayout({ children }) {
     { path: '/admin/gallery', label: 'Gallery', icon: '📸' },
     { path: '/admin/testimonials', label: 'Testimonials', icon: '💬' },
     { path: '/admin/orders', label: 'Orders', icon: '📋' },
+    { path: '/admin/drivers', label: 'Drivers', icon: '🚗' },
+    { path: '/admin/merchants', label: 'Merchants', icon: '🏪' },
     { path: '/admin/seed', label: 'Seed Sync', icon: '🌱' },
   ];
 

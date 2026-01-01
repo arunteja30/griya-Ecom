@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSiteSettings, useNavigation } from "../hooks/useRealtime";
 import { CartContext } from "../context/CartContext";
+import CustomerNotificationBell from "./CustomerNotificationBell";
+import { OrderTrackingService } from "../utils/orderTrackingService";
 
 export default function Navbar() {
   const { data: settings } = useSiteSettings();
@@ -10,11 +12,20 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { cartItems = [] } = useContext(CartContext) || {};
   const location = useLocation();
+  const [customerPhone, setCustomerPhone] = useState(null);
 
   useEffect(() => {
     const onScroll = () => setIsSticky(window.scrollY > 60);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Check for customer phone from recent orders
+  useEffect(() => {
+    const activeOrders = OrderTrackingService.getActiveOrders();
+    if (activeOrders.length > 0 && activeOrders[0].address?.phone) {
+      setCustomerPhone(activeOrders[0].address.phone);
+    }
   }, []);
 
   // 🔧 Make sure headerNav is ALWAYS an array
@@ -113,6 +124,18 @@ export default function Navbar() {
                 Categories
               </Link>
 
+              {/* Track Order link */}
+              <Link
+                to="/track-order"
+                className={`nav-link ${location.pathname === '/track-order' ? 'active' : ''}`}
+                style={{ color: location.pathname === '/track-order' ? (primaryColor || navItemColor) : navItemColor }}
+              >
+                Track Order
+              </Link>
+
+              {/* Customer Notifications */}
+              {customerPhone && <CustomerNotificationBell customerPhone={customerPhone} />}
+
               {/* Cart Button */}
               <Link to="/cart" className="relative group">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-50 hover:bg-primary-100 text-primary-700 transition-colors">
@@ -208,6 +231,16 @@ export default function Navbar() {
                     style={{ color: navItemColor }}
                   >
                     Categories
+                  </Link>
+
+                  {/* Mobile Track Order Link */}
+                  <Link
+                    to="/track-order"
+                    className="block px-4 py-3 rounded-xl hover:bg-primary-50 transition-all duration-200 font-medium"
+                    onClick={() => setMobileOpen(false)}
+                    style={{ color: navItemColor }}
+                  >
+                    Track Order
                   </Link>
 
                   {/* Mobile Cart Link */}

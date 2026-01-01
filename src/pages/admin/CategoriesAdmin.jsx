@@ -4,6 +4,7 @@ import { ref, onValue, push, update, remove, set } from 'firebase/database';
 import Loader from '../../components/Loader';
 import Modal from '../../components/Modal';
 import { showToast } from '../../components/Toast';
+import ImagePicker from '../../components/ImagePicker';
 
 export default function CategoriesAdmin(){
   const [categories, setCategories] = useState({});
@@ -20,6 +21,7 @@ export default function CategoriesAdmin(){
   const [viewMode, setViewMode] = useState('list');
   const [showDelete, setShowDelete] = useState(false);
   const [toDelete, setToDelete] = useState(null);
+  const [showImagePicker, setShowImagePicker] = useState(false);
 
   useEffect(()=>{
     const r = ref(db, '/categories');
@@ -142,7 +144,33 @@ export default function CategoriesAdmin(){
         {/* Row 3: Image URL and Sort order */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Image URL</label>
-          <input value={imageUrl} onChange={(e)=>setImageUrl(e.target.value)} className="border p-2 w-full" placeholder="Image URL" />
+          <div className="flex gap-2">
+            <input 
+              value={imageUrl} 
+              onChange={(e)=>setImageUrl(e.target.value)} 
+              className="flex-1 border p-2 rounded-lg" 
+              placeholder="Image URL" 
+            />
+            <button
+              type="button"
+              onClick={() => setShowImagePicker(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Pick from Gallery
+            </button>
+          </div>
+          {imageUrl && (
+            <div className="mt-2">
+              <img 
+                src={imageUrl} 
+                alt="Preview" 
+                className="w-20 h-20 object-cover rounded border"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
         </div>
 
         <div>
@@ -265,6 +293,14 @@ export default function CategoriesAdmin(){
           <button onClick={doDelete} className="px-4 py-2 bg-red-600 text-white rounded">Delete</button>
         </div>
       </Modal>
+      
+      {/* Image Picker */}
+      <ImagePicker 
+        isOpen={showImagePicker}
+        onClose={() => setShowImagePicker(false)}
+        onSelect={(url) => setImageUrl(url)}
+        selectedUrl={imageUrl}
+      />
     </div>
   );
 }

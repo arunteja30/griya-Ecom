@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useProductBySlug, useFirebaseList } from "../hooks/useFirebase";
+import { useFirebaseList } from "../hooks/useFirebase";
+import { useProductBySlugAll, useAllProducts } from "../hooks/useAllProducts";
 import { useCart } from "../context/CartContext";
 import ProductCard from "../components/ProductCard";
 
 export default function ProductDetailPage() {
   const { productSlug } = useParams();
   const navigate = useNavigate();
-  const { data: product, loading, error } = useProductBySlug(productSlug);
-  const { data: allProducts } = useFirebaseList("/products");
+  const { data: product, loading, error } = useProductBySlugAll(productSlug);
+  const { data: allProducts } = useAllProducts();
   const { addToCart, cart } = useCart();
   
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);

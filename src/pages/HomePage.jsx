@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { useFirebaseList } from '../hooks/useFirebase';
+import { useAllProducts } from '../hooks/useAllProducts';
 import { useServiceAreaSimple as useServiceArea } from "../hooks/useServiceAreaSimple";
 import { useServiceStatus } from '../context/ServiceStatusContext';
 import Loader from "../components/Loader";
@@ -41,7 +42,7 @@ export default function HomePage() {
 
 function HomePageContent() {
   const { data: categories, loading: categoriesLoading, error: categoriesError } = useFirebaseList('/categories');
-  const { data: products, loading: productsLoading, error: productsError } = useFirebaseList('/products');
+  const { data: products, loading: productsLoading, error: productsError } = useAllProducts();
   const { data: homeConfig, loading: homeConfigLoading } = useFirebaseList('/homeConfig');
   const { data: bannersData } = useFirebaseList('/banners');
   const [searchTerm, setSearchTerm] = useState('');

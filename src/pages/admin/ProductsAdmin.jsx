@@ -5,13 +5,15 @@ import Loader from '../../components/Loader';
 import Modal from '../../components/Modal';
 import { showToast } from '../../components/Toast';
 import { normalizeImageUrl } from '../../utils/imageHelpers';
+import ImagePicker from '../../components/ImagePicker';
 
 export default function ProductsAdmin(){
   const [products, setProducts] = useState({});
   const [categories, setCategories] = useState({});
+  const [merchants, setMerchants] = useState({});
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({name:'', price:'', slug:'', images:[], tags: [], categoryId: '', stock: 0, inStock: true, description: '', originalPrice: '', discount: 0, rating: '', isBestseller: false, unit: '', unitValue: '', variants: {}});
+  const [form, setForm] = useState({name:'', price:'', slug:'', images:[], tags: [], categoryId: '', stock: 0, inStock: true, description: '', originalPrice: '', discount: 0, rating: '', isBestseller: false, unit: '', unitValue: '', variants: {}, merchantId: ''});
   // keep previous price/original to avoid unnecessary updates
   const prevPriceRef = useRef({ price: '', originalPrice: '' });
 
@@ -40,13 +42,52 @@ export default function ProductsAdmin(){
   const [categoryFilter, setCategoryFilter] = useState('');
   const [stockFilter, setStockFilter] = useState('all'); // all | in | out
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+  const [showImagePicker, setShowImagePicker] = useState(false);
 
   useEffect(()=>{
+    // Load global products
     const r = ref(db, '/products');
-    return onValue(r, snap=>{
-      setProducts(snap.val() || {});
+    const productsUnsubscribe = onValue(r, snap=>{
+      const globalProducts = snap.val() || {};
+      setProducts(globalProducts);
       setLoading(false);
     });
+    
+    // Load merchant-specific products
+    const merchantProductsRef = ref(db, '/merchantProducts');
+    const merchantProductsUnsubscribe = onValue(merchantProductsRef, snap=>{
+      const merchantProductsData = snap.val() || {};
+      
+      // Flatten all merchant products into one collection for admin view
+      const allMerchantProducts = {};
+      Object.entries(merchantProductsData).forEach(([merchantId, products]) => {
+        Object.entries(products || {}).forEach(([productId, product]) => {
+          allMerchantProducts[productId] = {
+            ...product,
+            merchantId, // ensure merchantId is set
+            _merchantSpecific: true // flag to identify merchant-specific products
+          };
+        });
+      });
+      
+      // Merge with existing global products
+      setProducts(prev => ({
+        ...prev,
+        ...allMerchantProducts
+      }));
+    });
+    
+    // Load merchants
+    const merchantsRef = ref(db, '/merchants');
+    const merchantsUnsubscribe = onValue(merchantsRef, snap=>{
+      setMerchants(snap.val() || {});
+    });
+    
+    return () => {
+      productsUnsubscribe();
+      merchantProductsUnsubscribe();
+      merchantsUnsubscribe();
+    };
   },[]);
 
   // load categories for the category select
@@ -104,6 +145,8 @@ export default function ProductsAdmin(){
       if(editing){
         // update product
         const prevCategory = products[editing]?.categoryId;
+        const existingProduct = products[editing];
+        
         // coerce numeric fields and normalize variants before write
         const payload = {
           ...form,
@@ -131,7 +174,24 @@ export default function ProductsAdmin(){
             return out;
           })()
         };
-        await update(ref(db, `/products/${editing}`), payload);
+        
+        // Determine save path based on merchant selection
+        if (form.merchantId) {
+          // Save to merchant-specific path
+          await update(ref(db, `/merchantProducts/${form.merchantId}/${editing}`), payload);
+          // If this was previously a global product, remove it
+          if (!existingProduct._merchantSpecific) {
+            await remove(ref(db, `/products/${editing}`));
+          }
+        } else {
+          // Save to global products path
+          await update(ref(db, `/products/${editing}`), payload);
+          // If this was previously a merchant product, remove it
+          if (existingProduct._merchantSpecific && existingProduct.merchantId) {
+            await remove(ref(db, `/merchantProducts/${existingProduct.merchantId}/${editing}`));
+          }
+        }
+        
         // if category changed, update index mapping
         if(prevCategory !== form.categoryId){
           try{
@@ -142,7 +202,6 @@ export default function ProductsAdmin(){
         showToast('Product updated');
       } else {
         // create product and maintain category index
-        const newRef = push(ref(db, '/products'));
         const payload = {
           ...form,
           price: form.price === '' ? 0 : Number(form.price),
@@ -168,10 +227,23 @@ export default function ProductsAdmin(){
             return out;
           })()
         };
-        await set(newRef, payload);
-        const newId = newRef.key;
-        if(form.categoryId) await set(ref(db, `/categoryProducts/${form.categoryId}/${newId}`), true);
-        setForm({name:'', price:'', slug:'', images:[], tags: [], categoryId: '', stock: 0, inStock: true, description: '', originalPrice: '', discount: 0, rating: '', isBestseller: false, unit: '', unitValue: '', variants: {}});
+        
+        // Determine save path based on merchant selection
+        if (form.merchantId) {
+          // Save to merchant-specific path
+          const newRef = push(ref(db, `/merchantProducts/${form.merchantId}`));
+          await set(newRef, payload);
+          const newId = newRef.key;
+          if(form.categoryId) await set(ref(db, `/categoryProducts/${form.categoryId}/${newId}`), true);
+        } else {
+          // Save to global products path
+          const newRef = push(ref(db, '/products'));
+          await set(newRef, payload);
+          const newId = newRef.key;
+          if(form.categoryId) await set(ref(db, `/categoryProducts/${form.categoryId}/${newId}`), true);
+        }
+        
+        setForm({name:'', price:'', slug:'', images:[], tags: [], categoryId: '', stock: 0, inStock: true, description: '', originalPrice: '', discount: 0, rating: '', isBestseller: false, unit: '', unitValue: '', variants: {}, merchantId: ''});
         showToast('Product created');
       }
       setErrors({});
@@ -300,7 +372,10 @@ export default function ProductsAdmin(){
                     {p.images?.[0] ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">No image</div>}
                   </div>
                   <div className="font-medium text-sm">{p.name}</div>
-                  <div className="text-xs text-gray-600">{categories[p.categoryId]?.name || 'Uncategorized'} • ₹{p.price}</div>
+                  <div className="text-xs text-gray-600">
+                    {categories[p.categoryId]?.name || 'Uncategorized'} • ₹{p.price}
+                    {p.merchantId && <span className="ml-1 text-blue-600">• {merchants[p.merchantId]?.name || p.merchantId}</span>}
+                  </div>
                   <div className="flex items-center justify-between mt-3">
                     <button onClick={() => { setEditing(id); const variantsObj = p.variants && !Array.isArray(p.variants) ? p.variants : (Array.isArray(p.variants) ? p.variants.reduce((acc, v) => { const vid = v.id || (v.label ? String(v.label).toLowerCase().replace(/\s+/g,'-') : `v-${Date.now()}`); acc[vid] = { id: vid, label: v.label, unit: v.unit || (v.label ? v.label.replace(/\s+/g,'') : ''), price: v.price }; return acc; }, {}) : {}); setForm({ ...p, variants: variantsObj }); }} className="text-blue-600 text-sm">Edit</button>
                     <button onClick={()=>confirmDelete(id)} className="text-red-600 text-sm">Delete</button>
@@ -315,7 +390,10 @@ export default function ProductsAdmin(){
                 <div key={id} className="flex items-center justify-between border p-2 rounded bg-white">
                   <div>
                     <div className="font-medium">{p.name}</div>
-                    <div className="text-sm text-gray-600">{categories[p.categoryId]?.name || 'Uncategorized'} • ₹{p.price}</div>
+                    <div className="text-sm text-gray-600">
+                      {categories[p.categoryId]?.name || 'Uncategorized'} • ₹{p.price}
+                      {p.merchantId && <span className="ml-1 text-blue-600">• {merchants[p.merchantId]?.name || p.merchantId}</span>}
+                    </div>
                     <div className="text-sm mt-1">
                       {(!p.inStock || Number(p.stock || 0) <= 0) ? (
                         <span className="text-red-600 font-semibold">Out of stock</span>
@@ -380,6 +458,17 @@ export default function ProductsAdmin(){
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700">Merchant *</label>
+              <select value={form.merchantId||''} onChange={(e)=>setForm(f=>({...f, merchantId: e.target.value}))} className="border p-2 w-full" required>
+                <option value="">— Select merchant —</option>
+                {Object.entries(merchants).map(([mid, merchant]) => (
+                  <option key={mid} value={merchant.id}>{merchant.name} ({merchant.storeName})</option>
+                ))}
+              </select>
+              {errors.merchantId && <div className="text-sm text-red-600 mt-1">{errors.merchantId}</div>}
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-gray-700">Unit / Size</label>
               <select value={form.unit||''} onChange={(e)=>setForm(f=>({...f, unit: e.target.value}))} className="border p-2 w-full">
                 <option value="">— Unit / Size —</option>
@@ -437,7 +526,33 @@ export default function ProductsAdmin(){
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Image URL</label>
-              <input value={normalizeImageUrl(form.images?.[0])||''} onChange={(e)=>setForm(f=>({...f, images:[e.target.value]}))} className="border p-2 w-full" placeholder="Image URL" />
+              <div className="flex gap-2">
+                <input 
+                  value={normalizeImageUrl(form.images?.[0])||''} 
+                  onChange={(e)=>setForm(f=>({...f, images:[e.target.value]}))} 
+                  className="flex-1 border p-2 rounded-lg" 
+                  placeholder="Image URL" 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowImagePicker(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Pick from Gallery
+                </button>
+              </div>
+              {form.images?.[0] && (
+                <div className="mt-2">
+                  <img 
+                    src={normalizeImageUrl(form.images[0])} 
+                    alt="Preview" 
+                    className="w-20 h-20 object-cover rounded border"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="col-span-2 border p-2">
@@ -528,6 +643,14 @@ export default function ProductsAdmin(){
           <button onClick={doDelete} className="px-4 py-2 bg-red-600 text-white rounded">Delete</button>
         </div>
       </Modal>
+      
+      {/* Image Picker */}
+      <ImagePicker 
+        isOpen={showImagePicker}
+        onClose={() => setShowImagePicker(false)}
+        onSelect={(url) => setForm(f=>({...f, images:[url]}))}
+        selectedUrl={form.images?.[0] || ''}
+      />
     </div>
   );
 }

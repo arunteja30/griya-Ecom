@@ -1,6 +1,8 @@
 import { ref, get, push, set } from 'firebase/database';
 import { db } from './firebase';
 import { isLocationServiceable, fallbackPincodeServiceable } from './utils/deliveryArea';
+import { NotificationService } from './utils/notificationService';
+import { InventoryService } from './utils/inventoryService';
 
 // Return a promise that resolves to an array of categories: [{ id, ...data }, ...]
 export async function getCategories() {
@@ -49,6 +51,24 @@ export async function getProductsByCategory(categoryId) {
 // Create an order under /orders and return the new key
 export async function createOrder(order) {
   try {
+    // Check inventory availability before placing order
+    if (order.items && order.items.length > 0) {
+      try {
+        const inventoryCheck = await InventoryService.checkCartInventoryAvailability(order.items);
+        
+        if (!inventoryCheck.allAvailable) {
+          const unavailableItems = inventoryCheck.unavailableItems
+            .map(item => `${item.productName} (need: ${item.requestedQuantity}, available: ${item.availableStock})`)
+            .join(', ');
+          
+          return Promise.reject(new Error(`Some items are no longer available: ${unavailableItems}`));
+        }
+      } catch (inventoryError) {
+        console.warn('Inventory check failed:', inventoryError);
+        // Continue with order creation but log the issue
+      }
+    }
+
     // Defensive serviceability check using geo fence or pincode
     try {
       const settingsSnap = await get(ref(db, 'siteSettings'));
@@ -76,11 +96,73 @@ export async function createOrder(order) {
     const newRef = push(ordersRef);
     const orderData = {
       ...order,
+      id: newRef.key,
+      status: 'pending',
       createdAt: order.createdAt || new Date().toISOString()
     };
+    
     await set(newRef, orderData);
+    
+    // Send notifications to merchants and drivers
+    try {
+      await NotificationService.sendOrderNotification({
+        ...orderData,
+        customer: {
+          name: orderData.address?.name || 'Customer',
+          phone: orderData.address?.phone || ''
+        },
+        storeAddress: 'Store Location', // You can get this from settings
+        shippingAddress: {
+          fullAddress: `${orderData.address?.line1}, ${orderData.address?.city}, ${orderData.address?.pincode}`
+        }
+      });
+    } catch (notificationError) {
+      console.error('Failed to send order notifications:', notificationError);
+      // Don't fail the order creation if notifications fail
+    }
+    
     return { key: newRef.key, order: orderData };
   } catch (err) {
+    return Promise.reject(err);
+  }
+}
+
+// Create merchant-specific orders
+export async function createMerchantOrders(merchantOrders) {
+  try {
+    const promises = merchantOrders.map(async (order) => {
+      if (order.merchantId) {
+        // Save to merchant-specific orders path
+        const merchantOrdersRef = ref(db, `/merchantOrders/${order.merchantId}`);
+        const newRef = push(merchantOrdersRef);
+        const orderData = {
+          ...order,
+          id: newRef.key,
+          status: 'pending',
+          createdAt: order.createdAt || new Date().toISOString()
+        };
+        await set(newRef, orderData);
+        return { success: true, orderId: newRef.key, merchantId: order.merchantId };
+      } else {
+        // Save to global orders path for items without merchant
+        const globalOrdersRef = ref(db, '/orders');
+        const newRef = push(globalOrdersRef);
+        const orderData = {
+          ...order,
+          id: newRef.key,
+          status: 'pending',
+          createdAt: order.createdAt || new Date().toISOString()
+        };
+        await set(newRef, orderData);
+        return { success: true, orderId: newRef.key, merchantId: 'global' };
+      }
+    });
+    
+    const results = await Promise.all(promises);
+    console.log('Created merchant orders:', results);
+    return results;
+  } catch (err) {
+    console.error('Error creating merchant orders:', err);
     return Promise.reject(err);
   }
 }
@@ -88,5 +170,6 @@ export async function createOrder(order) {
 export default {
   getCategories,
   getProductsByCategory,
-  createOrder
+  createOrder,
+  createMerchantOrders
 };

@@ -1,0 +1,94 @@
+{
+  "rules": {
+    "products": {
+      ".read": true,
+      ".write": "auth != null",
+      "$productId": {
+        ".validate": "newData.hasChildren(['name', 'category', 'price', 'createdAt', 'updatedAt'])",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "category": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "price": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "originalPrice": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "stock": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "merchantId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "createdAt": {
+          ".validate": "newData.isString()"
+        },
+        "updatedAt": {
+          ".validate": "newData.isString()"
+        }
+      }
+    },
+    "categories": {
+      ".read": true,
+      ".write": "auth != null",
+      "$categoryId": {
+        ".validate": "newData.hasChildren(['name', 'slug', 'createdAt', 'updatedAt'])",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "slug": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "merchantId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "createdAt": {
+          ".validate": "newData.isString()"
+        },
+        "updatedAt": {
+          ".validate": "newData.isString()"
+        }
+      }
+    },
+    "orders": {
+      ".read": true,
+      ".write": "auth != null",
+      "$orderId": {
+        ".validate": "newData.hasChildren(['items', 'total', 'status', 'createdAt'])"
+      }
+    },
+    "drivers": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$driverId": {
+        ".validate": "newData.hasChildren(['id', 'name', 'phone', 'status'])"
+      }
+    },
+    "merchants": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$merchantId": {
+        ".validate": "newData.hasChildren(['id', 'name', 'storeName', 'phone', 'permissions'])"
+      }
+    },
+    "siteSettings": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "banners": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "testimonials": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "gallery": {
+      ".read": true,
+      ".write": "auth != null"
+    }
+  }
+}

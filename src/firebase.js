@@ -1,7 +1,7 @@
 // Firebase initialization (Modular SDK)
 // Replace the placeholder strings below with your Firebase project values.
 // You can obtain these from the Firebase console: Project settings -> General -> Your apps -> Config
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
 import { getAuth } from "firebase/auth";
 
@@ -16,8 +16,16 @@ const firebaseConfig = {
   appId: "1:863073530050:web:5e6ed98bbab3d525934b5b"
 };
 
+// Initialize Firebase with unique app name for main app
+let app;
+try {
+  app = getApp('main-app');
+} catch (error) {
+  app = initializeApp(firebaseConfig, 'main-app');
+}
+
 // Initialize Firebase app, Realtime Database and Auth
-export const app = initializeApp(firebaseConfig);
+export { app };
 export const db = getDatabase(app);
 export const auth = getAuth(app);
 

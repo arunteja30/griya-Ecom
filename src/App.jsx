@@ -34,6 +34,13 @@ import SeedSyncAdmin from "./pages/admin/SeedSyncAdmin";
 import BannersAdmin from "./pages/admin/BannersAdmin";
 import HomeConfigAdmin from "./pages/admin/HomeConfigAdmin";
 import ThemeAdmin from "./pages/admin/ThemeAdmin";
+import DriversAdmin from "./pages/admin/DriversAdmin";
+import MerchantsAdmin from "./pages/admin/MerchantsAdmin";
+import OrderTrackingPage from "./pages/OrderTrackingPage";
+import FloatingOrderTracker from "./components/FloatingOrderTracker";
+import './utils/devUtils'; // Development utilities
+import './utils/orderFlowTest'; // Order flow testing
+import './utils/errorHandling'; // Global error handling
 
 export default function App() {
   return (
@@ -57,6 +64,7 @@ export default function App() {
             <Route path="gallery" element={<GalleryPage />} />
             <Route path="wishlist" element={<WishlistPage />} />
             <Route path="checkout" element={<CheckoutPage />} />
+            <Route path="track-order" element={<OrderTrackingPage />} />
             <Route path="contact" element={<ContactPage />} />
             <Route path="cart" element={<CartPage />} />
           </Route>
@@ -73,11 +81,16 @@ export default function App() {
           <Route path="/admin/testimonials" element={<AdminRoute><AdminLayout><TestimonialsAdmin /></AdminLayout></AdminRoute>} />
           <Route path="/admin/theme" element={<AdminRoute><AdminLayout><ThemeAdmin /></AdminLayout></AdminRoute>} />
           <Route path="/admin/orders" element={<AdminRoute><AdminLayout><OrdersAdmin /></AdminLayout></AdminRoute>} />
+          <Route path="/admin/drivers" element={<AdminRoute><AdminLayout><DriversAdmin /></AdminLayout></AdminRoute>} />
+          <Route path="/admin/merchants" element={<AdminRoute><AdminLayout><MerchantsAdmin /></AdminLayout></AdminRoute>} />
           <Route path="/admin/seed" element={<AdminRoute><AdminLayout><SeedSyncAdmin /></AdminLayout></AdminRoute>} />
         </Routes>
         
         {/* Global Variant Selector */}
         <VariantSelector />
+        
+        {/* Floating Order Tracker */}
+        <FloatingOrderTracker />
         
             <ToastContainer />
             </WishlistProvider>

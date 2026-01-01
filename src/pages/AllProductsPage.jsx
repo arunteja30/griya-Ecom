@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { useFirebaseList } from '../hooks/useFirebase';
+import { useAllProducts } from '../hooks/useAllProducts';
 
 export default function AllProductsPage() {
   const location = useLocation();
-  const { data: products, loading: productsLoading } = useFirebaseList('/products');
+  const { data: products, loading: productsLoading } = useAllProducts();
   const { data: categories, loading: categoriesLoading } = useFirebaseList('/categories');
   const { data: homeConfig } = useFirebaseList('/homeConfig');
   const [searchTerm, setSearchTerm] = useState('');

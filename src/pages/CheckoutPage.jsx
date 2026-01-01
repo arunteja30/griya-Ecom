@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { createOrder as createOrderInDb } from '../firebaseApi';
+import { createOrder as createOrderInDb, createMerchantOrders as createMerchantOrdersInDb } from '../firebaseApi';
 import { showToast } from '../components/Toast';
 import { useFirebaseObject } from '../hooks/useFirebase';
 import { createOrderOnServer, openRazorpayCheckout } from '../utils/razorpay';
@@ -57,19 +57,64 @@ export default function CheckoutPage() {
     setError(null);
     setLoading(true);
 
+    // Group cart items by merchantId
+    const itemsByMerchant = cartItems.reduce((acc, item) => {
+      const merchantId = item.product?.merchantId || 'global';
+      if (!acc[merchantId]) {
+        acc[merchantId] = [];
+      }
+      acc[merchantId].push({
+        id: item.id, 
+        name: item.product?.name || item.name || 'Item', 
+        price: item.product?.price || item.price || 0, 
+        quantity: item.quantity || 1,
+        merchantId: item.product?.merchantId || null
+      });
+      return acc;
+    }, {});
+
+    // Calculate totals for each merchant
+    const merchantOrders = Object.entries(itemsByMerchant).map(([merchantId, items]) => {
+      const merchantSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const merchantFeesRatio = merchantSubtotal / cartTotal; // proportional fees
+      const merchantPlatformFee = Math.round(platformFee * merchantFeesRatio);
+      const merchantDeliveryFee = Math.round(deliveryFee * merchantFeesRatio);
+      const merchantFeesTotal = merchantPlatformFee + merchantDeliveryFee;
+      const merchantTotal = merchantSubtotal + merchantFeesTotal;
+      
+      return {
+        id: `order_${Date.now()}_${merchantId}`,
+        merchantId: merchantId === 'global' ? null : merchantId,
+        items,
+        subtotal: merchantSubtotal,
+        fees: { 
+          platformFee: merchantPlatformFee, 
+          deliveryFee: merchantDeliveryFee, 
+          deliveryFeeApplied, 
+          feesTotal: merchantFeesTotal 
+        },
+        total: merchantTotal,
+        address: { ...address },
+        createdAt: new Date().toISOString(),
+      };
+    });
+
+    // For payment, use the combined total but save separate orders
     const order = {
       id: `order_${Date.now()}`,
       items: cartItems.map((it) => ({ 
         id: it.id, 
         name: it.product?.name || it.name || 'Item', 
         price: it.product?.price || it.price || 0, 
-        quantity: it.quantity || 1 
+        quantity: it.quantity || 1,
+        merchantId: it.product?.merchantId || null
       })),
       subtotal: cartTotal,
       fees: { platformFee, deliveryFee, deliveryFeeApplied, feesTotal },
       total: totalWithFees,
       address: { ...address },
       createdAt: new Date().toISOString(),
+      merchantOrders // include merchant-specific orders
     };
 
     try {
@@ -80,7 +125,13 @@ export default function CheckoutPage() {
 
       if (!rkey) {
         try {
-          await createOrderInDb(order);
+          // Save merchant-specific orders
+          await createMerchantOrdersInDb(merchantOrders);
+          
+          // Add order to floating tracker
+          if (window.addOrderToTracking) {
+            window.addOrderToTracking(order);
+          }
         } catch (dbErr) {
           console.warn('Failed to save order to Firebase:', dbErr);
           showToast('Order placed but saving failed', 'warning');
@@ -108,9 +159,21 @@ export default function CheckoutPage() {
 
           const finalOrder = { ...order, payment: paymentInfo };
           const safeOrder = JSON.parse(JSON.stringify(finalOrder, (_key, value) => (value === undefined ? null : value)));
+          
+          // Update merchant orders with payment info
+          const merchantOrdersWithPayment = merchantOrders.map(mo => ({
+            ...mo,
+            payment: paymentInfo
+          }));
 
           try {
-            await createOrderInDb(safeOrder);
+            // Save merchant-specific orders with payment info
+            await createMerchantOrdersInDb(merchantOrdersWithPayment);
+            
+            // Add order to floating tracker
+            if (window.addOrderToTracking) {
+              window.addOrderToTracking(safeOrder);
+            }
           } catch (dbErr) {
             console.warn('Failed to save order to Firebase:', dbErr);
             showToast('Payment succeeded but saving failed', 'warning');

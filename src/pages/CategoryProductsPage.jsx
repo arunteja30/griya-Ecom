@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { useFirebaseList } from '../hooks/useFirebase';
+import { useAllProducts } from '../hooks/useAllProducts';
 
 export default function CategoryProductsPage() {
   const { categorySlug } = useParams();
   const location = useLocation();
-  const { data: products, loading: productsLoading } = useFirebaseList('/products');
+  const { data: products, loading: productsLoading } = useAllProducts();
   const { data: categories, loading: categoriesLoading } = useFirebaseList('/categories');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
