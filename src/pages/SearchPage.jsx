@@ -7,13 +7,38 @@ import { SkeletonBox, SkeletonText } from '../components/skeletons/SkeletonBase'
 
 export default function SearchPage() {
   const location = useLocation();
-  const { data: products, loading: productsLoading } = useFirebaseList('/products');
+  const { data: globalProducts, loading: globalProductsLoading } = useFirebaseList('/products');
+  const { data: merchantProducts, loading: merchantProductsLoading } = useFirebaseList('/merchantProducts');
   const { data: categories, loading: categoriesLoading } = useFirebaseList('/categories');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('name');
 
-  const productsArray = products ? Object.entries(products).map(([id, prod]) => ({ id, ...prod })) : [];
+  // Combine global and merchant products
+  const allProducts = {};
+  
+  // Add global products
+  if (globalProducts) {
+    Object.entries(globalProducts).forEach(([id, product]) => {
+      allProducts[id] = { id, ...product };
+    });
+  }
+  
+  // Add merchant products
+  if (merchantProducts) {
+    Object.entries(merchantProducts).forEach(([merchantId, products]) => {
+      Object.entries(products || {}).forEach(([productId, product]) => {
+        allProducts[productId] = { 
+          id: productId, 
+          ...product, 
+          merchantId,
+          _merchantSpecific: true 
+        };
+      });
+    });
+  }
+
+  const productsArray = Object.values(allProducts);
   const categoriesArray = categories ? Object.entries(categories).map(([id, cat]) => ({ id, ...cat })) : [];
 
   // Get search term from URL params if available
@@ -55,7 +80,7 @@ export default function SearchPage() {
     // Search logic is handled by state change
   };
 
-  if (productsLoading || categoriesLoading) {
+  if (globalProductsLoading || merchantProductsLoading || categoriesLoading) {
     return (
       <div className="min-h-screen pb-safe">
         {/* Search Header */}

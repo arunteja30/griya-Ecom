@@ -8,11 +8,77 @@ import { normalizeImageUrl } from '../../utils/imageHelpers';
 import ImagePicker from '../../components/ImagePicker';
 import AdminCard from './AdminCard';
 
+// Helper component for grid item
+const ProductGridItem = ({ id, product: p, categories, merchants, setEditing, setForm, copyToForm, confirmDelete }) => (
+  <div className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 hover:shadow-md overflow-hidden">
+    <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+      {p.images?.[0] ? (
+        <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+      )}
+    </div>
+    <div className="p-2">
+      <h4 className="font-medium text-gray-900 mb-1 text-sm line-clamp-1">{p.name}</h4>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-gray-600 bg-gray-100 px-1 py-0.5 rounded">{categories[p.categoryId]?.name || 'Uncategorized'}</span>
+        <span className="font-bold text-sm text-indigo-600">₹{p.price}</span>
+      </div>
+      {p.merchantId && <div className="text-xs text-blue-600 mb-2 bg-blue-50 px-1 py-0.5 rounded">M: {merchants[p.merchantId]?.name || p.merchantId}</div>}
+      <div className="flex gap-1">
+        <button onClick={() => { setEditing(id); const variantsObj = p.variants && !Array.isArray(p.variants) ? p.variants : (Array.isArray(p.variants) ? p.variants.reduce((acc, v) => { const vid = v.id || (v.label ? String(v.label).toLowerCase().replace(/\s+/g,'-') : `v-${Date.now()}`); acc[vid] = { id: vid, label: v.label, unit: v.unit || (v.label ? v.label.replace(/\s+/g,'') : ''), price: v.price }; return acc; }, {}) : {}); setForm({ ...p, variants: variantsObj }); }} className="px-2 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded text-xs font-medium transition-colors flex-1">Edit</button>
+        <button onClick={() => copyToForm(p)} className="px-2 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded text-xs font-medium transition-colors flex-1">Copy</button>
+        <button onClick={() => confirmDelete(id)} className="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded text-xs font-medium transition-colors flex-1">Del</button>
+      </div>
+    </div>
+  </div>
+);
+
+// Helper component for list item
+const ProductListItem = ({ id, product: p, categories, merchants, setEditing, setForm, copyToForm, confirmDelete }) => (
+  <div className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 hover:shadow-md overflow-hidden p-3">
+    <div className="flex items-center gap-3">
+      <div className="w-16 h-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+        {p.images?.[0] ? (
+          <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <h4 className="font-medium text-gray-900 truncate">{p.name}</h4>
+        <div className="flex items-center gap-2 mt-1">
+          <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">{categories[p.categoryId]?.name || 'Uncategorized'}</span>
+          <span className="font-bold text-indigo-600">₹{p.price}</span>
+          {p.merchantId && <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">M: {merchants[p.merchantId]?.name || p.merchantId}</span>}
+        </div>
+      </div>
+      <div className="flex gap-1">
+        <button onClick={() => { setEditing(id); const variantsObj = p.variants && !Array.isArray(p.variants) ? p.variants : (Array.isArray(p.variants) ? p.variants.reduce((acc, v) => { const vid = v.id || (v.label ? String(v.label).toLowerCase().replace(/\s+/g,'-') : `v-${Date.now()}`); acc[vid] = { id: vid, label: v.label, unit: v.unit || (v.label ? v.label.replace(/\s+/g,'') : ''), price: v.price }; return acc; }, {}) : {}); setForm({ ...p, variants: variantsObj }); }} className="px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded text-sm font-medium transition-colors">Edit</button>
+        <button onClick={() => copyToForm(p)} className="px-3 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded text-sm font-medium transition-colors">Copy</button>
+        <button onClick={() => confirmDelete(id)} className="px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded text-sm font-medium transition-colors">Del</button>
+      </div>
+    </div>
+  </div>
+);
+
 export default function ProductsAdmin(){
   const [products, setProducts] = useState({});
+  const [globalProducts, setGlobalProducts] = useState({});
+  const [merchantProducts, setMerchantProducts] = useState({});
   const [categories, setCategories] = useState({});
   const [merchants, setMerchants] = useState({});
   const [loading, setLoading] = useState(true);
+  const [globalLoading, setGlobalLoading] = useState(true);
+  const [merchantLoading, setMerchantLoading] = useState(true);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({name:'', price:'', slug:'', images:[], tags: [], categoryId: '', stock: 0, inStock: true, description: '', originalPrice: '', discount: 0, rating: '', isBestseller: false, unit: '', unitValue: '', variants: {}, merchantId: ''});
   // keep previous price/original to avoid unnecessary updates
@@ -49,9 +115,15 @@ export default function ProductsAdmin(){
     // Load global products
     const r = ref(db, '/products');
     const productsUnsubscribe = onValue(r, snap=>{
-      const globalProducts = snap.val() || {};
-      setProducts(globalProducts);
-      setLoading(false);
+      const globalProductsData = snap.val() || {};
+      setGlobalProducts(globalProductsData);
+      setGlobalLoading(false);
+      
+      // Update combined products
+      setProducts(prev => ({
+        ...globalProductsData,
+        ...prev // keep existing merchant products
+      }));
     });
     
     // Load merchant-specific products
@@ -59,7 +131,7 @@ export default function ProductsAdmin(){
     const merchantProductsUnsubscribe = onValue(merchantProductsRef, snap=>{
       const merchantProductsData = snap.val() || {};
       
-      // Flatten all merchant products into one collection for admin view
+      // Flatten all merchant products into one collection
       const allMerchantProducts = {};
       Object.entries(merchantProductsData).forEach(([merchantId, products]) => {
         Object.entries(products || {}).forEach(([productId, product]) => {
@@ -71,9 +143,12 @@ export default function ProductsAdmin(){
         });
       });
       
-      // Merge with existing global products
+      setMerchantProducts(allMerchantProducts);
+      setMerchantLoading(false);
+      
+      // Update combined products
       setProducts(prev => ({
-        ...prev,
+        ...prev, // keep existing global products
         ...allMerchantProducts
       }));
     });
@@ -83,13 +158,20 @@ export default function ProductsAdmin(){
     const merchantsUnsubscribe = onValue(merchantsRef, snap=>{
       setMerchants(snap.val() || {});
     });
-    
+
     return () => {
       productsUnsubscribe();
       merchantProductsUnsubscribe();
       merchantsUnsubscribe();
     };
   },[]);
+
+  // Update main loading state when individual loadings complete
+  useEffect(() => {
+    if (!globalLoading && !merchantLoading) {
+      setLoading(false);
+    }
+  }, [globalLoading, merchantLoading]);
 
   // load categories for the category select
   useEffect(()=>{
@@ -274,17 +356,7 @@ export default function ProductsAdmin(){
     return true;
   });
 
-  // Debug log - temporary for troubleshooting
-  console.log('Products debug:', { 
-    productsCount: Object.keys(products || {}).length, 
-    filteredCount: filteredProducts.length,
-    loading, 
-    search, 
-    categoryFilter, 
-    stockFilter,
-    sampleProduct: Object.values(products || {})[0],
-    productsKeys: Object.keys(products || {}).slice(0, 3) // first 3 product IDs
-  });
+
 
   const confirmDelete = (id)=>{
     setToDelete(id);
@@ -415,6 +487,20 @@ export default function ProductsAdmin(){
             </div>
 
             <div className="p-6">
+              {/* Loading States */}
+              {(globalLoading || merchantLoading) && (
+                <div className="mb-4 space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className={`w-2 h-2 rounded-full ${globalLoading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></div>
+                    Global Products: {globalLoading ? 'Loading...' : `${Object.keys(globalProducts).length} loaded`}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className={`w-2 h-2 rounded-full ${merchantLoading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></div>
+                    Merchant Products: {merchantLoading ? 'Loading...' : `${Object.keys(merchantProducts).length} loaded`}
+                  </div>
+                </div>
+              )}
+              
               {filteredProducts.length === 0 ? (
                 <div className="text-center py-12">
                   <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -429,6 +515,12 @@ export default function ProductsAdmin(){
                         : "No products to display."
                     }
                   </p>
+                  <div className="text-sm text-gray-400 mb-4">
+                    Debug: Total products: {Object.keys(products || {}).length}, 
+                    Global: {Object.keys(globalProducts).length}, 
+                    Merchant: {Object.keys(merchantProducts).length},
+                    Filtered: {filteredProducts.length}
+                  </div>
                   <button 
                     onClick={() => {setSearch(''); setCategoryFilter(''); setStockFilter('all');}} 
                     className="btn-primary"
@@ -436,87 +528,57 @@ export default function ProductsAdmin(){
                     Clear Filters
                   </button>
                 </div>
-              ) : viewMode === 'grid' ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {filteredProducts.map(([id, p]) => (
-                    <div key={id} className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 hover:shadow-md overflow-hidden">
-                      <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
-                        {p.images?.[0] ? (
-                          <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-2">
-                        <h4 className="font-medium text-gray-900 mb-1 text-sm line-clamp-1">{p.name}</h4>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs text-gray-600 bg-gray-100 px-1 py-0.5 rounded">{categories[p.categoryId]?.name || 'Uncategorized'}</span>
-                          <span className="font-bold text-sm text-indigo-600">₹{p.price}</span>
-                        </div>
-                        {p.merchantId && <div className="text-xs text-blue-600 mb-2 bg-blue-50 px-1 py-0.5 rounded text-xs">M: {merchants[p.merchantId]?.name || p.merchantId}</div>}
-                        <div className="flex flex-col gap-1">
-                          <div className="flex gap-1">
-                            <button onClick={() => { setEditing(id); const variantsObj = p.variants && !Array.isArray(p.variants) ? p.variants : (Array.isArray(p.variants) ? p.variants.reduce((acc, v) => { const vid = v.id || (v.label ? String(v.label).toLowerCase().replace(/\s+/g,'-') : `v-${Date.now()}`); acc[vid] = { id: vid, label: v.label, unit: v.unit || (v.label ? v.label.replace(/\s+/g,'') : ''), price: v.price }; return acc; }, {}) : {}); setForm({ ...p, variants: variantsObj }); }} className="px-2 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded text-xs font-medium transition-colors flex-1">Edit</button>
-                            <button onClick={() => copyToForm(p)} className="px-2 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded text-xs font-medium transition-colors flex-1">Copy</button>
-                            <button onClick={() => confirmDelete(id)} className="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded text-xs font-medium transition-colors flex-1">Del</button>
-                          </div>
-                          <div>
-                            {(!p.inStock || Number(p.stock || 0) <= 0) ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800">Out of stock</span>
-                            ) : (
-                              <span className="text-green-600">In stock — {p.stock || 0}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               ) : (
-                <div className="space-y-2">
-                  {filteredProducts.map(([id, p]) => (
-                    <div key={id} className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 p-4 transition-all duration-200 hover:shadow-md">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4 flex-1">
-                          <div className="w-12 h-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                            {p.images?.[0] ? (
-                              <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{p.name}</h4>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-md">{categories[p.categoryId]?.name || 'Uncategorized'}</span>
-                              <span className="font-semibold text-indigo-600">₹{p.price}</span>
-                              {p.merchantId && <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md">{merchants[p.merchantId]?.name || p.merchantId}</span>}
-                            </div>
-                            <div className="mt-1">
-                              {(!p.inStock || Number(p.stock || 0) <= 0) ? (
-                                <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800">Out of stock</span>
-                              ) : (
-                                <span className="text-green-600">In stock — {p.stock || 0}</span>
-                              )}
-                            </div>
-                          </div>
+                <div className="space-y-6">
+                  {/* Global Products Section */}
+                  {Object.keys(globalProducts).length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        Global Products ({Object.entries(globalProducts).filter(([id, p]) => filteredProducts.some(([fid]) => fid === id)).length})
+                      </h4>
+                      {viewMode === 'grid' ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
+                          {filteredProducts.filter(([id, p]) => !p._merchantSpecific).map(([id, p]) => (
+                            <ProductGridItem key={id} id={id} product={p} categories={categories} merchants={merchants} 
+                              setEditing={setEditing} setForm={setForm} copyToForm={copyToForm} confirmDelete={confirmDelete} />
+                          ))}
                         </div>
-                        <div className="flex gap-2">
-                          <button onClick={() => { setEditing(id); const variantsObj = p.variants && !Array.isArray(p.variants) ? p.variants : (Array.isArray(p.variants) ? p.variants.reduce((acc, v) => { const vid = v.id || (v.label ? String(v.label).toLowerCase().replace(/\s+/g,'-') : `v-${Date.now()}`); acc[vid] = { id: vid, label: v.label, unit: v.unit || (v.label ? v.label.replace(/\s+/g,'') : ''), price: v.price }; return acc; }, {}) : {}); setForm({ ...p, variants: variantsObj }); }} className="text-blue-600">Edit</button>
-                          <button onClick={() => confirmDelete(id)} className="text-red-600">Delete</button>
-                          <button onClick={() => copyToForm(p)} className="text-green-600">Copy</button>
+                      ) : (
+                        <div className="space-y-2 mb-4">
+                          {filteredProducts.filter(([id, p]) => !p._merchantSpecific).map(([id, p]) => (
+                            <ProductListItem key={id} id={id} product={p} categories={categories} merchants={merchants}
+                              setEditing={setEditing} setForm={setForm} copyToForm={copyToForm} confirmDelete={confirmDelete} />
+                          ))}
                         </div>
-                      </div>
+                      )}
                     </div>
-                  ))}
+                  )}
+
+                  {/* Merchant Products Section */}
+                  {Object.keys(merchantProducts).length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        Merchant Products ({Object.entries(merchantProducts).filter(([id, p]) => filteredProducts.some(([fid]) => fid === id)).length})
+                      </h4>
+                      {viewMode === 'grid' ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                          {filteredProducts.filter(([id, p]) => p._merchantSpecific).map(([id, p]) => (
+                            <ProductGridItem key={id} id={id} product={p} categories={categories} merchants={merchants}
+                              setEditing={setEditing} setForm={setForm} copyToForm={copyToForm} confirmDelete={confirmDelete} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {filteredProducts.filter(([id, p]) => p._merchantSpecific).map(([id, p]) => (
+                            <ProductListItem key={id} id={id} product={p} categories={categories} merchants={merchants}
+                              setEditing={setEditing} setForm={setForm} copyToForm={copyToForm} confirmDelete={confirmDelete} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
