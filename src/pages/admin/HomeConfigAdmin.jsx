@@ -15,22 +15,67 @@ export default function HomeConfigAdmin(){
 
   // subscribe to products and derive unique normalized tags for admin debugging
   useEffect(()=>{
-    const r = ref(db, '/products');
-    const unsub = onValue(r, snap => {
+    let globalTags = new Set();
+    let merchantTags = new Set();
+    let globalLoaded = false;
+    let merchantLoaded = false;
+    
+    const updateAvailableTags = () => {
+      if (globalLoaded && merchantLoaded) {
+        const allTags = new Set([...globalTags, ...merchantTags]);
+        setAvailableTags(Array.from(allTags).sort());
+      }
+    };
+
+    // Load tags from global products
+    const globalRef = ref(db, '/products');
+    const globalUnsub = onValue(globalRef, snap => {
       const raw = snap.val() || {};
-      const tagsSet = new Set();
+      globalTags = new Set();
+      
       Object.values(raw).forEach(p => {
         const t = p?.tags;
         if (!t) return;
         const arr = Array.isArray(t) ? t : String(t).split(',');
-        arr.map(x => String(x || '').trim().toLowerCase()).filter(Boolean).forEach(tag => tagsSet.add(tag));
+        arr.map(x => String(x || '').trim().toLowerCase()).filter(Boolean).forEach(tag => globalTags.add(tag));
       });
-      setAvailableTags(Array.from(tagsSet).sort());
+      
+      globalLoaded = true;
+      updateAvailableTags();
     }, (e)=>{
       console.error('Failed to read /products for tags', e);
-      setAvailableTags([]);
+      globalLoaded = true;
+      updateAvailableTags();
     });
-    return () => unsub();
+
+    // Load tags from merchant products
+    const merchantRef = ref(db, '/merchantProducts');
+    const merchantUnsub = onValue(merchantRef, snap => {
+      const merchantProductsData = snap.val() || {};
+      merchantTags = new Set();
+      
+      // Flatten merchant products and extract tags
+      Object.entries(merchantProductsData).forEach(([merchantId, products]) => {
+        Object.values(products || {}).forEach(p => {
+          const t = p?.tags;
+          if (!t) return;
+          const arr = Array.isArray(t) ? t : String(t).split(',');
+          arr.map(x => String(x || '').trim().toLowerCase()).filter(Boolean).forEach(tag => merchantTags.add(tag));
+        });
+      });
+      
+      merchantLoaded = true;
+      updateAvailableTags();
+    }, (e)=>{
+      console.error('Failed to read /merchantProducts for tags', e);
+      merchantLoaded = true;
+      updateAvailableTags();
+    });
+
+    return () => {
+      globalUnsub();
+      merchantUnsub();
+    };
   }, []);
 
   useEffect(()=>{
