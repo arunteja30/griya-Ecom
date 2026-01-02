@@ -3,7 +3,7 @@ services:
   - type: web
     name: griya-customer-app
     env: static
-    buildCommand: npm install && npx vite build
+    buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     routes:
       - type: rewrite
@@ -17,7 +17,7 @@ services:
   - type: web
     name: seller-griya
     env: static
-    buildCommand: cd merchant-app && npm install && npx vite build
+    buildCommand: cd merchant-app && npm install && npm run build
     staticPublishPath: ./merchant-app/dist
     routes:
       - type: rewrite
@@ -31,7 +31,7 @@ services:
   - type: web
     name: delivery-griya
     env: static
-    buildCommand: cd delivery-app && npm install && npx vite build
+    buildCommand: cd delivery-app && npm install && npm run build
     staticPublishPath: ./delivery-app/dist
     routes:
       - type: rewrite
