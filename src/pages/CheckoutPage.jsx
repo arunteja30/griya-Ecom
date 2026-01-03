@@ -286,7 +286,10 @@ export default function CheckoutPage() {
         name: item.product?.name || item.name || 'Item', 
         price: item.product?.price || item.price || 0, 
         quantity: item.quantity || 1,
-        merchantId: item.product?.merchantId || null
+        merchantId: item.product?.merchantId || null,
+        // Preserve product structure for inventory operations
+        product: item.product,
+        _merchantSpecific: !!item.product?.merchantId
       });
       return acc;
     }, {});
@@ -325,7 +328,10 @@ export default function CheckoutPage() {
         name: it.product?.name || it.name || 'Item', 
         price: it.product?.price || it.price || 0, 
         quantity: it.quantity || 1,
-        merchantId: it.product?.merchantId || null
+        merchantId: it.product?.merchantId || null,
+        // Preserve product structure for inventory operations
+        product: it.product,
+        _merchantSpecific: !!it.product?.merchantId
       })),
       subtotal: cartTotal,
       discount: discount,

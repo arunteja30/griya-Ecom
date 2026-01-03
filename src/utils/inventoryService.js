@@ -20,10 +20,13 @@ export class InventoryService {
         try {
           // Determine the correct path based on whether item is merchant-specific
           let productRef;
-          if (item.merchantId || item._merchantSpecific) {
-            productRef = ref(db, `/merchantProducts/${item.merchantId}/${item.id}`);
+          const merchantId = item.merchantId || item.product?.merchantId;
+          if (merchantId || item._merchantSpecific) {
+            productRef = ref(db, `/merchantProducts/${merchantId}/${item.id}`);
+            console.log(`Decrementing inventory for merchant product: /merchantProducts/${merchantId}/${item.id}`);
           } else {
             productRef = ref(db, `/products/${item.id}`);
+            console.log(`Decrementing inventory for global product: /products/${item.id}`);
           }
           
           // Use Firebase transaction to ensure atomic updates
@@ -107,10 +110,13 @@ export class InventoryService {
       for (const item of cartItems) {
         // Determine the correct path based on whether item is merchant-specific
         let productRef;
-        if (item.merchantId || item._merchantSpecific) {
-          productRef = ref(db, `/merchantProducts/${item.merchantId}/${item.id}`);
+        const merchantId = item.merchantId || item.product?.merchantId;
+        if (merchantId || item._merchantSpecific) {
+          productRef = ref(db, `/merchantProducts/${merchantId}/${item.id}`);
+          console.log(`Checking availability for merchant product: /merchantProducts/${merchantId}/${item.id}`);
         } else {
           productRef = ref(db, `/products/${item.id}`);
+          console.log(`Checking availability for global product: /products/${item.id}`);
         }
         
         const snapshot = await get(productRef);
@@ -173,10 +179,13 @@ export class InventoryService {
         try {
           // Determine the correct path based on whether item is merchant-specific
           let productRef;
-          if (item.merchantId || item._merchantSpecific) {
-            productRef = ref(db, `/merchantProducts/${item.merchantId}/${item.id}`);
+          const merchantId = item.merchantId || item.product?.merchantId;
+          if (merchantId || item._merchantSpecific) {
+            productRef = ref(db, `/merchantProducts/${merchantId}/${item.id}`);
+            console.log(`Restoring inventory for merchant product: /merchantProducts/${merchantId}/${item.id}`);
           } else {
             productRef = ref(db, `/products/${item.id}`);
+            console.log(`Restoring inventory for global product: /products/${item.id}`);
           }
           
           const result = await runTransaction(productRef, (currentProduct) => {

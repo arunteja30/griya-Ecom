@@ -1,4 +1,4 @@
-import { ref, get, push, set } from 'firebase/database';
+import { ref, get, push, set, update } from 'firebase/database';
 import { db } from './firebase';
 import { isLocationServiceable, fallbackPincodeServiceable } from './utils/deliveryArea';
 import { NotificationService } from './utils/notificationService';
@@ -52,9 +52,10 @@ export async function getProductsByCategory(categoryId) {
 // Create an order under /orders and return the new key
 export async function createOrder(order) {
   try {
-    // Check inventory availability before placing order
+    // Check inventory availability before placing order (read-only check)
     if (order.items && order.items.length > 0) {
       try {
+        console.log('Checking inventory for order items:', order.items);
         const inventoryCheck = await InventoryService.checkCartInventoryAvailability(order.items);
         
         if (!inventoryCheck.allAvailable) {
@@ -62,34 +63,14 @@ export async function createOrder(order) {
             .map(item => `${item.productName} (need: ${item.requestedQuantity}, available: ${item.availableStock})`)
             .join(', ');
           
+          console.error('Inventory check failed:', inventoryCheck);
           return Promise.reject(new Error(`Some items are no longer available: ${unavailableItems}`));
         }
         
-        // Decrement inventory after confirming availability
-        console.log('Decrementing inventory for order items:', order.items);
-        const decrementResult = await InventoryService.decrementInventoryOnCheckout(order.items);
-        
-        if (!decrementResult.success) {
-          console.error('Failed to decrement inventory:', decrementResult);
-          
-          // If some items failed to decrement, we should not proceed
-          if (decrementResult.outOfStockCount > 0) {
-            const outOfStockItems = decrementResult.details.outOfStock
-              .map(item => `${item.productName} (requested: ${item.requestedQuantity}, available: ${item.availableStock})`)
-              .join(', ');
-            return Promise.reject(new Error(`Items became out of stock during order processing: ${outOfStockItems}`));
-          }
-          
-          if (decrementResult.failureCount > 0) {
-            // Log failures but continue - may be network issues
-            console.warn('Some inventory updates failed but proceeding with order');
-          }
-        } else {
-          console.log('Successfully decremented inventory for all items');
-        }
+        console.log('Inventory availability check passed - proceeding with order creation');
         
       } catch (inventoryError) {
-        console.error('Inventory processing failed:', inventoryError);
+        console.error('Inventory check failed:', inventoryError);
         return Promise.reject(new Error(`Inventory error: ${inventoryError.message}`));
       }
     }
@@ -146,7 +127,56 @@ export async function createOrder(order) {
       merchantPaid: false // Track payout status
     };
     
+    // Create the order first
+    console.log('Creating order in database...');
     await set(newRef, orderData);
+    console.log('Order created successfully:', newRef.key);
+    
+    // NOW decrement inventory after successful order creation
+    if (order.items && order.items.length > 0) {
+      try {
+        console.log('Decrementing inventory after successful order creation...');
+        const decrementResult = await InventoryService.decrementInventoryOnCheckout(order.items);
+        
+        if (!decrementResult.success) {
+          console.error('Failed to decrement inventory after order creation:', decrementResult);
+          
+          // If some items failed to decrement, mark order with warning
+          if (decrementResult.outOfStockCount > 0) {
+            console.error('Stock became unavailable after order creation - updating order status');
+            await update(newRef, { 
+              status: 'stock_error',
+              stockError: 'Items became out of stock after order creation',
+              inventoryIssues: decrementResult.details.outOfStock
+            });
+          }
+          
+          if (decrementResult.failureCount > 0) {
+            console.warn('Some inventory updates failed but order created successfully');
+            await update(newRef, { 
+              inventoryWarning: 'Some inventory updates failed',
+              inventoryIssues: decrementResult.details.failures
+            });
+          }
+        } else {
+          console.log('Successfully decremented inventory for all items');
+          await update(newRef, { inventoryUpdated: true });
+        }
+        
+      } catch (inventoryError) {
+        console.error('Critical error during inventory decrement after order creation:', inventoryError);
+        // Mark the order with inventory error but don't fail the order creation
+        try {
+          await update(newRef, { 
+            status: 'inventory_error',
+            inventoryError: inventoryError.message,
+            needsManualInventoryUpdate: true
+          });
+        } catch (updateError) {
+          console.error('Failed to update order with inventory error status:', updateError);
+        }
+      }
+    }
     
     // Send notifications to merchants and drivers
     try {
