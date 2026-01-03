@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { ref, onValue } from 'firebase/database';
 import { db } from '../firebase';
 import MobileLayout from '../components/MobileLayout';
+import { loadPricingConfig } from '../utils/deliveryFeeCalculator';
 
 export default function Earnings() {
   const [deliveryPerson] = useState(() => {
     return JSON.parse(localStorage.getItem('deliveryPerson') || '{}');
   });
   const [orders, setOrders] = useState({});
+  const [pricingConfig, setPricingConfig] = useState({ driverEarningsPercentage: 80 });
   const [earnings, setEarnings] = useState({
     today: 0,
     thisWeek: 0,
@@ -16,12 +18,26 @@ export default function Earnings() {
     ordersToday: 0,
     ordersThisWeek: 0,
     ordersThisMonth: 0,
-    totalOrders: 0
+    totalOrders: 0,
+    distanceToday: 0,
+    distanceThisWeek: 0,
+    distanceThisMonth: 0,
+    totalDistance: 0,
+    avgEarningsPerKm: 0,
+    deliveryFeeEarnings: 0,
+    bonusEarnings: 0
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!deliveryPerson.id) return;
+
+    // Load pricing configuration
+    loadPricingConfig().then(config => {
+      setPricingConfig(config);
+    }).catch(error => {
+      console.error('Error loading pricing config:', error);
+    });
 
     const ordersRef = ref(db, '/orders');
     const unsubscribe = onValue(ordersRef, (snapshot) => {
@@ -32,7 +48,7 @@ export default function Earnings() {
     });
 
     return () => unsubscribe();
-  }, [deliveryPerson.id]);
+  }, [deliveryPerson.id, pricingConfig.driverEarningsPercentage]);
 
   const calculateEarnings = (ordersData) => {
     const myOrders = Object.entries(ordersData).filter(([id, order]) => 
@@ -44,33 +60,48 @@ export default function Earnings() {
     const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    let todayEarnings = 0, todayOrders = 0;
-    let weekEarnings = 0, weekOrders = 0;
-    let monthEarnings = 0, monthOrders = 0;
-    let totalEarnings = 0, totalOrders = 0;
+    let todayEarnings = 0, todayOrders = 0, todayDistance = 0;
+    let weekEarnings = 0, weekOrders = 0, weekDistance = 0;
+    let monthEarnings = 0, monthOrders = 0, monthDistance = 0;
+    let totalEarnings = 0, totalOrders = 0, totalDistance = 0;
+    let deliveryFeeEarnings = 0, bonusEarnings = 0;
 
     myOrders.forEach(([id, order]) => {
       const deliveryDate = new Date(order.deliveredAt);
-      const orderEarning = Math.max((order.total || 0) * 0.05, 20);
+      
+      // Calculate distance-based earnings using configurable percentage
+      const orderDistance = order.distance || 0;
+      const deliveryFeeTotal = order.fees?.deliveryFeeApplied || order.fees?.deliveryFee || 0;
+      const deliveryFee = deliveryFeeTotal * (pricingConfig.driverEarningsPercentage / 100);
+      const bonus = order.bonus || 0;
+      const orderEarning = deliveryFee + bonus;
       
       totalEarnings += orderEarning;
       totalOrders += 1;
+      totalDistance += orderDistance;
+      deliveryFeeEarnings += deliveryFee;
+      bonusEarnings += bonus;
 
       if (deliveryDate.toDateString() === today) {
         todayEarnings += orderEarning;
         todayOrders += 1;
+        todayDistance += orderDistance;
       }
       
       if (deliveryDate >= startOfWeek) {
         weekEarnings += orderEarning;
         weekOrders += 1;
+        weekDistance += orderDistance;
       }
       
       if (deliveryDate >= startOfMonth) {
         monthEarnings += orderEarning;
         monthOrders += 1;
+        monthDistance += orderDistance;
       }
     });
+
+    const avgEarningsPerKm = totalDistance > 0 ? totalEarnings / totalDistance : 0;
 
     setEarnings({
       today: todayEarnings,
@@ -80,7 +111,14 @@ export default function Earnings() {
       ordersToday: todayOrders,
       ordersThisWeek: weekOrders,
       ordersThisMonth: monthOrders,
-      totalOrders: totalOrders
+      totalOrders: totalOrders,
+      distanceToday: todayDistance,
+      distanceThisWeek: weekDistance,
+      distanceThisMonth: monthDistance,
+      totalDistance: totalDistance,
+      avgEarningsPerKm: avgEarningsPerKm,
+      deliveryFeeEarnings: deliveryFeeEarnings,
+      bonusEarnings: bonusEarnings
     });
   };
 
@@ -121,7 +159,7 @@ export default function Earnings() {
               <p className="text-fresh-100 text-sm font-medium">Today's Earnings</p>
               <p className="text-3xl font-bold">{formatINR(earnings.today)}</p>
               <p className="text-fresh-200 text-sm mt-1">
-                {earnings.ordersToday} deliveries completed
+                {earnings.ordersToday} deliveries • {earnings.distanceToday.toFixed(1)} km
               </p>
             </div>
             <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
@@ -129,6 +167,31 @@ export default function Earnings() {
                 <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
               </svg>
             </div>
+          </div>
+        </div>
+
+        {/* Distance & Performance Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="card p-4 text-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+            <p className="text-xl font-bold text-surface-900">{formatINR(earnings.avgEarningsPerKm)}</p>
+            <p className="text-sm text-surface-600 font-medium">Per KM</p>
+            <p className="text-xs text-surface-500">Average earnings</p>
+          </div>
+
+          <div className="card p-4 text-center">
+            <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </div>
+            <p className="text-xl font-bold text-surface-900">{earnings.totalDistance.toFixed(0)} km</p>
+            <p className="text-sm text-surface-600 font-medium">Total Distance</p>
+            <p className="text-xs text-surface-500">All time</p>
           </div>
         </div>
 
@@ -142,7 +205,7 @@ export default function Earnings() {
             </div>
             <p className="text-xl font-bold text-surface-900">{formatINR(earnings.thisWeek)}</p>
             <p className="text-sm text-surface-600 font-medium">This Week</p>
-            <p className="text-xs text-surface-500">{earnings.ordersThisWeek} orders</p>
+            <p className="text-xs text-surface-500">{earnings.ordersThisWeek} orders • {earnings.distanceThisWeek.toFixed(1)} km</p>
           </div>
 
           <div className="card p-4 text-center">

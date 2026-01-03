@@ -13,6 +13,7 @@ import Layout from './components/Layout'
 import Toast from './components/Toast'
 import ProtectedRoute, { AccessDenied } from './components/ProtectedRoute'
 import { PermissionProvider } from './context/PermissionContext'
+import MerchantEarningsDashboard from './components/MerchantEarningsDashboard'
 import './index.css'
 
 function App() {
@@ -117,6 +118,17 @@ function App() {
                             fallback={<AccessDenied feature="Analytics Dashboard" />}
                           >
                             <Analytics merchant={merchant} />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/earnings" 
+                        element={
+                          <ProtectedRoute 
+                            requiredPermission="earnings"
+                            fallback={<AccessDenied feature="Earnings Dashboard" />}
+                          >
+                            <MerchantEarningsDashboard merchant={merchant} />
                           </ProtectedRoute>
                         } 
                       />

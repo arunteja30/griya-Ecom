@@ -32,7 +32,8 @@ export default function MerchantsAdmin() {
       products: true,
       categories: true,
       orders: false,
-      analytics: false
+      analytics: false,
+      earnings: true
     },
     status: 'active',
     password: generateSecurePassword()
@@ -60,7 +61,8 @@ export default function MerchantsAdmin() {
         products: true,
         categories: true,
         orders: false,
-        analytics: false
+        analytics: false,
+        earnings: true
       },
       status: 'active',
       password: generateSecurePassword()
@@ -127,7 +129,8 @@ export default function MerchantsAdmin() {
         products: merchant.permissions?.products || false,
         categories: merchant.permissions?.categories || false,
         orders: merchant.permissions?.orders || false,
-        analytics: merchant.permissions?.analytics || false
+        analytics: merchant.permissions?.analytics || false,
+        earnings: merchant.permissions?.earnings || true
       },
       status: merchant.status || 'active',
       password: merchant.password || generateSecurePassword()
@@ -281,6 +284,9 @@ export default function MerchantsAdmin() {
                         )}
                         {merchant.permissions?.analytics && (
                           <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Analytics</span>
+                        )}
+                        {merchant.permissions?.earnings && (
+                          <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded">Earnings</span>
                         )}
                       </div>
                     </td>
@@ -496,6 +502,18 @@ export default function MerchantsAdmin() {
                       className="mr-2"
                     />
                     <span className="text-sm text-gray-700">View Analytics</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={form.permissions.earnings}
+                      onChange={(e) => setForm({
+                        ...form,
+                        permissions: { ...form.permissions, earnings: e.target.checked }
+                      })}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-700">View Earnings Dashboard</span>
                   </label>
                 </div>
               </div>

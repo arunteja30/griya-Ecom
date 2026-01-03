@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { ref, onValue } from 'firebase/database';
 import { db } from '../firebase';
 import MobileLayout from '../components/MobileLayout';
+import { loadPricingConfig } from '../utils/deliveryFeeCalculator';
 
 export default function Profile() {
   const navigate = useNavigate();
   const [deliveryPerson, setDeliveryPerson] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pricingConfig, setPricingConfig] = useState({ driverEarningsPercentage: 80 });
   const [stats, setStats] = useState({
     ordersToday: 0,
     earningsToday: 0,
@@ -23,6 +25,13 @@ export default function Profile() {
       return;
     }
     setDeliveryPerson(person);
+
+    // Load pricing configuration
+    loadPricingConfig().then(config => {
+      setPricingConfig(config);
+    }).catch(error => {
+      console.error('Error loading pricing config:', error);
+    });
 
     // Listen to orders in real-time for stats
     const ordersRef = ref(db, '/orders');
@@ -41,15 +50,17 @@ export default function Profile() {
         return orderDate === today;
       });
 
-      // Calculate total earnings (5% of order total or minimum ₹20)
+      // Calculate total earnings based on delivery fees (configurable % to driver)
       const totalEarnings = deliveredOrders.reduce((sum, [id, order]) => {
-        const orderEarning = Math.max((order.total || 0) * 0.05, 20);
-        return sum + orderEarning;
+        const deliveryFee = order.fees?.deliveryFeeApplied || 0;
+        const driverEarning = deliveryFee * (pricingConfig.driverEarningsPercentage / 100);
+        return sum + driverEarning;
       }, 0);
       
       const todayEarnings = ordersToday.reduce((sum, [id, order]) => {
-        const orderEarning = Math.max((order.total || 0) * 0.05, 20);
-        return sum + orderEarning;
+        const deliveryFee = order.fees?.deliveryFeeApplied || 0;
+        const driverEarning = deliveryFee * (pricingConfig.driverEarningsPercentage / 100);
+        return sum + driverEarning;
       }, 0);
       
       setStats({

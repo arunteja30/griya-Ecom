@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase';
+import { useAdminPermissions } from '../../context/AdminPermissionContext';
 
 export default function AdminLayout({ children }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const location = useLocation();
+  const { hasPermission } = useAdminPermissions();
 
   const isActiveRoute = (path) => {
     // Exact match for the base admin path (Site Settings)
@@ -15,24 +17,30 @@ export default function AdminLayout({ children }) {
     // For other paths, check if pathname starts with the path
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
-
   const navItems = [
-    { path: '/admin', label: 'Site Settings', icon: '⚙️' },
-    { path: '/admin/analytics', label: 'Analytics', icon: '📊' },
-    { path: '/admin/theme', label: 'Theme', icon: '🎨' },
-    { path: '/admin/categories', label: 'Categories', icon: '📦' },
-    { path: '/admin/products', label: 'Products', icon: '🛍️' },
-    { path: '/admin/promocodes', label: 'Promo Codes', icon: '🏷️' },
-    { path: '/admin/home', label: 'Homepage Sections', icon: '🏠' },
-    { path: '/admin/home-config', label: 'Homepage Config', icon: '🔧', isSubItem: true },
-    { path: '/admin/banners', label: 'Banners', icon: '🖼️' },
-    { path: '/admin/gallery', label: 'Gallery', icon: '📸' },
-    { path: '/admin/testimonials', label: 'Testimonials', icon: '💬' },
-    { path: '/admin/orders', label: 'Orders', icon: '📋' },
-    { path: '/admin/drivers', label: 'Drivers', icon: '🚗' },
-    { path: '/admin/merchants', label: 'Merchants', icon: '🏪' },
-    { path: '/admin/seed', label: 'Seed Sync', icon: '🌱' },
+    { path: '/admin', label: 'Site Settings', icon: '⚙️', permission: 'siteSettings' },
+    { path: '/admin/analytics', label: 'Analytics', icon: '📊', permission: 'analytics' },
+    { path: '/admin/theme', label: 'Theme', icon: '🎨', permission: 'theme' },
+    { path: '/admin/categories', label: 'Categories', icon: '📦', permission: 'categories' },
+    { path: '/admin/products', label: 'Products', icon: '🛍️', permission: 'products' },
+    { path: '/admin/promocodes', label: 'Promo Codes', icon: '🏷️', permission: 'promocodes' },
+    { path: '/admin/home', label: 'Homepage Sections', icon: '🏠', permission: 'home' },
+    { path: '/admin/home-config', label: 'Homepage Config', icon: '🔧', isSubItem: true, permission: 'home' },
+    { path: '/admin/banners', label: 'Banners', icon: '🖼️', permission: 'banners' },
+    { path: '/admin/gallery', label: 'Gallery', icon: '📸', permission: 'gallery' },
+    { path: '/admin/testimonials', label: 'Testimonials', icon: '💬', permission: 'testimonials' },
+    { path: '/admin/orders', label: 'Orders', icon: '📋', permission: 'orders' },
+    { path: '/admin/drivers', label: 'Drivers', icon: '🚗', permission: 'drivers' },
+    { path: '/admin/merchants', label: 'Merchants', icon: '🏪', permission: 'merchants' },
+    { path: '/admin/delivery-pricing', label: 'Delivery Pricing', icon: '💰', permission: 'deliveryPricing' },
+    { path: '/admin/merchant-earnings', label: 'Merchant Earnings', icon: '💼', permission: 'merchantEarnings' },
+    { path: '/admin/seed', label: 'Seed Sync', icon: '🌱', permission: 'seed' },
   ];
+
+  // Filter navigation items based on permissions
+  const allowedNavItems = navItems.filter(item => {
+    return !item.permission || hasPermission(item.permission);
+  });
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -91,7 +99,7 @@ export default function AdminLayout({ children }) {
             </div>
 
             <nav className="space-y-1">
-              {navItems.map((item) => (
+              {allowedNavItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
@@ -144,7 +152,7 @@ export default function AdminLayout({ children }) {
           </div>
           
           <nav className="flex-1 space-y-1">
-            {navItems.map((item) => (
+            {allowedNavItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}

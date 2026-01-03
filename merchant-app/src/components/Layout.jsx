@@ -15,6 +15,10 @@ const Layout = ({ merchant, onLogout, children }) => {
         return 'Orders'
       case '/products':
         return 'Products'
+      case '/earnings':
+        return 'Earnings'
+      case '/analytics':
+        return 'Analytics'
       case '/settings':
         return 'Settings'
       default:

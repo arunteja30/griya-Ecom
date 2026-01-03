@@ -5,13 +5,27 @@ import { db } from '../firebase';
 import { showToast } from '../utils/toast';
 import MobileLayout from '../components/MobileLayout';
 import { NotificationService } from '../utils/notificationService';
+import NewOrderAlert from '../components/NewOrderAlert';
+import { loadPricingConfig, subscribeToPricingConfig } from '../utils/deliveryFeeCalculator';
 
 export default function Dashboard() {
   const [orders, setOrders] = useState({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('available');
   const [deliveryPerson, setDeliveryPerson] = useState(null);
+  const [pricingConfig, setPricingConfig] = useState({ driverEarningsPercentage: 80 });
+  const [newOrderAlert, setNewOrderAlert] = useState({ visible: false, order: null, orderId: null });
+  const [previousOrderIds, setPreviousOrderIds] = useState(new Set());
   const navigate = useNavigate();
+
+  // Listen to real-time pricing config changes
+  useEffect(() => {
+    const unsubscribe = subscribeToPricingConfig((config) => {
+      setPricingConfig(config);
+    });
+    
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     // Get delivery person from localStorage
@@ -26,12 +40,72 @@ export default function Dashboard() {
     const ordersRef = ref(db, '/orders');
     const unsubscribe = onValue(ordersRef, (snapshot) => {
       const data = snapshot.val() || {};
+      const ordersList = Object.entries(data).map(([id, order]) => ({ id, ...order }));
+      
+      // Check for new available orders
+      if (!loading && deliveryPerson?.id) {
+        const availableOrders = ordersList.filter(order => 
+          (order.status === 'pending' || order.status === 'confirmed') && 
+          !order.deliveryPersonId
+        );
+        
+        // Find newly available orders
+        const newAvailableOrders = availableOrders.filter(order => 
+          !previousOrderIds.has(order.id)
+        );
+        
+        if (newAvailableOrders.length > 0) {
+          // Show alert for the first new order
+          const newOrder = newAvailableOrders[0];
+          setNewOrderAlert({ 
+            visible: true, 
+            order: newOrder, 
+            orderId: newOrder.id 
+          });
+          
+          // Play notification sound
+          try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Alert sound - urgent beeps
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+          } catch (error) {
+            console.error('Error playing notification sound:', error);
+          }
+        }
+        
+        // Update previous order IDs
+        setPreviousOrderIds(new Set(ordersList.map(order => order.id)));
+      }
+      
       setOrders(data);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, [navigate]);
+
+  const handleAcceptFromAlert = async () => {
+    if (newOrderAlert.orderId) {
+      await acceptOrder(newOrderAlert.orderId);
+      setNewOrderAlert({ visible: false, order: null, orderId: null });
+    }
+  };
+
+  const handleDeclineFromAlert = () => {
+    setNewOrderAlert({ visible: false, order: null, orderId: null });
+    showToast('Order declined', 'info');
+  };
 
   const acceptOrder = async (orderId) => {
     try {
@@ -312,12 +386,19 @@ export default function Dashboard() {
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold">
-                        {order.status === 'pending' || order.status === 'confirmed' || order.status === 'ready' ? 
-                          formatINR(order.fees?.deliveryFee || order.deliveryFee || 0) : 
-                          formatINR(order.total || order.subtotal || 0)
-                        }
-                      </span>
+                      <div>
+                        <span className="text-2xl font-bold">
+                          {order.status === 'pending' || order.status === 'confirmed' || order.status === 'ready' ? 
+                            formatINR((order.fees?.deliveryFeeApplied || order.fees?.deliveryFee || order.deliveryFee || 0) * (pricingConfig.driverEarningsPercentage / 100)) : 
+                            formatINR(order.total || order.subtotal || 0)
+                          }
+                        </span>
+                        {order.distance && (
+                          <div className="text-xs text-white/70 mt-1">
+                            {order.distance.toFixed(1)} km • {formatINR(((order.fees?.deliveryFeeApplied || 0) * (pricingConfig.driverEarningsPercentage / 100)) / order.distance)}/km
+                          </div>
+                        )}
+                      </div>
                       
                       <div className="flex space-x-2">
                         {order.status === 'assigned' && (
@@ -469,22 +550,54 @@ export default function Dashboard() {
                       </div>
 
                       <div className="flex justify-between items-center p-3 bg-gradient-to-r from-primary-50 to-fresh-50 rounded-xl border border-primary-200">
-                        <span className="text-sm font-semibold text-surface-700">
-                          {filter === 'available' ? 'Delivery Fee' : 
-                           (order.paymentMethod === 'cod' || order.payment?.method === 'cod') ? 'Total Amount (COD)' : 'Total Amount'}
-                        </span>
-                        <span className="text-xl font-bold text-primary-600">
-                          {filter === 'available' ? 
-                            formatINR(order.fees?.deliveryFee || order.deliveryFee || 0) :
-                            formatINR(order.total || order.subtotal || 0)
-                          }
-                        </span>
+                        <div>
+                          <span className="text-sm font-semibold text-surface-700">
+                            {filter === 'available' ? 'Your Earnings' : 
+                             (order.paymentMethod === 'cod' || order.payment?.method === 'cod') ? 'Total Amount (COD)' : 'Total Amount'}
+                          </span>
+                          {filter === 'available' && order.distance && (
+                            <div className="text-xs text-surface-500 mt-1">
+                              {order.distance.toFixed(1)} km distance
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xl font-bold text-primary-600">
+                            {filter === 'available' ? 
+                              formatINR((order.fees?.deliveryFeeApplied || order.fees?.deliveryFee || order.deliveryFee || 0) * (pricingConfig.driverEarningsPercentage / 100)) :
+                              formatINR(order.total || order.subtotal || 0)
+                            }
+                          </span>
+                          {filter === 'available' && order.distance && (
+                            <div className="text-xs text-surface-500">
+                              {formatINR(((order.fees?.deliveryFeeApplied || 0) * (pricingConfig.driverEarningsPercentage / 100)) / order.distance)}/km
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3">
                       {filter === 'available' && (
                         <>
+                          <div className="bg-white/10 rounded-xl p-3 mb-3 border border-white/20">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="text-xs text-white/70 uppercase tracking-wide">Your Earnings</span>
+                                <div className="text-lg font-bold text-white">
+                                  {formatINR((order.fees?.deliveryFeeApplied || order.fees?.deliveryFee || order.deliveryFee || 0) * (pricingConfig.driverEarningsPercentage / 100))}
+                                </div>
+                              </div>
+                              {order.distance && (
+                                <div className="text-right">
+                                  <span className="text-xs text-white/70">{order.distance.toFixed(1)} km</span>
+                                  <div className="text-sm text-white/90">
+                                    {formatINR(((order.fees?.deliveryFeeApplied || 0) * (pricingConfig.driverEarningsPercentage / 100)) / order.distance)}/km
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                           <button
                             onClick={() => acceptOrder(orderId)}
                             className="btn-primary flex-1"
@@ -545,6 +658,16 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* New Order Alert Modal */}
+      <NewOrderAlert
+        order={newOrderAlert.order}
+        orderId={newOrderAlert.orderId}
+        onAccept={handleAcceptFromAlert}
+        onDecline={handleDeclineFromAlert}
+        isVisible={newOrderAlert.visible}
+        pricingConfig={pricingConfig}
+      />
     </MobileLayout>
   );
 }

@@ -2,12 +2,21 @@ import React, { useState, useEffect } from 'react';
 import MobileLayout from '../components/MobileLayout';
 import { ref, get } from 'firebase/database';
 import { db } from '../firebase';
+import { loadPricingConfig } from '../utils/deliveryFeeCalculator';
 
 export default function DeliveryHistory() {
   const [history, setHistory] = useState([]);
+  const [pricingConfig, setPricingConfig] = useState({ driverEarningsPercentage: 80 });
   const person = JSON.parse(localStorage.getItem('deliveryPerson') || '{}');
 
   useEffect(() => {
+    // Load pricing configuration
+    loadPricingConfig().then(config => {
+      setPricingConfig(config);
+    }).catch(error => {
+      console.error('Error loading pricing config:', error);
+    });
+
     const fetchHistory = async () => {
       try {
         // Fetch regular orders
@@ -57,15 +66,16 @@ export default function DeliveryHistory() {
   };
 
   const calculateEarnings = (order) => {
-    // For merchant orders, show delivery fee only
+    // For merchant orders, use delivery fee with driver's configurable share
     if (order.orderType === 'merchant') {
-      return order.fees?.deliveryFee || order.deliveryFee || 50; // Default delivery fee
+      const deliveryFee = order.fees?.deliveryFeeApplied || order.fees?.deliveryFee || order.deliveryFee || 0;
+      return deliveryFee * (pricingConfig.driverEarningsPercentage / 100);
     }
     
-    // For regular orders, show delivery fee or a portion of total
-    const deliveryFee = order.deliveryFee || order.fees?.deliveryFee;
-    if (deliveryFee) {
-      return deliveryFee;
+    // For regular orders, use delivery fee with driver's configurable share
+    const deliveryFee = order.fees?.deliveryFeeApplied || order.fees?.deliveryFee || order.deliveryFee || 0;
+    if (deliveryFee > 0) {
+      return deliveryFee * (pricingConfig.driverEarningsPercentage / 100);
     }
     
     // Fallback: calculate a percentage of total order value

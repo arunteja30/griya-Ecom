@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from "../context/CartContext";
 import Loader from "../components/Loader";
@@ -7,24 +7,60 @@ import { showToast } from "../components/Toast";
 import { normalizeImageUrl } from '../utils/imageHelpers';
 import { useFirebaseObject, useFirebaseList } from '../hooks/useFirebase';
 import { isStoreOpen, getStoreStatus } from '../utils/storeHours';
+import { estimateDeliveryFee, subscribeToPricingConfig } from '../utils/deliveryFeeCalculator';
 import { SkeletonCartItem } from '../components/skeletons/SkeletonLayouts';
 import { SkeletonBox, SkeletonText } from '../components/skeletons/SkeletonBase';
 
 export default function CartPage() {
   const { cartItems = [], cartTotal = 0, updateQuantity, removeFromCart, clearCart } = useCart() || {};
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+  const [deliveryFeeData, setDeliveryFeeData] = useState({ total: 0, estimating: false });
+  const [pricingConfig, setPricingConfig] = useState(null);
   const navigate = useNavigate();
   const { data: siteSettings } = useFirebaseObject('/siteSettings');
   const { data: bannersData } = useFirebaseList('/banners');
 
   const MIN_ORDER = 350;
-  const deliveryFee = 0; // Free delivery
   const convenienceFee = 15;
-  const totalAmount = cartTotal + deliveryFee + convenienceFee;
+  const totalAmount = cartTotal + deliveryFeeData.total + convenienceFee;
   
   // Get store status
   const storeStatus = getStoreStatus(siteSettings);
   const isStoreClosed = storeStatus && !storeStatus.isOpen;
+
+  // Listen to real-time pricing config changes
+  useEffect(() => {
+    const unsubscribe = subscribeToPricingConfig((config) => {
+      setPricingConfig(config);
+      // Recalculate delivery fee when config changes
+      if (cartTotal > 0) {
+        calculateDeliveryFee();
+      }
+    });
+    
+    return unsubscribe;
+  }, []);
+
+  // Calculate delivery fee when cart total changes
+  useEffect(() => {
+    const calculateDeliveryFee = async () => {
+      if (cartTotal > 0) {
+        setDeliveryFeeData({ total: 0, estimating: true });
+        try {
+          // Use estimated distance of 5km for cart preview
+          const feeData = await estimateDeliveryFee(cartTotal, 5);
+          setDeliveryFeeData({ total: feeData.total, estimating: false, breakdown: feeData.breakdown });
+        } catch (error) {
+          console.error('Error estimating delivery fee:', error);
+          setDeliveryFeeData({ total: 0, estimating: false });
+        }
+      } else {
+        setDeliveryFeeData({ total: 0, estimating: false });
+      }
+    };
+    
+    calculateDeliveryFee();
+  }, [cartTotal]);
 
   // Simple formatter
   const formatINR = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n || 0);
@@ -134,23 +170,7 @@ export default function CartPage() {
       ) : (
         // Cart Content
         <div className="pb-32">
-          {/* Delivery Info Banner */}
-          <div className="px-mobile py-4">
-            <div className="bg-gradient-to-r from-fresh-50 to-primary-50 border border-fresh-200/50 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-fresh-500 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10 6a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z"/>
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-surface-900">Free delivery on your order!</p>
-                  <p className="text-sm text-surface-600">Get fresh groceries delivered in 10-30 mins</p>
-                </div>
-                <div className="text-2xl">🚀</div>
-              </div>
-            </div>
-          </div>
+          {/* Delivery Info Banner removed as per requirement */}
 
           {/* Cart Items */}
           <div className="px-mobile space-y-3">
@@ -280,17 +300,9 @@ export default function CartPage() {
                 <span className="text-surface-600">Item total</span>
                 <span className="text-surface-900 font-medium">{formatINR(cartTotal)}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-surface-600">Delivery fee</span>
-                <span className="text-fresh-600 font-medium">FREE</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-surface-600">Platform fee</span>
-                <span className="text-surface-900 font-medium">{formatINR(convenienceFee)}</span>
-              </div>
               <div className="border-t border-surface-200 pt-2 flex justify-between">
                 <span className="font-bold text-surface-900">Total</span>
-                <span className="font-bold text-surface-900">{formatINR(totalAmount)}</span>
+                <span className="font-bold text-surface-900">{formatINR(cartTotal)}</span>
               </div>
             </div>
 

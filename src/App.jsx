@@ -30,6 +30,7 @@ import { CartProvider } from "./context/CartContext";import { VariantProvider } 
 import { WishlistProvider } from './context/WishlistContext';
 import { LocationProvider } from './context/LocationContext';
 import { ServiceStatusProvider } from './context/ServiceStatusContext';
+import { AdminPermissionProvider } from './context/AdminPermissionContext';
 import VariantSelector from './components/VariantSelector';import ToastContainer from "./components/Toast";
 import CheckoutPage from "./pages/CheckoutPage";
 import WishlistPage from "./pages/WishlistPage";
@@ -40,6 +41,8 @@ import HomeConfigAdmin from "./pages/admin/HomeConfigAdmin";
 import ThemeAdmin from "./pages/admin/ThemeAdmin";
 import DriversAdmin from "./pages/admin/DriversAdmin";
 import MerchantsAdmin from "./pages/admin/MerchantsAdmin";
+import DeliveryPricingAdmin from "./pages/admin/DeliveryPricingAdmin";
+import MerchantEarningsAdmin from "./pages/admin/MerchantEarningsAdmin";
 import OrderTrackingPage from "./pages/OrderTrackingPage";
 import FloatingOrderTracker from "./components/FloatingOrderTracker";
 import './utils/devUtils'; // Development utilities
@@ -75,23 +78,25 @@ export default function App() {
 
           {/* Admin routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminRoute><AdminLayout><SiteSettingsAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/analytics" element={<AdminRoute><AdminLayout><AnalyticsAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/merchant/:merchantId" element={<AdminRoute><AdminLayout><MerchantDetailsAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/driver/:driverId" element={<AdminRoute><AdminLayout><DriverDetailsAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/categories" element={<AdminRoute><AdminLayout><CategoriesAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/products" element={<AdminRoute><AdminLayout><ProductsAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/promocodes" element={<AdminRoute><AdminLayout><PromocodesAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/home" element={<AdminRoute><AdminLayout><HomepageAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/gallery" element={<AdminRoute><AdminLayout><GalleryAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/banners" element={<AdminRoute><AdminLayout><BannersAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/home-config" element={<AdminRoute><AdminLayout><HomeConfigAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/testimonials" element={<AdminRoute><AdminLayout><TestimonialsAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/theme" element={<AdminRoute><AdminLayout><ThemeAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/orders" element={<AdminRoute><AdminLayout><OrdersAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/drivers" element={<AdminRoute><AdminLayout><DriversAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/merchants" element={<AdminRoute><AdminLayout><MerchantsAdmin /></AdminLayout></AdminRoute>} />
-          <Route path="/admin/seed" element={<AdminRoute><AdminLayout><SeedSyncAdmin /></AdminLayout></AdminRoute>} />
+          <Route path="/admin" element={<AdminRoute><AdminPermissionProvider><AdminLayout><SiteSettingsAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/analytics" element={<AdminRoute><AdminPermissionProvider><AdminLayout><AnalyticsAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/merchant/:merchantId" element={<AdminRoute><AdminPermissionProvider><AdminLayout><MerchantDetailsAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/driver/:driverId" element={<AdminRoute><AdminPermissionProvider><AdminLayout><DriverDetailsAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/categories" element={<AdminRoute><AdminPermissionProvider><AdminLayout><CategoriesAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/products" element={<AdminRoute><AdminPermissionProvider><AdminLayout><ProductsAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/promocodes" element={<AdminRoute><AdminPermissionProvider><AdminLayout><PromocodesAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/home" element={<AdminRoute><AdminPermissionProvider><AdminLayout><HomepageAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/gallery" element={<AdminRoute><AdminPermissionProvider><AdminLayout><GalleryAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/banners" element={<AdminRoute><AdminPermissionProvider><AdminLayout><BannersAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/home-config" element={<AdminRoute><AdminPermissionProvider><AdminLayout><HomeConfigAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/testimonials" element={<AdminRoute><AdminPermissionProvider><AdminLayout><TestimonialsAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/theme" element={<AdminRoute><AdminPermissionProvider><AdminLayout><ThemeAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/orders" element={<AdminRoute><AdminPermissionProvider><AdminLayout><OrdersAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/drivers" element={<AdminRoute><AdminPermissionProvider><AdminLayout><DriversAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/merchants" element={<AdminRoute><AdminPermissionProvider><AdminLayout><MerchantsAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/delivery-pricing" element={<AdminRoute><AdminPermissionProvider><AdminLayout><DeliveryPricingAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/merchant-earnings" element={<AdminRoute><AdminPermissionProvider><AdminLayout><MerchantEarningsAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
+          <Route path="/admin/seed" element={<AdminRoute><AdminPermissionProvider><AdminLayout><SeedSyncAdmin /></AdminLayout></AdminPermissionProvider></AdminRoute>} />
         </Routes>
         
         {/* Global Variant Selector */}

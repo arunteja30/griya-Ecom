@@ -3,6 +3,7 @@ import { db } from './firebase';
 import { isLocationServiceable, fallbackPincodeServiceable } from './utils/deliveryArea';
 import { NotificationService } from './utils/notificationService';
 import { InventoryService } from './utils/inventoryService';
+import { loadMerchantEarnings, calculateMerchantEarnings } from './utils/merchantEarnings';
 
 // Return a promise that resolves to an array of categories: [{ id, ...data }, ...]
 export async function getCategories() {
@@ -118,11 +119,31 @@ export async function createOrder(order) {
 
     const ordersRef = ref(db, 'orders');
     const newRef = push(ordersRef);
+    
+    // Calculate merchant earnings for each merchant in the order
+    let merchantEarnings = null;
+    if (order.merchantId) {
+      try {
+        const earningsConfig = await loadMerchantEarnings(order.merchantId);
+        merchantEarnings = calculateMerchantEarnings({
+          total: order.total || 0,
+          deliveryFee: order.deliveryFee || 0,
+          createdAt: order.createdAt || new Date().toISOString(),
+          merchantId: order.merchantId
+        }, earningsConfig);
+      } catch (earningsError) {
+        console.error('Error calculating merchant earnings:', earningsError);
+        // Don't fail order creation if earnings calculation fails
+      }
+    }
+    
     const orderData = {
       ...order,
       id: newRef.key,
       status: 'pending',
-      createdAt: order.createdAt || new Date().toISOString()
+      createdAt: order.createdAt || new Date().toISOString(),
+      merchantEarnings: merchantEarnings,
+      merchantPaid: false // Track payout status
     };
     
     await set(newRef, orderData);

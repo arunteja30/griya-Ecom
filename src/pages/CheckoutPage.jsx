@@ -6,11 +6,13 @@ import { showToast } from '../components/Toast';
 import { useFirebaseObject } from '../hooks/useFirebase';
 import { createOrderOnServer, openRazorpayCheckout } from '../utils/razorpay';
 import { isStoreOpen, getStoreStatus } from '../utils/storeHours';
+import { estimateDeliveryFee, calculateDistance, subscribeToPricingConfig } from '../utils/deliveryFeeCalculator';
 import { ref, onValue, update } from 'firebase/database';
 import { db } from '../firebase';
 
 export default function CheckoutPage() {
   const { cartItems = [], cartTotal = 0, clearCart } = useCart() || {};
+  const [pricingConfig, setPricingConfig] = useState(null);
   const navigate = useNavigate();
 
   const [address, setAddress] = useState({ name: '', phone: '', line1: '', city: '', pincode: '' });
@@ -31,9 +33,16 @@ export default function CheckoutPage() {
 
   // Calculate fees
   const platformFee = Number(siteSettings?.platformFee || 15);
-  const deliveryFee = Number(siteSettings?.deliveryFee || 0);
-  const freeDeliveryMin = Number(siteSettings?.freeDeliveryMin || 199);
-  const deliveryFeeApplied = freeDeliveryMin > 0 && (cartTotal || 0) >= freeDeliveryMin ? 0 : deliveryFee;
+  
+  // Dynamic delivery fee calculation
+  const [deliveryFeeData, setDeliveryFeeData] = useState({
+    total: Number(siteSettings?.deliveryFee || 0),
+    breakdown: null,
+    distance: 0
+  });
+  const [calculatingDeliveryFee, setCalculatingDeliveryFee] = useState(false);
+  
+  const deliveryFeeApplied = deliveryFeeData.total;
   const feesTotal = platformFee + deliveryFeeApplied;
   const subtotalAfterDiscount = Math.max(0, (cartTotal || 0) - discount);
   const totalWithFees = subtotalAfterDiscount + feesTotal;
@@ -44,7 +53,78 @@ export default function CheckoutPage() {
     }
   }, [cartItems, navigate, placedOrder]);
 
-  // Auto-populate city and pincode from site settings
+  // Listen to real-time pricing config changes
+  useEffect(() => {
+    const unsubscribe = subscribeToPricingConfig((config) => {
+      setPricingConfig(config);
+      // Recalculate delivery fee when config changes
+      if (address.line1 && address.city && address.pincode) {
+        calculateDeliveryFeeForAddress();
+      }
+    });
+    
+    return unsubscribe;
+  }, []);
+
+  // Listen to real-time pricing config changes
+  useEffect(() => {
+    const unsubscribe = subscribeToPricingConfig((config) => {
+      setPricingConfig(config);
+      // Recalculate delivery fee when config changes
+      if (address.line1 && address.city && address.pincode) {
+        calculateDeliveryFeeForAddress();
+      }
+    });
+    
+    return unsubscribe;
+  }, []);
+
+  // Calculate delivery fee when address changes
+  useEffect(() => {
+    const calculateDeliveryFeeForAddress = async () => {
+      if (address.line1 && address.city && address.pincode) {
+        setCalculatingDeliveryFee(true);
+        try {
+          // Calculate distance from store to delivery address
+          const storeAddress = siteSettings?.storeAddress || 'Store Location';
+          const customerAddress = `${address.line1}, ${address.city}, ${address.pincode}`;
+          
+          // Get distance (you should implement actual Google Maps API call)
+          const distanceData = await calculateDistance(storeAddress, customerAddress);
+          
+          // Calculate delivery fee based on distance and order value
+          const feeData = await estimateDeliveryFee(cartTotal || 0, distanceData.distance);
+          
+          setDeliveryFeeData({
+            total: feeData.total,
+            breakdown: feeData.breakdown,
+            distance: distanceData.distance,
+            reasons: feeData.reasons
+          });
+        } catch (error) {
+          console.error('Error calculating delivery fee:', error);
+          // Fallback to default fee
+          setDeliveryFeeData({
+            total: Number(siteSettings?.deliveryFee || 0),
+            breakdown: null,
+            distance: 0
+          });
+        } finally {
+          setCalculatingDeliveryFee(false);
+        }
+      } else {
+        // Reset to default when address is incomplete
+        setDeliveryFeeData({
+          total: Number(siteSettings?.deliveryFee || 0),
+          breakdown: null,
+          distance: 0
+        });
+      }
+    };
+    
+    calculateDeliveryFeeForAddress();
+  }, [address.line1, address.city, address.pincode, cartTotal, siteSettings]);
+  
   useEffect(() => {
     if (siteSettings && (!address.city || !address.pincode)) {
       const defaultCity = siteSettings.defaultCity || '';
@@ -255,7 +335,15 @@ export default function CheckoutPage() {
         discountValue: appliedPromo.discountValue,
         appliedDiscount: discount
       } : null,
-      fees: { platformFee, deliveryFee, deliveryFeeApplied, feesTotal },
+      fees: { 
+        platformFee, 
+        deliveryFee: deliveryFeeData.total, 
+        deliveryFeeApplied, 
+        feesTotal,
+        breakdown: deliveryFeeData.breakdown
+      },
+      distance: deliveryFeeData.distance,
+      deliveryFeeCalculation: deliveryFeeData,
       total: totalWithFees,
       address: { ...address },
       createdAt: new Date().toISOString(),
@@ -669,16 +757,36 @@ export default function CheckoutPage() {
                 <span className="font-medium text-gray-800">₹{platformFee}</span>
               </div>
             )}
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Delivery Fee</span>
-              {deliveryFeeApplied > 0 ? (
-                <span className="font-medium text-gray-800">₹{deliveryFeeApplied}</span>
-              ) : (
-                freeDeliveryMin > 0 ? (
-                  <span className="font-medium text-green-600">Free (orders ≥ ₹{freeDeliveryMin})</span>
+            <div className="py-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600 flex items-center">
+                  Delivery Fee
+                  {calculatingDeliveryFee && (
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
+                </span>
+                {deliveryFeeApplied > 0 ? (
+                  <span className="font-medium text-gray-800">₹{deliveryFeeApplied}</span>
                 ) : (
-                  <span className="font-medium text-green-600">Free</span>
-                )
+                  <span className="text-green-600 font-medium">FREE</span>
+                )}
+              </div>
+              {deliveryFeeData.distance > 0 && !deliveryFeeData.adminOverride && (
+                <div className="text-xs text-gray-500 mt-1 flex justify-between">
+                  <span>Distance: {deliveryFeeData.distance.toFixed(1)} km</span>
+                  {deliveryFeeData.reasons && deliveryFeeData.reasons.length > 0 && (
+                    <span>{deliveryFeeData.reasons.join(', ')}</span>
+                  )}
+                </div>
+              )}
+              {deliveryFeeData.adminOverride && (
+                <div className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                  <span>💼</span>
+                  <span>{deliveryFeeData.reasons?.[0] || 'Admin controlled pricing'}</span>
+                </div>
               )}
             </div>
             <div className="border-t border-purple-200 pt-2 mt-3">
