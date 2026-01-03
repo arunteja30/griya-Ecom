@@ -8,14 +8,26 @@ import android.os.Bundle
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
-import android.webkit.*
+import android.webkit.GeolocationPermissions
+import android.webkit.PermissionRequest
+import android.webkit.ValueCallback
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.griyaecom.app.bridge.WebBridge
-import com.griyaecom.app.utils.LocationHelper
 import com.griyaecom.app.utils.CameraHelper
+import com.griyaecom.app.utils.LocationHelper
 import com.griyaecom.app.utils.NotificationHelper
 
 class MainActivity : AppCompatActivity() {
@@ -32,6 +44,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var locationHelper: LocationHelper
     private lateinit var cameraHelper: CameraHelper
     private lateinit var notificationHelper: NotificationHelper
+
+    // Default customer web URL fallback
+    private var webViewUrl: String = "https://hungrimart.onrender.com"
+
+    // Firebase Realtime Database path for the customer web URL
+    private val webUrlConfigPath = "appConfig/customer/webViewUrl"
 
     private val fileUploadCallback = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -57,6 +75,10 @@ class MainActivity : AppCompatActivity() {
         setupFullScreen()
 
         initializeHelpers()
+
+        // Load customer web URL from Firebase before setting up WebView
+        loadCustomerWebUrl()
+
         setupWebView()
         handleDeepLink(intent)
         
@@ -67,6 +89,27 @@ class MainActivity : AppCompatActivity() {
         registerFCMTokenOnStartup()
     }
 
+    private fun loadCustomerWebUrl() {
+        val ref = FirebaseDatabase.getInstance().getReference(webUrlConfigPath)
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val url = snapshot.getValue(String::class.java)
+                    if (!url.isNullOrEmpty()) {
+                        webViewUrl = url
+                        // If WebView already created, reload with new URL
+                        if (::webView.isInitialized) {
+                            webView.loadUrl(webViewUrl)
+                        }
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Ignore and keep fallback URL
+            }
+        })
+    }
     private fun setupFullScreen() {
         try {
             // Enable edge-to-edge display
@@ -84,25 +127,25 @@ class MainActivity : AppCompatActivity() {
                 // For API < 30
                 @Suppress("DEPRECATION")
                 window.decorView.systemUiVisibility = (
-                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_FULLSCREEN
-                )
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                or View.SYSTEM_UI_FLAG_FULLSCREEN
+                        )
             }
         } catch (@Suppress("UNUSED_PARAMETER") e: Exception) {
             // Fallback to basic full screen if modern approach fails
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_FULLSCREEN
-            )
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    )
         }
     }
 
@@ -122,7 +165,6 @@ class MainActivity : AppCompatActivity() {
         notificationHelper = NotificationHelper(this)
         webBridge = WebBridge(this, locationHelper, cameraHelper, notificationHelper)
     }
-
     private fun setupWebView() {
         webView = findViewById(R.id.webView)
 
@@ -262,24 +304,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadWebApp() {
-        val url = "https://hungrimart.onrender.com"
-        webView.loadUrl(url)
+        webView.loadUrl(webViewUrl)
     }
 
     private fun handleDeepLink(intent: Intent?) {
-        val data = intent?.data
-        if (data != null) {
-            val url = data.toString()
-            when {
-                url.startsWith("https://hungrimart.onrender.com") -> {
-                    webView.loadUrl(url)
-                }
-                url.startsWith("griyamart://") -> {
-                    // Handle custom scheme
-                    val path = data.path ?: "/"
-                    val webUrl = "https://hungrimart.onrender.com$path"
-                    webView.loadUrl(webUrl)
-                }
+        val data = intent?.data ?: return
+        val url = data.toString()
+
+        when {
+            // If the deep link already points to the same host as our current webViewUrl, load directly
+            url.startsWith(webViewUrl.substringBefore("/", "")) || url.startsWith(webViewUrl) -> {
+                webView.loadUrl(url)
+            }
+
+            // Custom scheme: griyamart://path -> map onto our dynamic base URL
+            url.startsWith("griyamart://") -> {
+                val path = data.path ?: "/"
+                val targetUrl = webViewUrl.trimEnd('/') + path
+                webView.loadUrl(targetUrl)
             }
         }
     }

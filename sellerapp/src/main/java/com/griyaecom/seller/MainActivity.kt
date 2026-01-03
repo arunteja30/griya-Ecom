@@ -1,6 +1,7 @@
 package com.griyaecom.seller
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -18,13 +19,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.FirebaseMessaging
 import com.griyaecom.seller.ui.theme.GriyaMartTheme
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
-    private val webViewUrl = "https://seller-griyamart.onrender.com" // Replace with your seller web URL
+
+    // default fallback URL for seller app
+    private var webViewUrl: String = "https://seller-griyamart.onrender.com"
+
+    // Firebase Realtime Database path for the seller app web URL
+    private val webUrlConfigPath = "appConfig/seller/webViewUrl"
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -44,6 +52,9 @@ class MainActivity : ComponentActivity() {
         // Initialize Firebase and get FCM token
         initializeFirebaseMessaging()
 
+        // Load seller web URL from Firebase Realtime Database
+        loadSellerWebUrl()
+
         // Handle notification data from intent
         handleNotificationData()
 
@@ -58,6 +69,20 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    private fun loadSellerWebUrl() {
+        val database: DatabaseReference = FirebaseDatabase.getInstance().reference
+        database.child(webUrlConfigPath).get().addOnSuccessListener { snapshot ->
+            if (snapshot.exists()) {
+                webViewUrl = snapshot.value.toString()
+                Log.d("SellerApp", "Loaded webViewUrl from Firebase: $webViewUrl")
+            } else {
+                Log.w("SellerApp", "webViewUrl not found in Firebase, using default")
+            }
+        }.addOnFailureListener {
+            Log.e("SellerApp", "Failed to load webViewUrl from Firebase", it)
         }
     }
 
@@ -185,6 +210,31 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun handleDeepLink(intent: Intent?) {
+        val data = intent?.data ?: return
+        val url = data.toString()
+
+        when {
+            // If deep link already matches our current base URL, load directly
+            url.startsWith(webViewUrl) -> {
+                webView.loadUrl(url)
+            }
+
+            // Custom scheme: griyaseller://path -> map to dynamic seller base URL
+            url.startsWith("griyaseller://") -> {
+                val path = data.path ?: "/"
+                val targetUrl = webViewUrl.trimEnd('/') + path
+                webView.loadUrl(targetUrl)
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent?) {
+        super.onNewIntent(intent)
+        handleNotificationData()
+        handleDeepLink(intent)
     }
 
     inner class SellerWebBridge {

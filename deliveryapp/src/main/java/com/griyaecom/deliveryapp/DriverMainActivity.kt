@@ -20,6 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.messaging.FirebaseMessaging
 import com.griyaecom.deliveryapp.services.LiveLocationTrackingService
 import com.griyaecom.deliveryapp.ui.theme.GriyaMartTheme
@@ -27,7 +31,11 @@ import com.griyaecom.deliveryapp.ui.theme.GriyaMartTheme
 class DriverMainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
-    private val webViewUrl = "https://delivery-hungrimart.onrender.com" // Replace with your delivery web URL
+    private var webViewUrl: String =
+        "https://delivery-griyamart.onrender.com" // default fallback URL
+
+    // Firebase Realtime Database path for the delivery app web URL
+    private val webUrlConfigPath = "appConfig/delivery/webViewUrl"
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -50,6 +58,9 @@ class DriverMainActivity : ComponentActivity() {
         // Handle notification data from intent
         handleNotificationData()
 
+        // Load webViewUrl from Firebase Realtime Database
+        loadWebViewUrl()
+
         setContent {
             GriyaMartTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -62,6 +73,33 @@ class DriverMainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun loadWebViewUrl() {
+        val ref = FirebaseDatabase.getInstance().getReference(webUrlConfigPath)
+        ref.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val url = snapshot.getValue(String::class.java)
+                    if (!url.isNullOrEmpty()) {
+                        webViewUrl = url
+                        Log.d("DeliveryApp", "Loaded webViewUrl from Firebase: $webViewUrl")
+                        if (::webView.isInitialized) {
+                            webView.loadUrl(webViewUrl)
+                        }
+                    }
+                } else {
+                    Log.w(
+                        "DeliveryApp",
+                        "webViewUrl not found in Firebase, using default: $webViewUrl"
+                    )
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("DeliveryApp", "Error fetching webViewUrl", error.toException())
+            }
+        })
     }
 
     @Composable
@@ -183,6 +221,31 @@ class DriverMainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun handleDeepLink(intent: Intent?) {
+        val data = intent?.data ?: return
+        val url = data.toString()
+
+        when {
+            // If deep link already matches the current delivery base URL, load directly
+            url.startsWith(webViewUrl) -> {
+                webView.loadUrl(url)
+            }
+
+            // Custom scheme: griyadriver://path -> map to dynamic delivery base URL
+            url.startsWith("griyadriver://") -> {
+                val path = data.path ?: "/"
+                val targetUrl = webViewUrl.trimEnd('/') + path
+                webView.loadUrl(targetUrl)
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        handleNotificationData()
+        handleDeepLink(intent)
     }
 
     inner class DeliveryWebBridge {
