@@ -5,20 +5,9 @@ import { SoundNotification } from '../utils/soundNotification';
 class NotificationService {
   static subscribeToDriverNotifications(callback) {
     // Import Firebase modules
-    import('../firebase').then(({ db }) => {
-      import('firebase/database').then(({ ref, onValue, off }) => {
-        const notificationsRef = ref(db, '/notifications/drivers');
-        onValue(notificationsRef, (snapshot) => {
-          const notifications = snapshot.val() || {};
-          const notificationsList = Object.entries(notifications)
-            .map(([id, notification]) => ({ id, ...notification }))
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-          callback(notificationsList);
-        });
-        
-        return () => off(notificationsRef);
-      });
-    });
+    // We'll delegate subscription logic to delivery-app notification service
+    // This placeholder will be replaced by NotificationService.subscribeToDriverNotifications in the consumer
+    console.warn('subscribeToDriverNotifications should be used from utils; this code path is a fallback');
   }
 
   static async markAsRead(notificationId, type) {
@@ -69,7 +58,10 @@ export default function NotificationBell({ type = 'drivers' }) {
     let unsubscribe;
     
     if (type === 'drivers') {
-      unsubscribe = NotificationService.subscribeToDriverNotifications(setNotifications);
+      // Try to get delivery person id from localStorage
+      const person = JSON.parse(localStorage.getItem('deliveryPerson') || '{}');
+      const driverId = person?.id || null;
+      unsubscribe = NotificationService.subscribeToDriverNotifications(setNotifications, driverId);
     }
 
     return unsubscribe;

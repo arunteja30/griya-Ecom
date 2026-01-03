@@ -46,8 +46,8 @@ export class NotificationService {
         priority: 'high'
       };
 
-      // Add to driver notifications
-      await push(ref(db, '/notifications/drivers'), driverNotification);
+      // Add to driver broadcast channel (drivers should subscribe to broadcast + their inbox)
+      await push(ref(db, '/notifications/drivers/broadcast'), driverNotification);
 
       console.log('Order notification sent to drivers');
     } catch (error) {
@@ -77,7 +77,8 @@ export class NotificationService {
       }
       
       if (targetType === 'driver' || targetType === 'both') {
-        promises.push(push(ref(db, '/notifications/drivers'), notification));
+        // Push to driver broadcast channel so drivers subscribed to broadcast receive status updates
+        promises.push(push(ref(db, '/notifications/drivers/broadcast'), notification));
       }
 
       // Send customer-specific notification if phone number is provided
@@ -95,6 +96,30 @@ export class NotificationService {
       await Promise.all(promises);
     } catch (error) {
       console.error('Error sending status update:', error);
+    }
+  }
+
+  // Send notification to a specific driver inbox
+  static async sendDriverNotification(driverId, title, message, type = 'order_update', orderId = null, deliveryAddress = null) {
+    try {
+      if (!driverId) {
+        throw new Error('driverId required');
+      }
+      const notification = {
+        type,
+        title,
+        message,
+        orderId,
+        deliveryAddress,
+        timestamp: new Date().toISOString(),
+        read: false,
+        priority: 'high'
+      };
+
+      await push(ref(db, `/notifications/drivers/${driverId}`), notification);
+      console.log(`Notification sent to driver ${driverId}`);
+    } catch (error) {
+      console.error('Error sending driver notification:', error);
     }
   }
 
@@ -131,17 +156,34 @@ export class NotificationService {
     return () => off(notificationsRef);
   }
 
-  static subscribeToDriverNotifications(callback) {
-    const notificationsRef = ref(db, '/notifications/drivers');
-    onValue(notificationsRef, (snapshot) => {
-      const notifications = snapshot.val() || {};
-      const notificationsList = Object.entries(notifications)
-        .map(([id, notification]) => ({ id, ...notification }))
-        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      callback(notificationsList);
-    });
-    
-    return () => off(notificationsRef);
+  // Subscribe to driver notifications; if driverId provided subscribes to both broadcast and inbox
+  static subscribeToDriverNotifications(callback, driverId = null) {
+    const broadcastRef = ref(db, '/notifications/drivers/broadcast');
+    const inboxRef = driverId ? ref(db, `/notifications/drivers/${driverId}`) : null;
+
+    const handleBoth = async () => {
+      const bSnap = (await get(broadcastRef));
+      const iSnap = inboxRef ? (await get(inboxRef)) : null;
+      const bVal = bSnap.val() || {};
+      const iVal = (iSnap && iSnap.val()) || {};
+      const combined = [
+        ...Object.entries(bVal).map(([id, n]) => ({ id, ...n })),
+        ...Object.entries(iVal).map(([id, n]) => ({ id, ...n }))
+      ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      callback(combined);
+    };
+
+    // Initial read
+    handleBoth();
+
+    // subscribe to updates
+    onValue(broadcastRef, () => handleBoth());
+    if (inboxRef) onValue(inboxRef, () => handleBoth());
+
+    return () => {
+      off(broadcastRef);
+      if (inboxRef) off(inboxRef);
+    };
   }
 
   static subscribeToCustomerNotifications(customerPhone, callback) {

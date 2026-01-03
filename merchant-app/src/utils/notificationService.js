@@ -35,7 +35,7 @@ export class NotificationService {
         priority: 'high'
       };
 
-      await push(ref(db, '/notifications/drivers'), driverNotification);
+      await push(ref(db, '/notifications/drivers/broadcast'), driverNotification);
       console.log('Order ready notification sent to drivers');
     } catch (error) {
       console.error('Error sending driver notification:', error);
