@@ -1,0 +1,29 @@
+{
+}
+  "private": true
+  },
+    "typescript": "^4.9.0"
+    "eslint-config-google": "^0.14.0",
+    "eslint": "^8.15.0",
+  "devDependencies": {
+  },
+    "firebase-functions": "^4.8.1"
+    "firebase-admin": "^12.0.0",
+  "dependencies": {
+  "main": "index.js",
+  },
+    "node": "18"
+  "engines": {
+  },
+    "logs": "firebase functions:log"
+    "deploy": "firebase deploy --only functions",
+    "start": "npm run shell",
+    "shell": "npm run build && firebase functions:shell",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "build:watch": "tsc --watch",
+    "build": "tsc",
+    "lint": "eslint --ext .js,.ts .",
+  "scripts": {
+  "description": "Firebase Cloud Functions for GriyaMart notification triggers",
+  "name": "griyamart-functions",
+

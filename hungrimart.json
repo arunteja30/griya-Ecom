@@ -1,0 +1,1931 @@
+{
+  "about": {
+    "contact": {
+      "address": "Local Market Road, Your City, India",
+      "email": "hello@quickmart.example",
+      "phone": "+91 9900112233"
+    },
+    "content": [
+      "QuickMart provides fresh groceries and essentials with fast delivery.",
+      "We partner with trusted suppliers to bring quality produce to your home."
+    ],
+    "hero": {
+      "image": "/images/grocery-about.jpg",
+      "subtitle": "Reliable local grocery delivery",
+      "title": "About QuickMart"
+    }
+  },
+  "banners": {
+    "b1": {
+      "ctaLink": "/collections/sale",
+      "endDate": "2025-11-26",
+      "id": "b1",
+      "image": "https://images.unsplash.com/photo-1542831371-d531d36971e6?w=1200&q=80",
+      "startDate": "2025-11-25",
+      "subtitle": "Up to 50% off on selected essentials",
+      "title": "Big Weekend Sale 1"
+    },
+    "b2": {
+      "ctaLink": "/category/vegetables",
+      "endDate": "2025-11-27",
+      "id": "b2",
+      "image": "https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1200&q=80",
+      "startDate": "2025-01-01",
+      "subtitle": "Handpicked fruits and vegetables",
+      "title": "Fresh Today 2"
+    },
+    "b3": {
+      "ctaLink": "/collections/sale",
+      "endDate": "2025-11-30",
+      "id": "b3",
+      "image": "https://images.unsplash.com/photo-1542831371-d531d36971e6?w=1200&q=80",
+      "startDate": "2025-11-25",
+      "subtitle": "Up to 50% off on selected essentials",
+      "title": "Big Weekend Sale 3"
+    },
+    "b4": {
+      "ctaLink": "/category/vegetables",
+      "endDate": "2025-11-28",
+      "id": "b4",
+      "image": "https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1200&q=80",
+      "startDate": "2025-01-01",
+      "subtitle": "Handpicked fruits and vegetables",
+      "title": "Fresh Today 4"
+    },
+    "b5": {
+      "ctaLink": "/collections/sale",
+      "endDate": "2025-11-30",
+      "id": "b5",
+      "image": "https://images.unsplash.com/photo-1542831371-d531d36971e6?w=1200&q=80",
+      "startDate": "2025-11-25",
+      "subtitle": "Up to 50% off on selected essentials",
+      "title": "Big Weekend Sale"
+    },
+    "b6": {
+      "ctaLink": "/category/vegetables",
+      "endDate": "2025-11-29",
+      "id": "b6",
+      "image": "https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1200&q=80",
+      "startDate": "2025-01-01",
+      "subtitle": "Handpicked fruits and vegetables",
+      "title": "Fresh Today 5"
+    },
+    "b7": {
+      "ctaLink": "/collections/sale",
+      "endDate": "2025-11-30",
+      "id": "b7",
+      "image": "https://images.unsplash.com/photo-1542831371-d531d36971e6?w=1200&q=80",
+      "startDate": "2025-11-25",
+      "subtitle": "Up to 50% off on selected essentials",
+      "title": "Big Weekend Sale 7"
+    }
+  },
+  "categories": {
+    "Test category": {
+      "description": "Juices, tea, coffee and soft drinks",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/5bec1f84-4aa5-49ae-9c3d-9a0dcb9fe2ad_d990b4fc-4629-4cc6-bc7a-ace787fb378a",
+      "name": "test category",
+      "slug": "test-category",
+      "sortOrder": 5,
+      "subcategories": [
+        {
+          "description": "cool drinks",
+          "id": "test-cold-drinks",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/5bec1f84-4aa5-49ae-9c3d-9a0dcb9fe2ad_d990b4fc-4629-4cc6-bc7a-ace787fb378a",
+          "name": "test cold drinks",
+          "slug": "test-cold-drinks",
+          "tags": [
+            "cold",
+            "drinks",
+            "cola"
+          ]
+        },
+        {
+          "description": "test fruits changes",
+          "id": "test-fruits",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/7155c5af-2f9d-41a3-92d6-2a0d7ecacd4f_361de9d0-8257-4479-8511-76f4f1cd2009",
+          "name": "test fruits",
+          "slug": "test-fruits",
+          "tags": [
+            "fruits"
+          ]
+        }
+      ],
+      "tags": [
+        "christmas"
+      ]
+    },
+    "cat_beverages": {
+      "description": "Juices, tea, coffee and soft drinks",
+      "id": "cat_beverages",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/5bec1f84-4aa5-49ae-9c3d-9a0dcb9fe2ad_d990b4fc-4629-4cc6-bc7a-ace787fb378a",
+      "name": "Beverages",
+      "slug": "beverages",
+      "sortOrder": 5,
+      "subcategories": [
+        {
+          "description": "Soft drinks, sodas and cold beverages",
+          "id": "cold-drinks",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/5bec1f84-4aa5-49ae-9c3d-9a0dcb9fe2ad_d990b4fc-4629-4cc6-bc7a-ace787fb378a",
+          "name": "Cold Drinks",
+          "slug": "cold-drinks",
+          "tags": [
+            "cold",
+            "drinks",
+            "soda",
+            "cola"
+          ]
+        },
+        {
+          "description": "Fresh fruit juices and packaged drinks",
+          "id": "juices",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/juice_category.png",
+          "name": "Juices",
+          "slug": "juices",
+          "tags": [
+            "juice",
+            "fruit",
+            "healthy"
+          ]
+        },
+        {
+          "description": "Tea leaves, coffee powder and instant drinks",
+          "id": "tea-coffee",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/tea_coffee.png",
+          "name": "Tea & Coffee",
+          "slug": "tea-coffee",
+          "tags": [
+            "tea",
+            "coffee",
+            "hot",
+            "beverages"
+          ]
+        },
+        {
+          "description": "Sports drinks and energy boosters",
+          "id": "energy-drinks",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/energy_drinks.png",
+          "name": "Energy Drinks",
+          "slug": "energy-drinks",
+          "tags": [
+            "energy",
+            "sports",
+            "boost"
+          ]
+        }
+      ]
+    },
+    "cat_dairy": {
+      "description": "Milk, paneer, yogurt and eggs",
+      "id": "cat_dairy",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/11/10/d667fa79-d093-4ba3-8983-57fa61a12ecf_6ab193a3-5d79-4549-a0e2-4fc75c4cb4fe",
+      "name": "Dairy & Eggs",
+      "slug": "dairy-eggs",
+      "sortOrder": 3,
+      "subcategories": [
+        {
+          "description": "Fresh milk, flavored milk and dairy drinks",
+          "id": "milk",
+          "image": "https://paal.co/wp-content/uploads/2025/03/Packet-Milk.png",
+          "name": "Milk",
+          "slug": "milk",
+          "tags": [
+            "milk",
+            "dairy",
+            "fresh"
+          ]
+        },
+        {
+          "description": "Fresh eggs and egg products",
+          "id": "eggs",
+          "image": "https://www.kindpng.com/picc/m/69-698144_organic-egg-half-dozen-half-dozen-eggs-png.png",
+          "name": "Eggs",
+          "slug": "eggs",
+          "tags": [
+            "eggs",
+            "protein",
+            "fresh"
+          ]
+        },
+        {
+          "description": "Fresh curd, yogurt and fermented dairy products",
+          "id": "yogurt-curd",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/yogurt_category.png",
+          "name": "Yogurt & Curd",
+          "slug": "yogurt-curd",
+          "tags": [
+            "yogurt",
+            "curd",
+            "probiotic"
+          ]
+        },
+        {
+          "description": "Fresh paneer, cheese and dairy products",
+          "id": "cheese-paneer",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/paneer_category.png",
+          "name": "Cheese & Paneer",
+          "slug": "cheese-paneer",
+          "tags": [
+            "paneer",
+            "cheese",
+            "dairy"
+          ]
+        }
+      ]
+    },
+    "cat_fruits": {
+      "description": "Fresh seasonal fruits",
+      "id": "cat_fruits",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/7155c5af-2f9d-41a3-92d6-2a0d7ecacd4f_361de9d0-8257-4479-8511-76f4f1cd2009",
+      "name": "Fruits",
+      "slug": "fruits",
+      "sortOrder": 1,
+      "subcategories": [
+        {
+          "description": "Fresh seasonal and local fruits",
+          "id": "seasonal-fruits",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/959f3368e153e4cf3475e41318b33f8b",
+          "name": "Seasonal Fruits",
+          "slug": "seasonal-fruits",
+          "tags": [
+            "seasonal",
+            "local",
+            "fresh"
+          ]
+        },
+        {
+          "description": "Oranges, lemons, limes and citrus varieties",
+          "id": "citrus-fruits",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_600/53abc4b79446572e9c7a0eb090890cb6",
+          "name": "Citrus Fruits",
+          "slug": "citrus-fruits",
+          "tags": [
+            "citrus",
+            "vitamin-c",
+            "tangy"
+          ]
+        },
+        {
+          "description": "Mangoes, pineapples and exotic tropical fruits",
+          "id": "tropical-fruits",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/NI_CATALOG/IMAGES/ciw/2025/10/6/4e30fbf3-3361-4eed-9c72-61918d894b43_NPI-041393_1_20251006_060227.png",
+          "name": "Tropical Fruits",
+          "slug": "tropical-fruits",
+          "tags": [
+            "tropical",
+            "exotic",
+            "sweet"
+          ]
+        },
+        {
+          "description": "Strawberries, blueberries and mixed berries",
+          "id": "berries",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/berries_category.png",
+          "name": "Berries",
+          "slug": "berries",
+          "tags": [
+            "berries",
+            "antioxidants",
+            "healthy"
+          ]
+        }
+      ]
+    },
+    "cat_snacks": {
+      "description": "Chips, biscuits and munchies",
+      "id": "cat_snacks",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/23d6ea5b-a94e-455d-977d-03d09b0f27a3_ebb1a660-b475-4d22-82d5-d58689ff64e1",
+      "name": "Snacks & Biscuits",
+      "slug": "snacks",
+      "sortOrder": 6,
+      "subcategories": [
+        {
+          "description": "Potato chips, corn chips and crunchy snacks",
+          "id": "chips-crisps",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/chips_category.png",
+          "name": "Chips & Crisps",
+          "slug": "chips-crisps",
+          "tags": [
+            "chips",
+            "crisps",
+            "crunchy",
+            "snacks"
+          ]
+        },
+        {
+          "description": "Sweet biscuits, cookies and tea-time treats",
+          "id": "biscuits-cookies",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/biscuits_category.png",
+          "name": "Biscuits & Cookies",
+          "slug": "biscuits-cookies",
+          "tags": [
+            "biscuits",
+            "cookies",
+            "sweet",
+            "tea-time"
+          ]
+        },
+        {
+          "description": "Indian namkeen, bhujia and savory snacks",
+          "id": "namkeen-savory",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/namkeen_category.png",
+          "name": "Namkeen & Savory",
+          "slug": "namkeen-savory",
+          "tags": [
+            "namkeen",
+            "bhujia",
+            "savory",
+            "indian"
+          ]
+        },
+        {
+          "description": "Nuts, dry fruits and healthy munchies",
+          "id": "healthy-snacks",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/healthy_snacks.png",
+          "name": "Healthy Snacks",
+          "slug": "healthy-snacks",
+          "tags": [
+            "healthy",
+            "nuts",
+            "dry-fruits",
+            "protein"
+          ]
+        }
+      ]
+    },
+    "cat_staples": {
+      "description": "Rice, flour, pulses and cooking essentials",
+      "id": "cat_staples",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/11/17/c65894e4-5b70-4b9d-9d87-baba38e0ef6e_0cdf10e3-6c7c-4deb-9dbc-dcf24cd11fca",
+      "name": "Staples",
+      "slug": "staples",
+      "sortOrder": 4,
+      "subcategories": [
+        {
+          "description": "Basmati rice, wheat and other grains",
+          "id": "rice-grains",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/11/17/rice_category.png",
+          "name": "Rice & Grains",
+          "slug": "rice-grains",
+          "tags": [
+            "rice",
+            "grains",
+            "basmati",
+            "wheat"
+          ]
+        },
+        {
+          "description": "Wheat flour, multigrain atta and baking flour",
+          "id": "flour-atta",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/11/17/flour_category.png",
+          "name": "Flour & Atta",
+          "slug": "flour-atta",
+          "tags": [
+            "flour",
+            "atta",
+            "wheat",
+            "multigrain"
+          ]
+        },
+        {
+          "description": "Dal, chickpeas and variety of pulses",
+          "id": "pulses-lentils",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/11/17/pulses_category.png",
+          "name": "Pulses & Lentils",
+          "slug": "pulses-lentils",
+          "tags": [
+            "dal",
+            "pulses",
+            "lentils",
+            "protein"
+          ]
+        },
+        {
+          "description": "Sunflower, mustard and cooking oils",
+          "id": "cooking-oils",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/11/17/oil_category.png",
+          "name": "Cooking Oils",
+          "slug": "cooking-oils",
+          "tags": [
+            "oil",
+            "sunflower",
+            "mustard",
+            "cooking"
+          ]
+        }
+      ]
+    },
+    "cat_veggies": {
+      "description": "Daily fresh vegetables",
+      "id": "cat_veggies",
+      "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/323b2564-9fa9-43dd-9755-b5df299797d7_a7f60fc5-47fa-429d-9fd1-5f0644c0d4e3",
+      "name": "Vegetables",
+      "slug": "vegetables",
+      "sortOrder": 2,
+      "subcategories": [
+        {
+          "description": "Spinach, lettuce, cabbage and green leafy vegetables",
+          "id": "leafy-greens",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/leafy_greens.png",
+          "name": "Leafy Greens",
+          "slug": "leafy-greens",
+          "tags": [
+            "leafy",
+            "greens",
+            "healthy",
+            "iron"
+          ]
+        },
+        {
+          "description": "Potatoes, carrots, onions and root vegetables",
+          "id": "root-vegetables",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/NI_CATALOG/IMAGES/CIW/2025/1/15/d81d80c8-9153-4e88-9cb1-4eb5f01b412e_1108.png",
+          "name": "Root Vegetables",
+          "slug": "root-vegetables",
+          "tags": [
+            "root",
+            "potato",
+            "carrot",
+            "onion"
+          ]
+        },
+        {
+          "description": "Tomatoes, ginger, garlic and daily cooking vegetables",
+          "id": "cooking-essentials",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/054e83b5ebe789cf4b7b146319df4cfc",
+          "name": "Cooking Essentials",
+          "slug": "cooking-essentials",
+          "tags": [
+            "tomato",
+            "ginger",
+            "garlic",
+            "cooking"
+          ]
+        },
+        {
+          "description": "Broccoli, bell peppers and imported vegetables",
+          "id": "exotic-vegetables",
+          "image": "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_200/NI_CATALOG/IMAGES/CIW/2025/10/8/exotic_veggies.png",
+          "name": "Exotic Vegetables",
+          "slug": "exotic-vegetables",
+          "tags": [
+            "exotic",
+            "broccoli",
+            "bell-pepper",
+            "imported"
+          ]
+        }
+      ]
+    }
+  },
+  "categoryProducts": {
+    "berries": {
+      "-OepeEMa2LDVs2EuH2Ft": true
+    },
+    "biscuits-cookies": {
+      "-OepeEMa2LDVs2EuH2Ft": true
+    },
+    "cat_dairy": {
+      "-OfEhJ6D8nBhAnqKcZ1w": true,
+      "g_prod_005": true
+    },
+    "cat_fruits": {
+      "-OepeEMa2LDVs2EuH2Ft": true,
+      "g_prod_001": true,
+      "g_prod_002": true
+    },
+    "cat_veggies": {
+      "g_prod_003": true,
+      "g_prod_004": true
+    },
+    "cheese-paneer": {
+      "g_prod_005": true
+    },
+    "chips-crisps": {
+      "-OepeEMa2LDVs2EuH2Ft": true
+    },
+    "citrus-fruits": {
+      "g_prod_002": true
+    },
+    "cold-drinks": {
+      "-OepeEMa2LDVs2EuH2Ft": true
+    },
+    "cooking-essentials": {
+      "g_prod_003": true,
+      "g_prod_004": true
+    },
+    "cooking-oils": {
+      "g_prod_005": true
+    },
+    "eggs": {
+      "-OfEhJ6D8nBhAnqKcZ1w": true
+    },
+    "energy-drinks": {
+      "-OepeEMa2LDVs2EuH2Ft": true
+    },
+    "exotic-vegetables": {
+      "g_prod_003": true
+    },
+    "flour-atta": {
+      "g_prod_005": true
+    },
+    "healthy-snacks": {
+      "g_prod_001": true
+    },
+    "juices": {
+      "-OepeEMa2LDVs2EuH2Ft": true
+    },
+    "leafy-greens": {
+      "g_prod_003": true
+    },
+    "milk": {
+      "g_prod_005": true
+    },
+    "namkeen-savory": {
+      "-OepeEMa2LDVs2EuH2Ft": true
+    },
+    "pulses-lentils": {
+      "g_prod_005": true
+    },
+    "rice-grains": {
+      "g_prod_005": true
+    },
+    "root-vegetables": {
+      "g_prod_004": true
+    },
+    "seasonal-fruits": {
+      "g_prod_001": true,
+      "g_prod_002": true
+    },
+    "tea-coffee": {
+      "-OepeEMa2LDVs2EuH2Ft": true
+    },
+    "test-cold-drinks": {
+      "-OepeEMa2LDVs2EuH2Ft": true
+    },
+    "tropical-fruits": {
+      "-OepeEMa2LDVs2EuH2Ft": true,
+      "g_prod_001": true
+    },
+    "yogurt-curd": {
+      "g_prod_005": true
+    }
+  },
+  "gallery": {
+    "img_1": {
+      "caption": "Fresh produce",
+      "order": 1,
+      "url": "/images/groceries/bananas.jpg"
+    },
+    "img_2": {
+      "caption": "Daily essentials",
+      "order": 2,
+      "url": "/images/groceries/veggies.jpg"
+    }
+  },
+  "home": {
+    "hero": {
+      "buttonText": "Shop Groceries",
+      "buttonUrl": "/groceries",
+      "image": "/images/grocery-hero.jpg",
+      "subtitle": "Fruits, vegetables, dairy and daily essentials",
+      "title": "Fresh groceries, delivered to your door"
+    }
+  },
+  "homeConfig": {
+    "days": {
+      "tuesday": [
+        "fruit",
+        "beverages",
+        "vegetable",
+        "banana"
+      ]
+    },
+    "deals": [
+      "dairy",
+      "fruit"
+    ],
+    "festivals": {
+      "christmas": [
+        "banana",
+        "fruit",
+        "dairy"
+      ]
+    },
+    "show": {
+      "deals": true,
+      "festivals": true,
+      "popular": false,
+      "quickBuys": false,
+      "recommended": false
+    }
+  },
+  "merchantPushTokens": {
+    "8H9O7iqfDreOqZrFAb8LEpwI2Jt2": {
+      "token": "merchant-token-1764880360635",
+      "ts": 1764880360637
+    },
+    "merchant_demo": "expo-demo-token-merchant-12345"
+  },
+  "merchants": {
+    "merchant_001": {
+      "bankDetailsKey": "bank_merchant_001",
+      "email": "merchant_demo@quickmart.example",
+      "id": "merchant_001",
+      "name": "GriyaMart - Downtown",
+      "phone": "+91 9988001122",
+      "pushTokenKey": "merchant_demo",
+      "storeAddress": "Local Market Road, Your City, India"
+    }
+  },
+  "navigation": {
+    "footer": [
+      {
+        "id": "privacy",
+        "order": 1,
+        "title": "Privacy Policy",
+        "url": "/privacy"
+      }
+    ],
+    "header": [
+      {
+        "id": "home",
+        "order": 1,
+        "title": "Home",
+        "url": "/"
+      },
+      {
+        "id": "groceries",
+        "order": 2,
+        "title": "Groceries",
+        "url": "/groceries"
+      },
+      {
+        "id": "about",
+        "order": 3,
+        "title": "About",
+        "url": "/about"
+      },
+      {
+        "id": "contact",
+        "order": 4,
+        "title": "Contact",
+        "url": "/contact"
+      }
+    ]
+  },
+  "orders": {
+    "-OehZ3XOrYaq0JKLPRHL": {
+      "address": {
+        "city": "hyd",
+        "line1": "g1",
+        "name": "aruteja",
+        "phone": "9799956775",
+        "pincode": "500468"
+      },
+      "amount": 360,
+      "createdAt": "2025-11-22T21:55:05.489Z",
+      "customerName": "aruteja",
+      "customerPhone": "9799956775",
+      "dropAddress": "g1, hyd",
+      "id": "order_1763848505489",
+      "items": [
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples (1 kg)",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "orderItems": [
+        {
+          "name": "Red Apples (1 kg)",
+          "qty": 2
+        }
+      ],
+      "orderStatusHistory": [
+        {
+          "status": "CANCELLED",
+          "ts": 1763848505489
+        }
+      ],
+      "paymentType": "COD",
+      "pickupAddress": "g1, hyd",
+      "status": "CANCELLED",
+      "total": 360
+    },
+    "-OehZnyerolsywCqdStc": {
+      "address": {
+        "city": "hyd",
+        "line1": "g1",
+        "name": "arunteh",
+        "phone": "989897876",
+        "pincode": "50056"
+      },
+      "amount": 350,
+      "createdAt": "2025-11-22T21:57:45.975Z",
+      "customerName": "arunteh",
+      "customerPhone": "989897876",
+      "dropAddress": "g1, hyd",
+      "id": "order_1763848665975",
+      "items": [
+        {
+          "id": "g_prod_004",
+          "name": "Potatoes (1 kg)",
+          "price": 35,
+          "quantity": 10
+        }
+      ],
+      "lastUpdatedAt": 1764794718327,
+      "orderItems": [
+        {
+          "name": "Potatoes (1 kg)",
+          "qty": 10
+        }
+      ],
+      "orderStatusHistory": {
+        "0": {
+          "status": "DELIVERED",
+          "ts": 1763848665975
+        },
+        "-Of_x_XdlbpzYgyDtuYa": {
+          "status": "PREPARING",
+          "ts": 1764794718390
+        }
+      },
+      "payment": {
+        "razorpayOrderId": "order_RiwU8gPsvbcDob",
+        "razorpayPaymentId": "pay_RiwUUbEp9LwbAI",
+        "razorpaySignature": "3e73f49b8216bee93fbc9b74de634f7e102e7425a0ea5e6dff29aed2393fd516"
+      },
+      "paymentType": "PREPAID",
+      "pickupAddress": "g1, hyd",
+      "status": "PREPARING",
+      "total": 350
+    },
+    "-OeqqzjX9kauoNn4d-GK": {
+      "address": {
+        "city": "hyd",
+        "line1": "G1",
+        "name": "Arunteja",
+        "phone": "98989898",
+        "pincode": "500045"
+      },
+      "amount": 410,
+      "assignedAt": 1764092727566,
+      "createdAt": "2025-11-24T17:14:21.521Z",
+      "currentRiderLocation": {
+        "lat": 17.4402,
+        "lng": 78.349,
+        "ts": 1764007060000
+      },
+      "customerName": "Arunteja",
+      "customerPhone": "98989898",
+      "dropAddress": "G1, hyd",
+      "dropLocation": {
+        "lat": 17.4415,
+        "lng": 78.35
+      },
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764004461520",
+      "items": [
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "lastUpdatedAt": 1764871884597,
+      "orderItems": [
+        {
+          "name": "Red Apples",
+          "qty": 2
+        }
+      ],
+      "orderStatusHistory": {
+        "0": {
+          "status": "ASSIGNED",
+          "ts": 1764004461520
+        },
+        "1": {
+          "status": "ACCEPTED",
+          "ts": 1764092727566
+        },
+        "2": {
+          "status": "REACHED_STORE",
+          "ts": 1764092819590
+        },
+        "3": {
+          "status": "PICKED_UP",
+          "ts": 1764093242829
+        },
+        "-OfeYwxZYDpKDu5gCtSJ": {
+          "status": "PREPARING",
+          "ts": 1764871884655
+        }
+      },
+      "paymentType": "COD",
+      "pickupAddress": "G1, hyd",
+      "pickupLocation": {
+        "lat": 17.44,
+        "lng": 78.3495
+      },
+      "riderId": "tDQqs8OSe4QeeZDh9mGvZRQDb9p2",
+      "status": "PREPARING",
+      "subtotal": 360,
+      "total": 410
+    },
+    "-Oequ7HZPPRji3H0Gn1B": {
+      "address": {
+        "city": "Hyd",
+        "line1": "G1",
+        "name": "griya",
+        "phone": "9898989898",
+        "pincode": "500045"
+      },
+      "amount": 410,
+      "createdAt": "2025-11-24T17:25:21.607Z",
+      "customerName": "griya",
+      "customerPhone": "9898989898",
+      "dropAddress": "G1, Hyd",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764005121607",
+      "items": [
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "orderItems": [
+        {
+          "name": "Red Apples",
+          "qty": 2
+        }
+      ],
+      "orderStatusHistory": [
+        {
+          "status": "DELIVERED",
+          "ts": 1764005121607
+        }
+      ],
+      "payment": {
+        "razorpayPaymentId": "pay_RjexCN3uAUPEuz"
+      },
+      "paymentType": "PREPAID",
+      "pickupAddress": "G1, Hyd",
+      "status": "DELIVERED",
+      "subtotal": 360,
+      "total": 410
+    },
+    "-Oeqy7aAsUuLK-8Vko15": {
+      "address": {
+        "city": "hyd",
+        "line1": "g1",
+        "name": "ram",
+        "phone": "8989898989",
+        "pincode": "500045"
+      },
+      "amount": 455,
+      "createdAt": "2025-11-24T17:45:01.803Z",
+      "currentRiderLocation": {
+        "lat": 17.441,
+        "lng": 78.3505,
+        "ts": 1764007200000
+      },
+      "customerName": "ram",
+      "customerPhone": "8989898989",
+      "deliveredAt": 1764091056005,
+      "dropAddress": "g1, hyd",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764006301803",
+      "items": [
+        {
+          "id": "-OepeEMa2LDVs2EuH2Ft-v-1763984258876",
+          "name": "test fruit",
+          "price": 15,
+          "quantity": 1
+        },
+        {
+          "id": "-OepeEMa2LDVs2EuH2Ft-v-1763984267880",
+          "name": "test fruit",
+          "price": 30,
+          "quantity": 1
+        },
+        {
+          "id": "g_prod_002-undefined",
+          "name": "Red Apples",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "lastUpdatedAt": 1764091056007,
+      "orderItems": [
+        {
+          "name": "test fruit",
+          "qty": 1
+        },
+        {
+          "name": "test fruit",
+          "qty": 1
+        },
+        {
+          "name": "Red Apples",
+          "qty": 2
+        }
+      ],
+      "orderStatusHistory": [
+        {
+          "status": "ON_THE_WAY",
+          "ts": 1764006301803
+        },
+        {
+          "status": "DELIVERED",
+          "ts": 1764091056007
+        }
+      ],
+      "payment": {
+        "razorpayPaymentId": "pay_RjfFj6c6mUKtzn"
+      },
+      "paymentType": "PREPAID",
+      "pickupAddress": "g1, hyd",
+      "riderId": "tDQqs8OSe4QeeZDh9mGvZRQDb9p2",
+      "status": "DELIVERED",
+      "subtotal": 405,
+      "total": 455
+    },
+    "-OerAr7y6hKqbMMvOM0X": {
+      "address": {
+        "city": "test",
+        "line1": "test",
+        "name": "test",
+        "phone": "999999999",
+        "pincode": "500545"
+      },
+      "amount": 470,
+      "createdAt": "2025-11-24T18:45:03.117Z",
+      "customerName": "test",
+      "customerPhone": "999999999",
+      "dropAddress": "test, test",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764009903116",
+      "items": [
+        {
+          "id": "g_prod_001",
+          "name": "Bananas (per dozen)",
+          "price": 60,
+          "quantity": 1
+        },
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples (1 kg)",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "lastUpdatedAt": 1764794116350,
+      "orderItems": [
+        {
+          "name": "Bananas (per dozen)",
+          "qty": 1
+        },
+        {
+          "name": "Red Apples (1 kg)",
+          "qty": 2
+        }
+      ],
+      "orderStatusHistory": {
+        "0": {
+          "status": "ASSIGNED",
+          "ts": 1764009903116
+        },
+        "-Of_vH5BlsTDkpWB8tNt": {
+          "status": "READY_FOR_PICKUP",
+          "ts": 1764794116442
+        }
+      },
+      "payment": {
+        "razorpayPaymentId": "pay_RjgH5LVm2vIldU"
+      },
+      "paymentType": "PREPAID",
+      "pickupAddress": "test, test",
+      "readyAt": 1764794716350,
+      "status": "READY_FOR_PICKUP",
+      "subtotal": 420,
+      "total": 470
+    },
+    "-Of-d6CY5Peuo4SBUzl4": {
+      "address": {
+        "city": "Hyd",
+        "line1": "G1",
+        "name": "Arunteja",
+        "phone": "89898989",
+        "pincode": "500042"
+      },
+      "createdAt": "2025-11-26T14:48:58.199Z",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764168538199",
+      "items": [
+        {
+          "id": "g_prod_004",
+          "name": "Potatoes (1 kg)",
+          "price": 35,
+          "quantity": 2
+        },
+        {
+          "id": "g_prod_003",
+          "name": "Tomatoes (1 kg)",
+          "price": 45,
+          "quantity": 3
+        },
+        {
+          "id": "g_prod_005",
+          "name": "Fresh Milk (1 L)",
+          "price": 60,
+          "quantity": 3
+        }
+      ],
+      "payment": {
+        "razorpayPaymentId": "pay_RkPKHuzGUZUy8c"
+      },
+      "subtotal": 385,
+      "total": 435
+    },
+    "-Of2g1OH0zaBKgnghcyZ": {
+      "address": {
+        "city": "hyd",
+        "line1": "hyd",
+        "name": "arunte",
+        "phone": "8787678778",
+        "pincode": "500465"
+      },
+      "createdAt": "2025-11-27T05:01:08.276Z",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764219668276",
+      "items": [
+        {
+          "id": "g_prod_005",
+          "name": "Fresh Milk (1 L)",
+          "price": 60,
+          "quantity": 7
+        }
+      ],
+      "payment": {
+        "razorpayPaymentId": "pay_Rkdq3flFUiBMo3"
+      },
+      "subtotal": 420,
+      "total": 470
+    },
+    "-OfB8nQF_I-Y-b9duvhs": {
+      "address": {
+        "city": "hyf",
+        "line1": "hygg",
+        "name": "hygg",
+        "phone": "9898989898",
+        "pincode": "676767"
+      },
+      "createdAt": "2025-11-28T20:28:15.859Z",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 30,
+        "feesTotal": 50,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1764361695858",
+      "items": [
+        {
+          "id": "g_prod_005",
+          "name": "Fresh Milk (1 L)",
+          "price": 60,
+          "quantity": 6
+        }
+      ],
+      "payment": {
+        "razorpayPaymentId": "pay_RlIAOz1DM1kHd8"
+      },
+      "subtotal": 360,
+      "total": 410
+    },
+    "-OftNJGQc97SkkSlTB5N": {
+      "address": {
+        "city": "hyderabad",
+        "line1": "197, hyderabad",
+        "name": "Ariunteja",
+        "phone": "9700567734",
+        "pincode": "505468"
+      },
+      "createdAt": "2025-12-07T15:14:26.652Z",
+      "fees": {
+        "deliveryFee": 30,
+        "deliveryFeeApplied": 0,
+        "feesTotal": 20,
+        "otherFee": 0,
+        "platformFee": 10,
+        "surgeFee": 10
+      },
+      "id": "order_1765120466652",
+      "items": [
+        {
+          "id": "g_prod_004",
+          "name": "Potatoes (1 kg)",
+          "price": 35,
+          "quantity": 4
+        },
+        {
+          "id": "g_prod_003",
+          "name": "Tomatoes (1 kg)",
+          "price": 45,
+          "quantity": 6
+        },
+        {
+          "id": "g_prod_005",
+          "name": "Fresh Milk (1 L)",
+          "price": 60,
+          "quantity": 15.59
+        }
+      ],
+      "payment": {
+        "razorpayPaymentId": "pay_Rold24MFx8DJVS"
+      },
+      "subtotal": 1345.4,
+      "total": 1365.4
+    }
+  },
+  "ordersByStatus": {
+    "sample_accepted_1": {
+      "assignedAt": 1765197600000,
+      "createdAt": "2025-12-04T06:40:00.000Z",
+      "customerName": "Rider Test B",
+      "customerPhone": "9000000002",
+      "dropAddress": "Home B, Block 2",
+      "dropLocation": {
+        "lat": 17.442,
+        "lng": 78.351
+      },
+      "fees": {
+        "deliveryFee": 30
+      },
+      "id": "order_accepted_1",
+      "items": [
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples",
+          "price": 180,
+          "quantity": 1
+        }
+      ],
+      "orderItems": [
+        {
+          "name": "Red Apples",
+          "qty": 1
+        }
+      ],
+      "orderStatusHistory": [
+        {
+          "status": "ASSIGNED",
+          "ts": 1765197600000
+        },
+        {
+          "status": "ACCEPTED",
+          "ts": 1765197660000
+        }
+      ],
+      "pickupAddress": "Store B, Market Road",
+      "pickupLocation": {
+        "lat": 17.439,
+        "lng": 78.348
+      },
+      "riderId": "tDQqs8OSe4QeeZDh9mGvZRQDb9p2",
+      "status": "ACCEPTED"
+    },
+    "sample_arrived_customer": {
+      "assignedAt": 1765132200000,
+      "createdAt": "2025-12-03T23:30:00.000Z",
+      "customerName": "Rider Test E",
+      "customerPhone": "9000000005",
+      "dropAddress": "Home E, Avenue",
+      "dropLocation": {
+        "lat": 17.445,
+        "lng": 78.354
+      },
+      "fees": {
+        "deliveryFee": 30
+      },
+      "id": "order_arrived_1",
+      "items": [
+        {
+          "id": "g_prod_005",
+          "name": "Fresh Milk",
+          "price": 60,
+          "quantity": 2
+        }
+      ],
+      "orderItems": [
+        {
+          "name": "Fresh Milk",
+          "qty": 2
+        }
+      ],
+      "orderStatusHistory": [
+        {
+          "status": "ASSIGNED",
+          "ts": 1765132200000
+        },
+        {
+          "status": "ACCEPTED",
+          "ts": 1765132260000
+        },
+        {
+          "status": "REACHED_STORE",
+          "ts": 1765132320000
+        },
+        {
+          "status": "PICKED_UP",
+          "ts": 1765132380000
+        },
+        {
+          "status": "ARRIVED_CUSTOMER",
+          "ts": 1765132440000
+        }
+      ],
+      "pickupAddress": "Store E, Mall",
+      "pickupLocation": {
+        "lat": 17.436,
+        "lng": 78.345
+      },
+      "riderId": "tDQqs8OSe4QeeZDh9mGvZRQDb9p2",
+      "status": "ARRIVED_CUSTOMER"
+    },
+    "sample_assigned_1": {
+      "assignedAt": 1765200000000,
+      "createdAt": "2025-12-04T07:00:00.000Z",
+      "customerName": "Rider Test A",
+      "customerPhone": "9000000001",
+      "dropAddress": "Home A, Sector 1",
+      "dropLocation": {
+        "lat": 17.441,
+        "lng": 78.35
+      },
+      "fees": {
+        "deliveryFee": 30
+      },
+      "id": "order_assigned_1",
+      "items": [
+        {
+          "id": "g_prod_001",
+          "name": "Bananas",
+          "price": 60,
+          "quantity": 1
+        }
+      ],
+      "orderItems": [
+        {
+          "name": "Bananas",
+          "qty": 1
+        }
+      ],
+      "orderStatusHistory": [
+        {
+          "status": "ASSIGNED",
+          "ts": 1765200000000
+        }
+      ],
+      "pickupAddress": "Store A, Market Road",
+      "pickupLocation": {
+        "lat": 17.44,
+        "lng": 78.349
+      },
+      "status": "ASSIGNED"
+    },
+    "sample_cancelled": {
+      "createdAt": "2025-12-01T12:00:00.000Z",
+      "customerName": "Rider Test H",
+      "customerPhone": "9000000008",
+      "dropAddress": "Home H, Lane 8",
+      "fees": {
+        "deliveryFee": 30
+      },
+      "id": "order_cancelled_1",
+      "items": [
+        {
+          "id": "g_prod_005",
+          "name": "Fresh Milk",
+          "price": 60,
+          "quantity": 1
+        }
+      ],
+      "orderItems": [
+        {
+          "name": "Fresh Milk",
+          "qty": 1
+        }
+      ],
+      "orderStatusHistory": [
+        {
+          "status": "ASSIGNED",
+          "ts": 1764955200000
+        },
+        {
+          "status": "CANCELLED",
+          "ts": 1764958800000
+        }
+      ],
+      "pickupAddress": "Store H, Old Town",
+      "status": "CANCELLED"
+    },
+    "sample_delivered": {
+      "assignedAt": 1765034400000,
+      "createdAt": "2025-12-02T18:00:00.000Z",
+      "customerName": "Rider Test G",
+      "customerPhone": "9000000007",
+      "deliveredAt": 1765038000000,
+      "dropAddress": "Home G, Sector 9",
+      "dropLocation": {
+        "lat": 17.447,
+        "lng": 78.356
+      },
+      "fees": {
+        "deliveryFee": 30
+      },
+      "id": "order_delivered_1",
+      "items": [
+        {
+          "id": "g_prod_001",
+          "name": "Bananas",
+          "price": 60,
+          "quantity": 2
+        }
+      ],
+      "orderItems": [
+        {
+          "name": "Bananas",
+          "qty": 2
+        }
+      ],
+      "orderStatusHistory": [
+        {
+          "status": "ASSIGNED",
+          "ts": 1765034400000
+        },
+        {
+          "status": "ACCEPTED",
+          "ts": 1765034460000
+        },
+        {
+          "status": "REACHED_STORE",
+          "ts": 1765034520000
+        },
+        {
+          "status": "PICKED_UP",
+          "ts": 1765034580000
+        },
+        {
+          "status": "ARRIVED_CUSTOMER",
+          "ts": 1765034640000
+        },
+        {
+          "status": "DELIVERED",
+          "ts": 1765038000000
+        }
+      ],
+      "pickupAddress": "Store G, Market",
+      "pickupLocation": {
+        "lat": 17.4355,
+        "lng": 78.3445
+      },
+      "riderId": "tDQqs8OSe4QeeZDh9mGvZRQDb9p2",
+      "status": "DELIVERED"
+    },
+    "sample_on_the_way": {
+      "assignedAt": 1765128000000,
+      "createdAt": "2025-12-03T21:00:00.000Z",
+      "customerName": "Rider Test F",
+      "customerPhone": "9000000006",
+      "dropAddress": "Home F, Street",
+      "dropLocation": {
+        "lat": 17.446,
+        "lng": 78.355
+      },
+      "fees": {
+        "deliveryFee": 30
+      },
+      "id": "order_onway_1",
+      "items": [
+        {
+          "id": "g_prod_002",
+          "name": "Red Apples",
+          "price": 180,
+          "quantity": 2
+        }
+      ],
+      "orderItems": [
+        {
+          "name": "Red Apples",
+          "qty": 2
+        }
+      ],
+      "orderStatusHistory": [
+        {
+          "status": "ASSIGNED",
+          "ts": 1765128000000
+        },
+        {
+          "status": "ACCEPTED",
+          "ts": 1765128060000
+        },
+        {
+          "status": "ON_THE_WAY",
+          "ts": 1765128120000
+        }
+      ],
+      "pickupAddress": "Store F, Plaza",
+      "pickupLocation": {
+        "lat": 17.438,
+        "lng": 78.347
+      },
+      "riderId": "tDQqs8OSe4QeeZDh9mGvZRQDb9p2",
+      "status": "ON_THE_WAY"
+    },
+    "sample_picked_up": {
+      "assignedAt": 1765194600000,
+      "createdAt": "2025-12-04T05:50:00.000Z",
+      "currentRiderLocation": {
+        "lat": 17.4402,
+        "lng": 78.349,
+        "ts": 1765198200000
+      },
+      "customerName": "Rider Test D",
+      "customerPhone": "9000000004",
+      "dropAddress": "Home D, Park",
+      "dropLocation": {
+        "lat": 17.444,
+        "lng": 78.353
+      },
+      "fees": {
+        "deliveryFee": 30
+      },
+      "id": "order_picked_1",
+      "items": [
+        {
+          "id": "g_prod_004",
+          "name": "Potatoes",
+          "price": 35,
+          "quantity": 5
+        }
+      ],
+      "orderItems": [
+        {
+          "name": "Potatoes",
+          "qty": 5
+        }
+      ],
+      "orderStatusHistory": [
+        {
+          "status": "ASSIGNED",
+          "ts": 1765194600000
+        },
+        {
+          "status": "ACCEPTED",
+          "ts": 1765194660000
+        },
+        {
+          "status": "REACHED_STORE",
+          "ts": 1765194720000
+        },
+        {
+          "status": "PICKED_UP",
+          "ts": 1765194780000
+        }
+      ],
+      "pickupAddress": "Store D, Plaza",
+      "pickupLocation": {
+        "lat": 17.437,
+        "lng": 78.346
+      },
+      "riderId": "tDQqs8OSe4QeeZDh9mGvZRQDb9p2",
+      "status": "PICKED_UP"
+    },
+    "sample_reached_store": {
+      "assignedAt": 1765196400000,
+      "createdAt": "2025-12-04T06:20:00.000Z",
+      "customerName": "Rider Test C",
+      "customerPhone": "9000000003",
+      "dropAddress": "Home C, Lane 3",
+      "dropLocation": {
+        "lat": 17.443,
+        "lng": 78.352
+      },
+      "fees": {
+        "deliveryFee": 30
+      },
+      "id": "order_reached_1",
+      "items": [
+        {
+          "id": "g_prod_003",
+          "name": "Tomatoes",
+          "price": 45,
+          "quantity": 2
+        }
+      ],
+      "orderItems": [
+        {
+          "name": "Tomatoes",
+          "qty": 2
+        }
+      ],
+      "orderStatusHistory": [
+        {
+          "status": "ASSIGNED",
+          "ts": 1765196400000
+        },
+        {
+          "status": "ACCEPTED",
+          "ts": 1765196460000
+        },
+        {
+          "status": "REACHED_STORE",
+          "ts": 1765196520000
+        }
+      ],
+      "pickupAddress": "Store C, Central",
+      "pickupLocation": {
+        "lat": 17.4385,
+        "lng": 78.3475
+      },
+      "riderId": "tDQqs8OSe4QeeZDh9mGvZRQDb9p2",
+      "status": "REACHED_STORE"
+    }
+  },
+  "products": {
+    "-OepeEMa2LDVs2EuH2Ft": {
+      "categoryId": "cat_fruits",
+      "description": "tasty fruit",
+      "discount": 40,
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/NI_CATALOG/IMAGES/ciw/2025/10/6/4e30fbf3-3361-4eed-9c72-61918d894b43_NPI-041393_1_20251006_060227.png"
+      ],
+      "inStock": true,
+      "isBestseller": false,
+      "name": "test fruit",
+      "originalPrice": 25,
+      "price": 15,
+      "rating": 5,
+      "slug": "test fruite 200gm",
+      "stock": 1,
+      "tags": [
+        "christmas"
+      ],
+      "unit": "g",
+      "unitValue": "200",
+      "variants": {
+        "v-1763984258876": {
+          "id": "v-1763984258876",
+          "label": "200",
+          "price": 15,
+          "unit": "gms"
+        },
+        "v-1763984267880": {
+          "id": "v-1763984267880",
+          "label": "500",
+          "price": 30,
+          "unit": "gms"
+        }
+      }
+    },
+    "-OfEhJ6D8nBhAnqKcZ1w": {
+      "categoryId": "cat_dairy",
+      "description": "Full Eggs pack of 6 ",
+      "discount": 14,
+      "id": "g_prod_005",
+      "images": [
+        "https://www.kindpng.com/picc/m/69-698144_organic-egg-half-dozen-half-dozen-eggs-png.png"
+      ],
+      "inStock": true,
+      "isBestseller": true,
+      "name": "Eggs ( 6 pcs )",
+      "originalPrice": 70,
+      "price": 60,
+      "rating": 4.3,
+      "sku": "DA-MILK-005",
+      "slug": "6-fresh-Eggs-pack",
+      "stock": 12,
+      "tags": [
+        "milk",
+        "dairy"
+      ],
+      "unit": "ltr",
+      "unitValue": "12 pcs"
+    },
+    "g_prod_001": {
+      "categoryId": "cat_fruits",
+      "description": "Ripe Cavendish bananas, approx. 12 pcs",
+      "discount": 14,
+      "id": "g_prod_001",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/959f3368e153e4cf3475e41318b33f8b"
+      ],
+      "inStock": false,
+      "isBestseller": true,
+      "name": "Bananas (per dozen)",
+      "originalPrice": 70,
+      "price": 60,
+      "rating": 4.5,
+      "sku": "FR-BAN-001",
+      "slug": "bananas-dozen",
+      "stock": 120,
+      "tags": [
+        "banana",
+        "fruit"
+      ],
+      "unit": "dozen",
+      "variants": {
+        "per-dozen": {
+          "id": "per-dozen",
+          "label": "Per dozen",
+          "price": 60,
+          "unit": "Perdozen"
+        },
+        "per-kg": {
+          "id": "per-kg",
+          "label": "Per kg",
+          "price": 50,
+          "unit": "Perkg"
+        }
+      }
+    },
+    "g_prod_002": {
+      "categoryId": "cat_fruits",
+      "description": "Fresh red apples",
+      "discount": 10,
+      "id": "g_prod_002",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy",
+        "f_auto",
+        "q_auto",
+        "h_600/53abc4b79446572e9c7a0eb090890cb6"
+      ],
+      "inStock": true,
+      "isBestseller": true,
+      "name": "Red Apples",
+      "originalPrice": 200,
+      "price": 180,
+      "rating": 4.6,
+      "sku": "FR-APP-002",
+      "slug": "red-apples-1kg",
+      "stock": 40,
+      "tags": [
+        "apple",
+        "fruit"
+      ],
+      "unit": "g",
+      "unitValue": "500",
+      "variants": [
+        {
+          "id": "v_1764873066800",
+          "label": "1 kg",
+          "price": 180
+        },
+        {
+          "id": "v_1764873066800",
+          "label": "500 g",
+          "price": 95
+        }
+      ]
+    },
+    "g_prod_003": {
+      "categoryId": "cat_veggies",
+      "description": "Fresh tomatoes, ideal for everyday cooking",
+      "discount": 10,
+      "id": "g_prod_003",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/054e83b5ebe789cf4b7b146319df4cfc"
+      ],
+      "inStock": true,
+      "isBestseller": false,
+      "name": "Tomatoes (1 kg)",
+      "originalPrice": 50,
+      "price": 45,
+      "rating": 4.1,
+      "sku": "VG-TOM-003",
+      "slug": "tomatoes-1kg",
+      "stock": 80,
+      "tags": [
+        "tomato",
+        "vegetable"
+      ],
+      "unit": "kg"
+    },
+    "g_prod_004": {
+      "categoryId": "cat_veggies",
+      "description": "Cleaned potatoes, good for all recipes",
+      "discount": 12,
+      "id": "g_prod_004",
+      "images": [
+        "https://instamart-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,h_544,w_504/NI_CATALOG/IMAGES/CIW/2025/1/15/d81d80c8-9153-4e88-9cb1-4eb5f01b412e_1108.png"
+      ],
+      "inStock": true,
+      "isBestseller": true,
+      "name": "Potatoes (1 kg)",
+      "originalPrice": 40,
+      "price": 35,
+      "rating": 4,
+      "sku": "VG-POT-004",
+      "slug": "potatoes-1kg",
+      "stock": 200,
+      "tags": [
+        "potato",
+        "vegetable"
+      ],
+      "unit": "kg"
+    },
+    "g_prod_005": {
+      "categoryId": "cat_dairy",
+      "description": "Full cream fresh milk, pasteurised",
+      "discount": 14,
+      "id": "g_prod_005",
+      "images": [
+        "https://paal.co/wp-content/uploads/2025/03/Packet-Milk.png"
+      ],
+      "inStock": true,
+      "isBestseller": true,
+      "merchantId": "8H9O7iqfDreOqZrFAb8LEpwI2Jt2",
+      "name": "Fresh Milk (1 L)",
+      "originalPrice": 70,
+      "price": 60,
+      "rating": 4.3,
+      "sku": "DA-MILK-005",
+      "slug": "fresh-milk-1l",
+      "stock": 150,
+      "tags": [
+        "milk",
+        "dairy"
+      ],
+      "unit": "ltr"
+    }
+  },
+  "riderLocations": {
+    "rider_002": {
+      "lat": 17.435,
+      "lng": 78.342,
+      "ts": 1763990000000
+    },
+    "tDQqs8OSe4QeeZDh9mGvZRQDb9p2": {
+      "lat": 17.4401,
+      "lng": 78.3489,
+      "ts": 1764007000000
+    }
+  },
+  "riders": {
+    "rider_002": {
+      "isOnline": false,
+      "lastSeenAt": 1763990000000,
+      "name": "Sita Devi",
+      "phone": "+91 9988776655",
+      "photoUrl": "",
+      "uid": "rider_002",
+      "vehicleNumber": "KA02CD5678"
+    },
+    "tDQqs8OSe4QeeZDh9mGvZRQDb9p2": {
+      "isOnline": true,
+      "lastSeenAt": 1764092716480,
+      "name": "Arun Teja",
+      "phone": "+91 9876543210",
+      "photoUrl": "",
+      "uid": "rider_001",
+      "vehicleNumber": "KA01AB1234"
+    }
+  },
+  "siteSettings": {
+    "accentColor": "",
+    "address": "Local Market Road, Your City, India",
+    "appBackground": "",
+    "bannerBgColor": "#df2121",
+    "bannerLink": "",
+    "bannerOffers": "Test message",
+    "bannerText": "Test message",
+    "bannerTextColor": "",
+    "bannerVisible": false,
+    "brandName": "GriyaMart",
+    "cardBgColor": "",
+    "cardTextColor": "",
+    "deliveryFee": 30,
+    "deliveryRadiusKm": 5,
+    "footerBgColor": "",
+    "footerText": "© 2025 GriyaMart. All rights reserved.",
+    "footerTextColor": "",
+    "freeDeliveryMin": 500,
+    "instagram": "https://instagram.com/GriyaMart",
+    "logoUrl": "https://us.123rf.com/450wm/vectorgalaxy/vectorgalaxy1805/vectorgalaxy180500944/101157287-mart-logo-isolated-on-white-background-for-your-web-and-mobile-app-design-colorful-vector-icon.jpg",
+    "navBgColor": "#df2121",
+    "navTextColor": "",
+    "offers": [
+      "Test message"
+    ],
+    "otherFee": 0,
+    "platformFee": 10,
+    "primaryColor": "",
+    "serviceablePincodes": "505468,505498",
+    "storeLat": "18.2018",
+    "storeLocation": {
+      "lat": 18.2018,
+      "lon": 79.3967
+    },
+    "storeLon": "79.3967",
+    "surgeFee": 10,
+    "tagline": "Daily essentials delivered fast",
+    "theme": {
+      "accentColor": "#0d3eaf",
+      "appBackground": "#f4f4f1",
+      "cardBadgeBgColor": "#3e590d",
+      "cardBgColor": "#eff5f5",
+      "cardBorderColor": "#ffffff",
+      "cardButtonAccentBg": "#fb923c",
+      "cardButtonAccentTextColor": "#ffffff",
+      "cardButtonPrimaryBg": "#0a4fe6",
+      "cardButtonPrimaryTextColor": "#ffffff",
+      "cardTextColor": "#0649db",
+      "footerBgColor": "#2d5bbe",
+      "footerTextColor": "#ffffff",
+      "navBgColor": "#2d5bbe",
+      "navItemTextColor": "#fafafa",
+      "navTextColor": "#ffffff",
+      "primaryColor": "#e9ecf1",
+      "productCardBgColor": "#ffffff",
+      "tagTextColor": "#ffffff",
+      "titleColor": "#f1f2f3"
+    },
+    "whatsapp": "+918341223637"
+  },
+  "siteSettingsExtra": {
+    "bank": {
+      "accountName": "GriyaMart Downtown",
+      "accountNumber": "123456789012",
+      "bankKey": "bank_merchant_001",
+      "bankName": "HDFC Bank",
+      "ifsc": "HDFC0001234",
+      "upiId": "griyamart@upi"
+    }
+  },
+  "testimonials": {
+    "t1": {
+      "date": "2025-03-12",
+      "message": "Fresh produce and quick delivery!",
+      "name": "Asha Patel",
+      "rating": 5
+    }
+  },
+  "users": {
+    "80PZE6hRzjSgrSv9iCYly9NLgBq2": {
+      "email": "rider@griya.com",
+      "name": "",
+      "role": "merchant",
+      "uid": "80PZE6hRzjSgrSv9iCYly9NLgBq2"
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "863073530050",
+    "firebase_url": "https://hungrimart-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "hungrimart",
+    "storage_bucket": "hungrimart.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863073530050:android:d5134f90c2c6d8da934b5b",
+        "android_client_info": {
+          "package_name": "com.griyaecom.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzbiU2DUc-Fb9p2tppTy7A5piyWnliwEM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863073530050:android:32886b6241b66df5934b5b",
+        "android_client_info": {
+          "package_name": "com.griyaecom.deliveryapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzbiU2DUc-Fb9p2tppTy7A5piyWnliwEM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863073530050:android:c68c7ef6debf515b934b5b",
+        "android_client_info": {
+          "package_name": "com.griyaecom.seller"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzbiU2DUc-Fb9p2tppTy7A5piyWnliwEM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
