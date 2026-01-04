@@ -31,6 +31,8 @@ import { WishlistProvider } from './context/WishlistContext';
 import { LocationProvider } from './context/LocationContext';
 import { ServiceStatusProvider } from './context/ServiceStatusContext';
 import { AdminPermissionProvider } from './context/AdminPermissionContext';
+import { AddressProvider } from './context/AddressContext';
+import AddressGuard from './components/AddressGuard';
 import VariantSelector from './components/VariantSelector';import ToastContainer from "./components/Toast";
 import CheckoutPage from "./pages/CheckoutPage";
 import WishlistPage from "./pages/WishlistPage";
@@ -53,9 +55,11 @@ export default function App() {
   return (
     <LocationProvider>
       <ServiceStatusProvider>
-        <CartProvider>
-          <VariantProvider>
-            <WishlistProvider>
+        <AddressProvider>
+          <AddressGuard>
+            <CartProvider>
+              <VariantProvider>
+                <WishlistProvider>
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
@@ -109,7 +113,9 @@ export default function App() {
             </WishlistProvider>
           </VariantProvider>
         </CartProvider>
-      </ServiceStatusProvider>
+      </AddressGuard>
+    </AddressProvider>
+    </ServiceStatusProvider>
     </LocationProvider>
   );
 }

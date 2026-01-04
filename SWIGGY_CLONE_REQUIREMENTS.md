@@ -506,17 +506,26 @@ match /orders/{orderId} {
 2. Apply offers → Choose payment → Place order
 3. Track order → Receive delivery → Rate experience
 
-### **Restaurant Journey**
+### **Merchant Journey**
 1. Receive order → Accept/Reject → Prepare food
-2. Mark ready → Hand over to delivery partner
+2. Mark ready → Broadcast to delivery partners
 
 ### **Delivery Journey**
-1. Receive assignment → Accept → Navigate to restaurant
+1. See ready orders → Accept → Navigate to restaurant
 2. Pick up order → Navigate to customer → Deliver
 3. Confirm delivery → Update earnings
 
 ### **Order States**
-- Placed → Accepted → Preparing → Ready → Picked → Out for Delivery → Delivered
+- **Pending** → Customer placed, waiting merchant approval
+- **Confirmed** → Merchant accepted, starting preparation  
+- **Preparing** → Merchant preparing food
+- **Ready** → Merchant packed, broadcasted to drivers
+- **Assigned** → Driver accepted and heading to pickup
+- **Picked** → Driver picked up from merchant
+- **In-Transit** → Driver heading to customer
+- **Delivered** → Successfully completed
+
+### **Key Rule: Drivers only see orders after merchant marks as "Ready"**
 
 ---
 

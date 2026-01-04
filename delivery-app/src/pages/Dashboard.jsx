@@ -7,6 +7,10 @@ import MobileLayout from '../components/MobileLayout';
 import { NotificationService } from '../utils/notificationService';
 import NewOrderAlert from '../components/NewOrderAlert';
 import { loadPricingConfig, subscribeToPricingConfig } from '../utils/deliveryFeeCalculator';
+import { updateDriverEarnings, calculateDriverEarning } from '../utils/driverEarnings';
+import locationService from '../utils/locationService';
+import locationService from '../utils/locationService';
+import locationService from '../utils/locationService';
 
 export default function Dashboard() {
   const [orders, setOrders] = useState({});
@@ -16,6 +20,11 @@ export default function Dashboard() {
   const [pricingConfig, setPricingConfig] = useState({ driverEarningsPercentage: 80 });
   const [newOrderAlert, setNewOrderAlert] = useState({ visible: false, order: null, orderId: null });
   const [previousOrderIds, setPreviousOrderIds] = useState(new Set());
+  const [locationStatus, setLocationStatus] = useState({
+    isTracking: false,
+    lastUpdate: null,
+    error: null
+  });
   const navigate = useNavigate();
 
   // Listen to real-time pricing config changes
@@ -27,6 +36,62 @@ export default function Dashboard() {
     return unsubscribe;
   }, []);
 
+  // Location tracking functions
+  const startLocationTracking = async (firebaseKey) => {
+    try {
+      const success = await locationService.startTracking(
+        firebaseKey,
+        (locationData) => {
+          setLocationStatus({
+            isTracking: true,
+            lastUpdate: locationData.timestamp,
+            error: null
+          });
+        },
+        (error) => {
+          console.error('Location tracking error:', error);
+          setLocationStatus({
+            isTracking: false,
+            lastUpdate: null,
+            error: error.message
+          });
+        }
+      );
+      
+      if (success) {
+        setLocationStatus(prev => ({ ...prev, isTracking: true, error: null }));
+      }
+    } catch (error) {
+      console.error('Failed to start location tracking:', error);
+      setLocationStatus({
+        isTracking: false,
+        lastUpdate: null,
+        error: error.message
+      });
+    }
+  };
+
+  const stopLocationTracking = async () => {
+    locationService.stopTracking();
+    if (deliveryPerson?.firebaseKey) {
+      await locationService.setDriverOffline(deliveryPerson.firebaseKey);
+    }
+    setLocationStatus({
+      isTracking: false,
+      lastUpdate: null,
+      error: null
+    });
+  };
+
+  // Cleanup location tracking on unmount
+  useEffect(() => {
+    return () => {
+      if (locationStatus.isTracking) {
+        stopLocationTracking();
+      }
+    };
+  }, [locationStatus.isTracking]);
+
   useEffect(() => {
     // Get delivery person from localStorage
     const person = JSON.parse(localStorage.getItem('deliveryPerson') || '{}');
@@ -35,6 +100,11 @@ export default function Dashboard() {
       return;
     }
     setDeliveryPerson(person);
+
+    // Start location tracking
+    if (person.firebaseKey) {
+      startLocationTracking(person.firebaseKey);
+    }
 
     // Listen to orders in real-time
     const ordersRef = ref(db, '/orders');
@@ -45,7 +115,7 @@ export default function Dashboard() {
       // Check for new available orders
       if (!loading && deliveryPerson?.id) {
         const availableOrders = ordersList.filter(order => 
-          (order.status === 'pending' || order.status === 'confirmed') && 
+          order.status === 'ready' && 
           !order.deliveryPersonId
         );
         
@@ -114,6 +184,7 @@ export default function Dashboard() {
         [`/orders/${orderId}/status`]: 'assigned',
         [`/orders/${orderId}/deliveryPersonId`]: deliveryPerson.id,
         [`/orders/${orderId}/deliveryPersonName`]: deliveryPerson.name,
+        [`/orders/${orderId}/deliveryPersonFirebaseKey`]: deliveryPerson.firebaseKey,
         [`/orders/${orderId}/assignedAt`]: new Date().toISOString()
       };
       
@@ -185,11 +256,34 @@ export default function Dashboard() {
           break;
         case 'delivered':
           statusUpdates[`/orders/${orderId}/deliveredAt`] = timestamp;
+          
+          // Update delivery person earnings when delivered
+          if (deliveryPerson && deliveryPerson.firebaseKey) {
+            const deliveryFeeTotal = order.fees?.deliveryFeeApplied || order.fees?.deliveryFee || 0;
+            const driverEarning = deliveryFeeTotal * (pricingConfig.driverEarningsPercentage / 100);
+            
+            if (driverEarning > 0) {
+              // Add earnings update to order record for tracking
+              statusUpdates[`/orders/${orderId}/driverEarning`] = driverEarning;
+              statusUpdates[`/orders/${orderId}/driverFirebaseKey`] = deliveryPerson.firebaseKey;
+              console.log('Recording driver earning for later processing:', driverEarning);
+            }
+          }
           break;
       }
 
       // Update main order in /orders path
       await update(ref(db), statusUpdates);
+      
+      // Handle driver earnings update separately after main order update
+      if (newStatus === 'delivered' && deliveryPerson?.firebaseKey) {
+        const deliveryFeeTotal = order.fees?.deliveryFeeApplied || order.fees?.deliveryFee || 0;
+        const driverEarning = calculateDriverEarning(deliveryFeeTotal, pricingConfig.driverEarningsPercentage);
+        
+        if (driverEarning > 0) {
+          await updateDriverEarnings(deliveryPerson.firebaseKey, driverEarning, orderId);
+        }
+      }
       
       // Also update merchant-specific orders if they exist
       if (order?.merchantOrders && Array.isArray(order.merchantOrders)) {
@@ -269,7 +363,7 @@ export default function Dashboard() {
   const filteredOrders = Object.entries(orders).filter(([id, order]) => {
     switch (filter) {
       case 'available':
-        return order.status === 'pending' || order.status === 'confirmed';
+        return order.status === 'ready' && !order.deliveryPersonId;
       case 'assigned':
         return order.deliveryPersonId === deliveryPerson?.id && 
                (order.status === 'assigned' || order.status === 'picked' || order.status === 'in-transit');
@@ -298,12 +392,11 @@ export default function Dashboard() {
 
   const getStatusConfig = (status) => {
     switch (status) {
-      case 'pending':
-      case 'confirmed': 
+      case 'ready': 
         return { 
           class: 'status-available', 
-          emoji: '🔍', 
-          text: 'Available'
+          emoji: '📦', 
+          text: 'Ready for Pickup'
         };
       case 'assigned': 
         return { 
@@ -360,6 +453,44 @@ export default function Dashboard() {
   return (
     <MobileLayout activeTab="dashboard">
       <div className="px-4 py-6 space-y-6">
+        {/* Location Status Header */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 border border-surface-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-surface-900">🚚 Dashboard</h1>
+              <p className="text-surface-600 text-sm">Welcome back, {deliveryPerson?.name}</p>
+            </div>
+            <div className="text-right">
+              <div className={`flex items-center gap-2 ${locationStatus.isTracking ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`w-3 h-3 rounded-full ${locationStatus.isTracking ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                <span className="text-sm font-medium">
+                  {locationStatus.isTracking ? '📍 Online' : '📍 Offline'}
+                </span>
+              </div>
+              {locationStatus.error && (
+                <p className="text-xs text-red-500 mt-1">{locationStatus.error}</p>
+              )}
+              <div className="mt-2">
+                {locationStatus.isTracking ? (
+                  <button
+                    onClick={stopLocationTracking}
+                    className="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 transition-colors"
+                  >
+                    Stop Tracking
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => startLocationTracking(deliveryPerson?.firebaseKey)}
+                    className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full hover:bg-green-200 transition-colors"
+                  >
+                    Start Tracking
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Current Orders Section (if any) */}
         {currentOrders.length > 0 && (
           <div className="space-y-4">
@@ -388,16 +519,12 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-2xl font-bold">
-                          {order.status === 'pending' || order.status === 'confirmed' || order.status === 'ready' ? 
-                            formatINR((order.fees?.deliveryFeeApplied || order.fees?.deliveryFee || order.deliveryFee || 0) * (pricingConfig.driverEarningsPercentage / 100)) : 
-                            formatINR(order.total || order.subtotal || 0)
-                          }
+                          {formatINR((order.fees?.deliveryFeeApplied || order.fees?.deliveryFee || order.deliveryFee || 0) * (pricingConfig.driverEarningsPercentage / 100))}
                         </span>
-                        {order.distance && (
-                          <div className="text-xs text-white/70 mt-1">
-                            {order.distance.toFixed(1)} km • {formatINR(((order.fees?.deliveryFeeApplied || 0) * (pricingConfig.driverEarningsPercentage / 100)) / order.distance)}/km
-                          </div>
-                        )}
+                        <div className="text-xs text-white/70 mt-1">
+                          Your Earning
+                          {order.distance && ` • ${order.distance.toFixed(1)} km`}
+                        </div>
                       </div>
                       
                       <div className="flex space-x-2">
@@ -448,7 +575,7 @@ export default function Dashboard() {
           <div className="card p-4 text-center">
             <div className="text-3xl font-bold text-primary-600">
               {Object.entries(orders).filter(([id, order]) => 
-                order.status === 'pending' || order.status === 'confirmed'
+                order.status === 'ready' && !order.deliveryPersonId
               ).length}
             </div>
             <p className="text-sm font-medium text-surface-600">Available Orders</p>
@@ -477,7 +604,7 @@ export default function Dashboard() {
               }`}
             >
               🔍 Available ({Object.entries(orders).filter(([id, order]) => 
-                order.status === 'pending' || order.status === 'confirmed'
+                order.status === 'ready' && !order.deliveryPersonId
               ).length})
             </button>
             <button

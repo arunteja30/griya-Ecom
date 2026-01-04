@@ -229,8 +229,8 @@ export default function HomePage() {
         ) : categories && categories.length ? (
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-gray-800">Shop by Category</h2>
-            {/* compact grid: smaller cards/images on mobile */}
-            <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            {/* compact grid: minimum 3 columns on all screen sizes */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
               {categories.map((col) => (
                 <Link
                   key={col.id}

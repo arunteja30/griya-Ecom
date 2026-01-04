@@ -169,12 +169,24 @@ async function seedOrders() {
     console.log('✅ Sample orders seeded successfully!');
     console.log(`📦 Added ${sampleOrders.length} sample orders`);
     console.log('');
-    console.log('Order statuses:');
+    console.log('🚚 Swiggy-like Order Flow:');
+    console.log('1. Customer places order → Pending');
+    console.log('2. Merchant receives → Confirmed');  
+    console.log('3. Merchant prepares → Preparing');
+    console.log('4. Merchant packs → Ready (broadcasted to drivers)');
+    console.log('5. Driver accepts → Assigned');
+    console.log('6. Driver picks → Picked');
+    console.log('7. Driver delivers → Delivered');
+    console.log('');
+    console.log('📋 Order Statuses:');
     console.log('- Pending: Orders waiting for merchant approval');
-    console.log('- Confirmed: Orders accepted by merchant');
-    console.log('- Preparing: Orders being prepared');
-    console.log('- Ready: Orders ready for pickup/delivery');
-    console.log('- Rejected: Orders declined by merchant');
+    console.log('- Confirmed: Orders accepted by merchant (not visible to drivers)');
+    console.log('- Preparing: Orders being prepared by merchant (not visible to drivers)');
+    console.log('- Ready: Orders ready for pickup (visible to drivers for acceptance)');
+    console.log('- Assigned: Orders accepted by delivery partner');
+    console.log('- Picked: Orders picked up by delivery partner');
+    console.log('- In-Transit: Orders out for delivery');
+    console.log('- Delivered: Orders completed successfully');
 
   } catch (error) {
     console.error('❌ Error seeding orders:', error);

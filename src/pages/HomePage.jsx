@@ -95,14 +95,25 @@ function HomePageContent() {
 
   // Convert banners data to array and filter active banners
   const activeBanners = React.useMemo(() => {
-    if (!bannersData) return [];
+    if (!bannersData) {
+      console.log('No bannersData available');
+      return [];
+    }
+    
     const bannersArray = Array.isArray(bannersData) 
       ? bannersData 
       : Object.entries(bannersData).map(([id, banner]) => ({ id, ...banner }));
     
+    console.log('Banners array:', bannersArray);
+    
     // Filter active banners based on date range
     const now = new Date();
-    return bannersArray.filter(banner => {
+    const filtered = bannersArray.filter(banner => {
+      if (!banner.image) {
+        console.log('Banner missing image:', banner);
+        return false;
+      }
+      
       if (banner.startDate) {
         const startDate = new Date(banner.startDate);
         if (startDate > now) return false;
@@ -113,27 +124,20 @@ function HomePageContent() {
       }
       return true;
     });
+    
+    console.log('Filtered active banners:', filtered);
+    return filtered;
   }, [bannersData]);
+
+  // Debug: Log banner data
+  useEffect(() => {
+    console.log('Banner debug:', { bannersData, activeBanners });
+  }, [bannersData, activeBanners]);
 
   const renderBanners = () => {
     if (!activeBanners || activeBanners.length === 0) {
-      // Fallback to default free delivery banner when no admin banners
-      return (
-        <section className="py-6 px-mobile">
-          <div className="card-glass bg-gradient-to-r from-accent-coral/20 to-accent-gold/20 p-6 rounded-3xl border border-accent-coral/20">
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <h3 className="text-lg font-bold text-surface-900">Free Delivery</h3>
-                <p className="text-surface-600">On orders above ₹199</p>
-                <button className="btn-fresh text-sm px-6 py-2">
-                  Shop Now
-                </button>
-              </div>
-              <div className="text-6xl opacity-50">🚚</div>
-            </div>
-          </div>
-        </section>
-      );
+      // No banners to show
+      return null;
     }
 
     // Single banner display
@@ -148,8 +152,8 @@ function HomePageContent() {
       return (
         <section className="py-6 px-mobile">
           <LinkComponent {...linkProps} className="block">
-            <div className="relative overflow-hidden rounded-3xl shadow-soft hover:shadow-medium transition-shadow">
-              <div className="aspect-[2/1] relative">
+            <div className="relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="aspect-[16/9] sm:aspect-[2/1] relative">
                 <img 
                   src={banner.image} 
                   alt={banner.title || 'Banner'} 
@@ -175,7 +179,7 @@ function HomePageContent() {
     return (
       <section className="py-6">
         <div className="px-mobile mb-4">
-          <h2 className="text-xl font-bold text-surface-900">Special Offers</h2>
+          <h2 className="text-xl font-bold text-surface-900">🎯 Special Offers</h2>
         </div>
         <div className="overflow-x-auto">
           <div className="flex gap-4 px-mobile pb-2">
@@ -239,7 +243,7 @@ function HomePageContent() {
         </div>
       )}
       {/* Hero Section with Search */}
-      <section className="bg-gradient-to-br from-primary-500 via-primary-600 to-fresh-500 text-white relative overflow-hidden">
+      <section className="bg-gradient-to-br from-primary-500 via-primary-600 to-fresh-500 text-white relative overflow-hidden" style={{backgroundColor: "rgba(255, 0, 0, 0.1)"}}>
         <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
         <div className="px-mobile py-8 relative">
           <div className="space-y-6">
@@ -309,7 +313,7 @@ function HomePageContent() {
 
       {/* Categories Stories - Hidden when searching */}
       {!searchTerm && (categoriesLoading || categoriesArray.length > 0) && (
-        <section className="py-6 px-mobile">
+        <section className="py-6 px-mobile" style={{backgroundColor: "rgba(0, 255, 0, 0.1)"}}>
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-surface-900">Shop by Category</h2>
             {categoriesLoading ? (
@@ -378,7 +382,7 @@ function HomePageContent() {
       {!searchTerm && showConfig.featured !== false && (
         productsLoading || homeConfigLoading || featuredProducts.length > 0
       ) && (
-        <section className="py-6 px-mobile">
+        <section className="py-6 px-mobile" style={{backgroundColor: "rgba(0, 0, 255, 0.1)"}}>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-surface-900">✨ Featured</h2>
@@ -413,7 +417,7 @@ function HomePageContent() {
 
       {/* Festival Sections - Hidden when searching */}
       {!searchTerm && festivalSections.map((section) => (
-        <section key={section.key} className="py-6 px-mobile">
+        <section key={section.key} className="py-6 px-mobile" style={{backgroundColor: "rgba(255, 255, 0, 0.1)"}}>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-surface-900">{section.title}</h2>
@@ -436,7 +440,7 @@ function HomePageContent() {
       {!searchTerm && showConfig.popular !== false && (
         productsLoading || homeConfigLoading || popularProducts.length > 0
       ) && (
-        <section className="py-6 px-mobile">
+        <section className="py-6 px-mobile" style={{backgroundColor: "rgba(255, 0, 255, 0.1)"}}>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-surface-900">🔥 Popular</h2>
@@ -471,7 +475,7 @@ function HomePageContent() {
                     
       {/* Deals & Offers - Hidden when searching */}
       {!searchTerm && showConfig.deals !== false && dealsProducts.length > 0 && (
-        <section className="py-6 px-mobile">
+        <section className="py-6 px-mobile" style={{backgroundColor: "rgba(0, 255, 255, 0.1)"}}>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-surface-900">💰 Best Deals</h2>
@@ -492,7 +496,7 @@ function HomePageContent() {
 
       {/* Quick Buys - Hidden when searching */}
       {!searchTerm && showConfig.quickBuys !== false && quickBuyProducts.length > 0 && (
-        <section className="py-6 px-mobile">
+        <section className="py-6 px-mobile" style={{backgroundColor: "rgba(128, 128, 128, 0.1)"}}>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-surface-900">⚡ Quick Buys</h2>
@@ -513,7 +517,7 @@ function HomePageContent() {
 
       {/* Recommended for You - Hidden when searching */}
       {!searchTerm && showConfig.recommended !== false && recommendedProducts.length > 0 && (
-        <section className="py-6 px-mobile">
+        <section className="py-6 px-mobile" style={{backgroundColor: "rgba(255, 165, 0, 0.1)"}}>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-surface-900">👍 Recommended</h2>
@@ -533,10 +537,10 @@ function HomePageContent() {
       )}
 
       {/* Dynamic Banners - Hidden when searching */}
-      {!searchTerm && bannersData && (renderBanners())}
+      {!searchTerm && activeBanners && activeBanners.length > 0 && renderBanners()}
 
       {/* Search Results / All Products Grid */}
-      <section className="py-6 px-mobile pb-safe">
+      <section className="py-6 px-mobile pb-safe" style={{backgroundColor: "rgba(128, 0, 128, 0.1)"}}>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-surface-900">

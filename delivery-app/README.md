@@ -38,13 +38,17 @@ A standalone delivery partner application for managing order pickups and deliver
 - **ID**: DEL002, **Password**: delivery123 (Jane Smith - Bike)  
 - **ID**: DEL003, **Password**: delivery123 (Mike Johnson - Car)
 
-## Order Flow
+## Order Flow (Swiggy-like Workflow)
 
-1. **Available Orders**: New orders appear for all delivery partners
-2. **Accept Order**: Partner accepts and order status becomes 'assigned'
-3. **Mark as Picked**: Partner picks up from store, status becomes 'picked'
-4. **Start Delivery**: Partner starts delivery, status becomes 'in-transit'
-5. **Mark as Delivered**: Order completion, status becomes 'delivered'
+1. **Customer Places Order**: Order created with 'pending' status
+2. **Merchant Accepts**: Order becomes 'confirmed' and 'preparing'
+3. **Merchant Packs**: Order marked as 'ready' and broadcasted to all delivery partners
+4. **Driver Sees & Accepts**: Available orders appear only when 'ready', partner accepts and status becomes 'assigned'
+5. **Mark as Picked**: Partner picks up from store, status becomes 'picked'
+6. **Start Delivery**: Partner starts delivery, status becomes 'in-transit'
+7. **Mark as Delivered**: Order completion, status becomes 'delivered'
+
+**Key Feature**: Drivers only see orders AFTER merchant marks them as ready (packed)
 
 ## Integration with Main App
 

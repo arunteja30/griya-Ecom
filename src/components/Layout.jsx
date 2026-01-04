@@ -7,6 +7,7 @@ import { useServiceStatus } from "../context/ServiceStatusContext";
 import { useFirebaseObject } from "../hooks/useFirebase";
 import { OrderTrackingService } from "../utils/orderTrackingService";
 import { getStoreStatus } from "../utils/storeHours";
+import AddressSelector from "./AddressSelector";
 
 export default function Layout() {
   const routerLocation = useRouterLocation();
@@ -240,6 +241,13 @@ export default function Layout() {
           </div>
         </div>
       </header>
+
+      {/* Sticky Address Selector - Only on Home Page */}
+      {routerLocation.pathname === '/' && (
+        <div className="sticky top-16 z-30 bg-white/95 backdrop-blur-md border-b border-surface-200/50 shadow-sm">
+          <AddressSelector />
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="pb-20 min-h-screen">

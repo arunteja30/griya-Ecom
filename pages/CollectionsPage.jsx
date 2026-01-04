@@ -53,8 +53,8 @@ export default function CollectionsPage() {
       </div>
       
 
-      {/* Categories Grid - compact for mobile: 4 columns on small screens */}
-      <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-2">
+      {/* Categories Grid - compact for mobile: 3 columns minimum */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-9 gap-2">
         {filteredAndSortedCategories.map((c) => (
           <Link
             key={c.id}

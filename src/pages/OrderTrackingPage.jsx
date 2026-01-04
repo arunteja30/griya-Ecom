@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ref, get } from 'firebase/database';
 import { db } from '../firebase';
 import { showToast } from '../components/Toast';
+import DriverLocationTracker from '../components/DriverLocationTracker';
 
 export default function OrderTrackingPage() {
   const [searchParams] = useSearchParams();
@@ -262,6 +263,14 @@ export default function OrderTrackingPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Driver Location Tracker - Show for assigned/picked/in-transit orders */}
+                {order.deliveryPersonFirebaseKey && ['assigned', 'picked', 'in-transit'].includes(order.status) && (
+                  <DriverLocationTracker 
+                    orderId={order.id}
+                    driverFirebaseKey={order.deliveryPersonFirebaseKey}
+                  />
+                )}
 
                 {/* Order Items */}
                 {order.items && (

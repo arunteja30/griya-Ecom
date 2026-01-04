@@ -224,7 +224,7 @@ export default function CategoriesAdmin(){
       </div>
 
       {viewMode === 'grid' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
           {Object.entries(categories).map(([id, cat]) => (
             <div key={id} className="border p-3 rounded bg-white">
               <div className="w-full h-36 bg-gray-100 mb-3 flex items-center justify-center overflow-hidden">

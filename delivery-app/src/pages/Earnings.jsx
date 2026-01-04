@@ -3,12 +3,15 @@ import { ref, onValue } from 'firebase/database';
 import { db } from '../firebase';
 import MobileLayout from '../components/MobileLayout';
 import { loadPricingConfig } from '../utils/deliveryFeeCalculator';
+import { getDriverEarnings } from '../utils/driverEarnings';
 
 export default function Earnings() {
   const [deliveryPerson] = useState(() => {
     return JSON.parse(localStorage.getItem('deliveryPerson') || '{}');
   });
   const [orders, setOrders] = useState({});
+  const [driverData, setDriverData] = useState(null);
+  const [storedEarnings, setStoredEarnings] = useState(null);
   const [pricingConfig, setPricingConfig] = useState({ driverEarningsPercentage: 80 });
   const [earnings, setEarnings] = useState({
     today: 0,
@@ -39,6 +42,33 @@ export default function Earnings() {
       console.error('Error loading pricing config:', error);
     });
 
+    // Load stored driver earnings
+    if (deliveryPerson.firebaseKey) {
+      getDriverEarnings(deliveryPerson.firebaseKey).then(earnings => {
+        setStoredEarnings(earnings);
+      }).catch(error => {
+        console.error('Error loading stored earnings:', error);
+      });
+    }
+
+    // Listen to driver data for real-time stored earnings
+    if (deliveryPerson.firebaseKey) {
+      const driverRef = ref(db, `/drivers/${deliveryPerson.firebaseKey}`);
+      const unsubscribeDriver = onValue(driverRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          setDriverData(data);
+          setStoredEarnings({
+            total: data.earnings?.total || 0,
+            lastUpdated: data.earnings?.lastUpdated,
+            totalDeliveries: data.stats?.totalDeliveries || 0,
+            lastDelivery: data.stats?.lastDelivery,
+            lastOrderId: data.stats?.lastOrderId
+          });
+        }
+      });
+    }
+
     const ordersRef = ref(db, '/orders');
     const unsubscribe = onValue(ordersRef, (snapshot) => {
       const data = snapshot.val() || {};
@@ -47,7 +77,10 @@ export default function Earnings() {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      // Driver listener cleanup is handled automatically
+    };
   }, [deliveryPerson.id, pricingConfig.driverEarningsPercentage]);
 
   const calculateEarnings = (ordersData) => {
@@ -161,6 +194,11 @@ export default function Earnings() {
               <p className="text-fresh-200 text-sm mt-1">
                 {earnings.ordersToday} deliveries • {earnings.distanceToday.toFixed(1)} km
               </p>
+              {storedEarnings && (
+                <p className="text-fresh-200 text-xs mt-1 bg-white/20 backdrop-blur-sm rounded px-2 py-1">
+                  💾 Total Stored: {formatINR(storedEarnings.total)} • {storedEarnings.totalDeliveries} total deliveries
+                </p>
+              )}
             </div>
             <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
               <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">

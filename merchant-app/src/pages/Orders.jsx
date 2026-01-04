@@ -270,14 +270,22 @@ const Orders = ({ merchant }) => {
 
       // Trigger additional notifications based on status change
       if (currentOrder) {
-        // When order is ready, notify drivers for potential pickup
+        // When order is ready, broadcast to all drivers and update main orders table
         if (newStatus === 'ready') {
+          // Update the main orders table so delivery app can see it
+          const mainOrderUpdates = {
+            [`/orders/${currentOrder.id}/status`]: 'ready',
+            [`/orders/${currentOrder.id}/readyAt`]: new Date().toISOString()
+          };
+          await update(ref(db), mainOrderUpdates);
+          
+          // Notify drivers for potential pickup
           await NotificationService.notifyDriversOrderReady({
             id: currentOrder.id,
             total: currentOrder.total,
             storeName: currentOrder.storeName,
             merchantId: currentOrder.merchantId
-          })
+          });
         }
 
         // Notify customer of status changes

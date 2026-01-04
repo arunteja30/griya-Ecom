@@ -4,6 +4,8 @@ import { ref, get, update, push } from 'firebase/database';
 import { db } from '../firebase';
 import { showToast } from '../utils/toast';
 import { loadPricingConfig } from '../utils/deliveryFeeCalculator';
+import { updateDriverEarnings, calculateDriverEarning } from '../utils/driverEarnings';
+import locationService from '../utils/locationService';
 
 export default function OrderDetails() {
   const { orderId } = useParams();
@@ -12,6 +14,7 @@ export default function OrderDetails() {
   const [loading, setLoading] = useState(true);
   const [deliveryPerson, setDeliveryPerson] = useState(null);
   const [pricingConfig, setPricingConfig] = useState({ driverEarningsPercentage: 80 });
+  const [isTrackingLocation, setIsTrackingLocation] = useState(false);
 
   useEffect(() => {
     const person = JSON.parse(localStorage.getItem('deliveryPerson') || '{}');
@@ -35,7 +38,15 @@ export default function OrderDetails() {
         const snapshot = await get(orderRef);
         
         if (snapshot.exists()) {
-          setOrder(snapshot.val());
+          const orderData = snapshot.val();
+          setOrder(orderData);
+          
+          // Start location tracking for assigned/picked/in-transit orders
+          if (orderData.deliveryPersonId === person.id && 
+              ['assigned', 'picked', 'in-transit'].includes(orderData.status) &&
+              !isTrackingLocation) {
+            startLocationTracking(person.firebaseKey);
+          }
         } else {
           showToast('Order not found', 'error');
           navigate('/dashboard');
@@ -53,6 +64,49 @@ export default function OrderDetails() {
       fetchOrder();
     }
   }, [orderId, navigate]);
+
+  // Location tracking for active deliveries
+  const startLocationTracking = async (firebaseKey) => {
+    if (!firebaseKey || isTrackingLocation) return;
+    
+    try {
+      const success = await locationService.startTracking(
+        firebaseKey,
+        (locationData) => {
+          console.log('Location updated during delivery:', locationData);
+        },
+        (error) => {
+          console.error('Location tracking error during delivery:', error);
+        }
+      );
+      
+      if (success) {
+        setIsTrackingLocation(true);
+        console.log('Started location tracking for delivery');
+      }
+    } catch (error) {
+      console.error('Failed to start location tracking:', error);
+    }
+  };
+
+  const stopLocationTracking = () => {
+    if (isTrackingLocation) {
+      locationService.stopTracking();
+      setIsTrackingLocation(false);
+      console.log('Stopped location tracking');
+    }
+  };
+
+  // Stop location tracking when component unmounts or order is delivered/cancelled
+  useEffect(() => {
+    if (order && ['delivered', 'cancelled'].includes(order.status)) {
+      stopLocationTracking();
+    }
+    
+    return () => {
+      stopLocationTracking();
+    };
+  }, [order?.status]);
 
   const updateOrderStatus = async (newStatus) => {
     try {
@@ -103,9 +157,17 @@ export default function OrderDetails() {
         }
       }
       
-      // Send notifications when delivered
+      // Update delivery person earnings when delivered
       if (newStatus === 'delivered') {
         try {
+          // Calculate and update delivery person earnings
+          const deliveryFeeTotal = order.fees?.deliveryFeeApplied || order.fees?.deliveryFee || 0;
+          const driverEarning = calculateDriverEarning(deliveryFeeTotal, pricingConfig.driverEarningsPercentage);
+          
+          if (driverEarning > 0 && deliveryPerson.firebaseKey) {
+            await updateDriverEarnings(deliveryPerson.firebaseKey, driverEarning, orderId);
+          }
+          
           // Notify customer
           if (order?.address?.phone) {
             const customerNotification = {
@@ -200,8 +262,7 @@ export default function OrderDetails() {
 
   const getNextAction = () => {
     switch (order?.status) {
-      case 'pending':
-      case 'confirmed':
+      case 'ready':
         return { action: 'assigned', label: 'Accept Order', color: 'btn-primary' };
       case 'assigned':
         return { action: 'picked', label: 'Mark as Picked', color: 'btn-warning' };
@@ -332,32 +393,14 @@ export default function OrderDetails() {
               {/* Order Summary */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Subtotal:</span>
-                    <span>{formatINR(order.subtotal || 0)}</span>
-                  </div>
-                  {order.fees?.deliveryFeeApplied > 0 && (
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span>Delivery Fee:</span>
-                        <span>{formatINR(order.fees.deliveryFeeApplied)}</span>
-                      </div>
-                      {order.distance && (
-                        <div className="flex justify-between text-xs text-gray-600">
-                          <span>Distance: {order.distance.toFixed(1)} km</span>
-                          <span>Your Earnings: {formatINR((order.fees.deliveryFeeApplied * (pricingConfig.driverEarningsPercentage / 100)) || 0)}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {order.fees?.platformFee > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span>Platform Fee:</span>
-                      <span>{formatINR(order.fees.platformFee)}</span>
+                  {order.distance && (
+                    <div className="flex justify-between text-sm text-green-600 bg-green-50 p-2 rounded">
+                      <span>Distance: {order.distance.toFixed(1)} km</span>
+                      <span className="font-medium">Your Earnings: {formatINR((order.fees?.deliveryFeeApplied * (pricingConfig.driverEarningsPercentage / 100)) || 0)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-base font-medium pt-2 border-t border-gray-200">
-                    <span>Total:</span>
+                    <span>Order Value:</span>
                     <span>{formatINR(order.total || order.subtotal || 0)}</span>
                   </div>
                 </div>

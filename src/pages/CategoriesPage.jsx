@@ -149,7 +149,7 @@ export default function CategoriesPage() {
 
           {/* Categories Grid */}
           {filteredCategories.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {filteredCategories.map((category) => (
                 <Link
                   key={category.id}
