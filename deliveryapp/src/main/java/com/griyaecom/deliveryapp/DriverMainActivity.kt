@@ -17,8 +17,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -83,14 +85,21 @@ class DriverMainActivity : ComponentActivity() {
 
     @Composable
     private fun AppContent() {
-        Box(modifier = Modifier.fillMaxSize()) {
-            if (isLoading) {
-                LoadingIndicator()
-            } else {
-                WebViewComposable(
-                    url = webViewUrl,
-                    modifier = Modifier.fillMaxSize()
-                )
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                if (isLoading) {
+                    LoadingIndicator()
+                } else {
+                    WebViewComposable(
+                        url = webViewUrl,
+                        modifier = Modifier
+                            .fillMaxSize()
+                    )
+                }
             }
         }
     }
