@@ -3,6 +3,7 @@ package com.griyaecom.seller
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.webkit.JavascriptInterface
@@ -14,6 +15,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -26,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.firebase.messaging.FirebaseMessaging
 import com.griyaecom.seller.ui.theme.GriyaMartTheme
@@ -46,9 +49,22 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Apply theme colors to status and navigation bars
+        try {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            val statusColor =
+                ContextCompat.getColor(this, com.griyaecom.seller.R.color.primary_color_dark)
+            val navColor = ContextCompat.getColor(this, com.griyaecom.seller.R.color.primary_color)
+            window.statusBarColor = statusColor
+            window.navigationBarColor = navColor
+        } catch (e: Exception) {
+            Log.w("SellerApp", "Failed to set system bar colors", e)
+        }
 
         requestNotificationPermissions()
         handleNotificationData()
@@ -205,6 +221,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun requestNotificationPermissions() {
         val permissions = arrayOf(
             Manifest.permission.POST_NOTIFICATIONS,

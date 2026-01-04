@@ -17,10 +17,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.griyaecom.deliveryapp.services.LiveLocationTrackingService
 import com.griyaecom.deliveryapp.ui.theme.GriyaMartTheme
@@ -53,6 +52,19 @@ class DriverMainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Apply theme colors to status and navigation bars
+        try {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            val statusColor =
+                ContextCompat.getColor(this, com.griyaecom.deliveryapp.R.color.primary_color_dark)
+            val navColor =
+                ContextCompat.getColor(this, com.griyaecom.deliveryapp.R.color.primary_color)
+            window.statusBarColor = statusColor
+            window.navigationBarColor = navColor
+        } catch (e: Exception) {
+            Log.w("DeliveryApp", "Failed to set system bar colors", e)
+        }
+
         requestNotificationPermissions()
         initializeFirebaseMessaging()
         handleNotificationData()
@@ -71,20 +83,14 @@ class DriverMainActivity : ComponentActivity() {
 
     @Composable
     private fun AppContent() {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                if (isLoading) {
-                    LoadingIndicator()
-                } else {
-                    WebViewComposable(
-                        url = webViewUrl,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (isLoading) {
+                LoadingIndicator()
+            } else {
+                WebViewComposable(
+                    url = webViewUrl,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     }
