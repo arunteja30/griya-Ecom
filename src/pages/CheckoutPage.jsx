@@ -299,7 +299,7 @@ export default function CheckoutPage() {
       const merchantSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       const merchantFeesRatio = merchantSubtotal / cartTotal; // proportional fees
       const merchantPlatformFee = Math.round(platformFee * merchantFeesRatio);
-      const merchantDeliveryFee = Math.round(deliveryFee * merchantFeesRatio);
+      const merchantDeliveryFee = Math.round(deliveryFeeApplied * merchantFeesRatio);
       const merchantFeesTotal = merchantPlatformFee + merchantDeliveryFee;
       const merchantTotal = merchantSubtotal + merchantFeesTotal;
       
@@ -365,19 +365,33 @@ export default function CheckoutPage() {
           updatedAt: Date.now()
         });
       }
+      
+      console.log('Creating order with amount:', totalWithFees);
       const amountPaise = Math.round((totalWithFees || 0) * 100);
+      console.log('Amount in paise:', amountPaise);
+      
       const serverResp = await createOrderOnServer(amountPaise);
+      console.log('Server response:', serverResp);
+      
       const orderId = serverResp?.order_id || serverResp?.id || serverResp?.razorpay_order_id;
       const rkey = siteSettings?.razorpayKey || import.meta.env.VITE_RAZORPAY_KEY || serverResp?.key;
+      
+      console.log('Razorpay key available:', !!rkey);
+      console.log('Order ID:', orderId);
 
       if (!rkey) {
+        console.warn('No Razorpay key found, proceeding with COD order');
         try {
+          // Clean the order object to remove undefined values (Firebase doesn't accept undefined)
+          const safeOrder = JSON.parse(JSON.stringify(order, (_key, value) => (value === undefined ? null : value)));
+          const safeMerchantOrders = JSON.parse(JSON.stringify(merchantOrders, (_key, value) => (value === undefined ? null : value)));
+          
           // Save main order first
-          const mainOrderResult = await createOrderInDb(order);
+          const mainOrderResult = await createOrderInDb(safeOrder);
           const mainOrderId = mainOrderResult.key;
           
           // Update merchant orders with main order ID reference
-          const merchantOrdersWithRef = merchantOrders.map(mo => ({
+          const merchantOrdersWithRef = safeMerchantOrders.map(mo => ({
             ...mo,
             mainOrderId: mainOrderId
           }));
@@ -387,10 +401,10 @@ export default function CheckoutPage() {
           
           // Add order to floating tracker
           if (window.addOrderToTracking) {
-            window.addOrderToTracking({ ...order, id: mainOrderId });
+            window.addOrderToTracking({ ...safeOrder, id: mainOrderId });
           }
         } catch (dbErr) {
-          console.warn('Failed to save order to Firebase:', dbErr);
+          console.error('Failed to save order to Firebase:', dbErr);
           showToast('Order placed but saving failed', 'warning');
         }
         clearCart();
@@ -400,6 +414,7 @@ export default function CheckoutPage() {
         return;
       }
 
+      console.log('Initiating Razorpay payment...');
       await openRazorpayCheckout({
         key: rkey,
         amountINR: totalWithFees,
@@ -417,19 +432,20 @@ export default function CheckoutPage() {
           const finalOrder = { ...order, payment: paymentInfo };
           const safeOrder = JSON.parse(JSON.stringify(finalOrder, (_key, value) => (value === undefined ? null : value)));
           
-          // Update merchant orders with payment info
+          // Update merchant orders with payment info and clean undefined values
           const merchantOrdersWithPayment = merchantOrders.map(mo => ({
             ...mo,
             payment: paymentInfo
           }));
+          const safeMerchantOrdersWithPayment = JSON.parse(JSON.stringify(merchantOrdersWithPayment, (_key, value) => (value === undefined ? null : value)));
 
           try {
             // Save main order first
-            const mainOrderResult = await createOrderInDb(finalOrder);
+            const mainOrderResult = await createOrderInDb(safeOrder);
             const mainOrderId = mainOrderResult.key;
             
             // Update merchant orders with main order ID reference and payment info
-            const merchantOrdersWithRef = merchantOrdersWithPayment.map(mo => ({
+            const merchantOrdersWithRef = safeMerchantOrdersWithPayment.map(mo => ({
               ...mo,
               mainOrderId: mainOrderId
             }));
