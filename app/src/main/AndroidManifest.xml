@@ -55,7 +55,10 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="hungrimart.onrender.com" />
+
+                <data
+                    android:host="griyamart.onrender.com"
+                    android:scheme="https" />
             </intent-filter>
 
             <!-- Custom app scheme -->
@@ -79,7 +82,7 @@
 
         <!-- Live Order Tracking Service -->
         <service
-            android:name=".services.LiveOrderTrackingService"
+            android:name="com.griyaecom.app.services.LiveOrderTrackingService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />

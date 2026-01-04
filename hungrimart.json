@@ -15,6 +15,17 @@
       "title": "About QuickMart"
     }
   },
+  "appConfig": {
+    "customer": {
+      "webViewUrl": "https://hungrimart.onrender.com"
+    },
+    "delivery": {
+      "webViewUrl": "https://delivery-griyamart.onrender.com"
+    },
+    "seller": {
+      "webViewUrl": "https://seller-griyamart.onrender.com"
+    }
+  },
   "banners": {
     "b1": {
       "ctaLink": "/collections/sale",
@@ -1579,20 +1590,20 @@
           "qty": 2
         }
       ],
-      "orderStatusHistory": [
-        {
+      "orderStatusHistory": {
+        "0": {
           "status": "ASSIGNED",
           "ts": 1765196400000
         },
-        {
+        "1": {
           "status": "ACCEPTED",
           "ts": 1765196460000
         },
-        {
+        "2": {
           "status": "REACHED_STORE",
           "ts": 1765196520000
         }
-      ],
+      },
       "pickupAddress": "Store C, Central",
       "pickupLocation": {
         "lat": 17.4385,
@@ -1929,3 +1940,4 @@
     }
   }
 }
+

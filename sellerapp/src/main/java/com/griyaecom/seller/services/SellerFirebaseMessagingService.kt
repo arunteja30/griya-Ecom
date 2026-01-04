@@ -154,7 +154,7 @@ class SellerFirebaseMessagingService : FirebaseMessagingService() {
         tag: String? = null
     ) {
         val intent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             // Add notification data as extras
             data.forEach { (key, value) ->
                 putExtra(key, value)
@@ -202,7 +202,7 @@ class SellerFirebaseMessagingService : FirebaseMessagingService() {
                 val acceptIntent = Intent(this, MainActivity::class.java).apply {
                     putExtra("action", "accept_order")
                     putExtra("order_id", orderId)
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
                 val acceptPendingIntent = PendingIntent.getActivity(
                     this,
@@ -215,7 +215,7 @@ class SellerFirebaseMessagingService : FirebaseMessagingService() {
                 val viewOrderIntent = Intent(this, MainActivity::class.java).apply {
                     putExtra("action", "view_order")
                     putExtra("order_id", orderId)
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
                 val viewOrderPendingIntent = PendingIntent.getActivity(
                     this,
@@ -229,7 +229,7 @@ class SellerFirebaseMessagingService : FirebaseMessagingService() {
                 val restockIntent = Intent(this, MainActivity::class.java).apply {
                     putExtra("action", "restock_product")
                     putExtra("product_name", data["product_name"])
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
                 val restockPendingIntent = PendingIntent.getActivity(
                     this,
@@ -242,7 +242,7 @@ class SellerFirebaseMessagingService : FirebaseMessagingService() {
             "review_received" -> {
                 val viewReviewIntent = Intent(this, MainActivity::class.java).apply {
                     putExtra("action", "view_reviews")
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
                 val viewReviewPendingIntent = PendingIntent.getActivity(
                     this,

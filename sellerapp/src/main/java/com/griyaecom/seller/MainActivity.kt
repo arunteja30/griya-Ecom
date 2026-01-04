@@ -6,33 +6,37 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.webkit.JavascriptInterface
+import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import androidx.lifecycle.lifecycleScope
 import com.google.firebase.messaging.FirebaseMessaging
 import com.griyaecom.seller.ui.theme.GriyaMartTheme
+import com.griyaecom.seller.utils.ConfigManager
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
-
-    // default fallback URL for seller app
-    private var webViewUrl: String = "https://seller-griyamart.onrender.com"
-
-    // Firebase Realtime Database path for the seller app web URL
-    private val webUrlConfigPath = "appConfig/seller/webViewUrl"
+    private var webViewUrl by mutableStateOf(ConfigManager.Defaults.SELLER_URL)
+    private var isLoading by mutableStateOf(true)
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -46,81 +50,159 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Request notification permissions
         requestNotificationPermissions()
-
-        // Initialize Firebase and get FCM token
-        initializeFirebaseMessaging()
-
-        // Load seller web URL from Firebase Realtime Database
-        loadSellerWebUrl()
-
-        // Handle notification data from intent
         handleNotificationData()
+
+        // Load config asynchronously
+        lifecycleScope.launch {
+            loadConfigAndSetup()
+        }
 
         setContent {
             GriyaMartTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    WebViewComposable(
-                        url = webViewUrl,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    )
-                }
+                AppContent()
             }
-        }
-    }
-
-    private fun loadSellerWebUrl() {
-        val database: DatabaseReference = FirebaseDatabase.getInstance().reference
-        database.child(webUrlConfigPath).get().addOnSuccessListener { snapshot ->
-            if (snapshot.exists()) {
-                webViewUrl = snapshot.value.toString()
-                Log.d("SellerApp", "Loaded webViewUrl from Firebase: $webViewUrl")
-            } else {
-                Log.w("SellerApp", "webViewUrl not found in Firebase, using default")
-            }
-        }.addOnFailureListener {
-            Log.e("SellerApp", "Failed to load webViewUrl from Firebase", it)
         }
     }
 
     @Composable
-    fun WebViewComposable(url: String, modifier: Modifier = Modifier) {
+    private fun AppContent() {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (isLoading) {
+                LoadingIndicator()
+            } else {
+                WebViewComposable(
+                    url = webViewUrl,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun LoadingIndicator() {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        }
+    }
+
+    private suspend fun loadConfigAndSetup() {
+        try {
+            webViewUrl = ConfigManager.getSellerWebUrl()
+            Log.d("SellerApp", "Loaded webViewUrl: $webViewUrl")
+        } catch (e: Exception) {
+            Log.e("SellerApp", "Failed to load config, using fallback: $webViewUrl", e)
+        } finally {
+            isLoading = false
+        }
+
+        // Initialize Firebase after config is loaded
+        initializeFirebaseMessaging()
+    }
+
+    private fun initializeFirebaseMessaging() {
+        lifecycleScope.launch {
+            try {
+                com.griyaecom.seller.utils.FirebaseHelper.initializeFirebaseMessaging(
+                    context = this@MainActivity,
+                    onTokenReceived = { token ->
+                        Log.d("SellerApp", "FCM token received: $token")
+                        // Subscribe to seller topics
+                        lifecycleScope.launch {
+                            com.griyaecom.seller.utils.FirebaseHelper.subscribeToSellerTopics(
+                                onSuccess = { topic ->
+                                    Log.d("SellerApp", "Subscribed to topic: $topic")
+                                },
+                                onError = { topic, error ->
+                                    Log.w(
+                                        "SellerApp",
+                                        "Failed to subscribe to topic: $topic",
+                                        error
+                                    )
+                                }
+                            )
+                        }
+                    },
+                    onError = { exception ->
+                        Log.e("SellerApp", "Firebase initialization failed", exception)
+                        // Continue without push notifications
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e("SellerApp", "Critical Firebase error", e)
+            }
+        }
+    }
+
+    @Composable
+    private fun WebViewComposable(url: String, modifier: Modifier = Modifier) {
         AndroidView(
             modifier = modifier,
             factory = { context ->
                 WebView(context).apply {
                     webView = this
-
-                    settings.apply {
-                        javaScriptEnabled = true
-                        domStorageEnabled = true
-                        allowFileAccess = true
-                        allowContentAccess = true
-                        setSupportZoom(true)
-                        builtInZoomControls = false
-                        displayZoomControls = false
-                        loadWithOverviewMode = true
-                        useWideViewPort = true
-                    }
-
-                    // Add JavaScript interface for native communication
-                    addJavascriptInterface(SellerWebBridge(), "SellerApp")
-
-                    webViewClient = object : WebViewClient() {
-                        override fun onPageFinished(view: WebView?, url: String?) {
-                            super.onPageFinished(view, url)
-                            // Inject FCM token into web app
-                            injectFCMToken()
-                        }
-                    }
-
-                    loadUrl(url)
+                    setupWebView(this, url)
+                }
+            },
+            update = { view ->
+                if (view.url != url) {
+                    view.loadUrl(url)
                 }
             }
         )
+    }
+
+    private fun setupWebView(webView: WebView, url: String) {
+        webView.apply {
+            settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                allowFileAccess = true
+                allowContentAccess = true
+                setSupportZoom(true)
+                builtInZoomControls = false
+                displayZoomControls = false
+                loadWithOverviewMode = true
+                useWideViewPort = true
+                cacheMode = WebSettings.LOAD_DEFAULT
+            }
+
+            addJavascriptInterface(SellerWebBridge(), "SellerApp")
+
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(
+                    view: WebView?,
+                    request: WebResourceRequest?
+                ): Boolean {
+                    val requestUrl = request?.url?.toString() ?: return false
+
+                    // Handle external URLs
+                    if (requestUrl.startsWith("tel:") || requestUrl.startsWith("mailto:") || requestUrl.startsWith(
+                            "sms:"
+                        )
+                    ) {
+                        startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(requestUrl)))
+                        return true
+                    }
+
+                    // Dynamic host checking
+                    val baseHost = android.net.Uri.parse(webViewUrl).host
+                    val targetHost = android.net.Uri.parse(requestUrl).host
+                    return baseHost != targetHost
+                }
+
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    injectFCMToken()
+                }
+            }
+
+            clearCache(true)
+            loadUrl(url)
+        }
     }
 
     private fun requestNotificationPermissions() {
@@ -138,33 +220,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun initializeFirebaseMessaging() {
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                Log.w("SellerApp", "Fetching FCM registration token failed", task.exception)
-                return@addOnCompleteListener
-            }
-
-            // Get new FCM registration token
-            val token = task.result
-            Log.d("SellerApp", "FCM Registration Token: $token")
-
-            // Store token locally
-            val sharedPref = getSharedPreferences("SellerFCMPrefs", MODE_PRIVATE)
-            with(sharedPref.edit()) {
-                putString("fcm_token", token)
-                apply()
-            }
-        }
-
-        // Subscribe to topics for sellers
-        FirebaseMessaging.getInstance().subscribeToTopic("seller_updates")
-        FirebaseMessaging.getInstance().subscribeToTopic("admin_announcements")
-    }
-
     private fun injectFCMToken() {
-        val sharedPref = getSharedPreferences("SellerFCMPrefs", MODE_PRIVATE)
-        val token = sharedPref.getString("fcm_token", "")
+        val token = com.griyaecom.seller.utils.FirebaseHelper.getCurrentToken(this) ?: ""
 
         val javascript = """
             window.fcmToken = '$token';
@@ -174,41 +231,34 @@ class MainActivity : ComponentActivity() {
             }
         """.trimIndent()
 
-        webView.evaluateJavascript(javascript, null)
+        if (::webView.isInitialized) {
+            webView.evaluateJavascript(javascript, null)
+        }
     }
 
     private fun handleNotificationData() {
         intent.extras?.let { extras ->
             val action = extras.getString("action")
+            val orderId = extras.getString("order_id")
+            val productName = extras.getString("product_name")
+
             when (action) {
-                "accept_order" -> {
-                    val orderId = extras.getString("order_id")
-                    val javascript = "if (window.handleNotificationAction) { window.handleNotificationAction('accept_order', '$orderId'); }"
-                    if (::webView.isInitialized) {
-                        webView.evaluateJavascript(javascript, null)
-                    }
-                }
-                "view_order" -> {
-                    val orderId = extras.getString("order_id")
-                    val javascript = "if (window.handleNotificationAction) { window.handleNotificationAction('view_order', '$orderId'); }"
-                    if (::webView.isInitialized) {
-                        webView.evaluateJavascript(javascript, null)
-                    }
+                "accept_order", "view_order" -> {
+                    executeJavaScript("if (window.handleNotificationAction) { window.handleNotificationAction('$action', '$orderId'); }")
                 }
                 "restock_product" -> {
-                    val productName = extras.getString("product_name")
-                    val javascript = "if (window.handleNotificationAction) { window.handleNotificationAction('restock_product', '$productName'); }"
-                    if (::webView.isInitialized) {
-                        webView.evaluateJavascript(javascript, null)
-                    }
+                    executeJavaScript("if (window.handleNotificationAction) { window.handleNotificationAction('restock_product', '$productName'); }")
                 }
                 "view_reviews" -> {
-                    val javascript = "if (window.handleNotificationAction) { window.handleNotificationAction('view_reviews', ''); }"
-                    if (::webView.isInitialized) {
-                        webView.evaluateJavascript(javascript, null)
-                    }
+                    executeJavaScript("if (window.handleNotificationAction) { window.handleNotificationAction('view_reviews', ''); }")
                 }
             }
+        }
+    }
+
+    private fun executeJavaScript(script: String) {
+        if (::webView.isInitialized) {
+            webView.evaluateJavascript(script, null)
         }
     }
 
@@ -217,12 +267,7 @@ class MainActivity : ComponentActivity() {
         val url = data.toString()
 
         when {
-            // If deep link already matches our current base URL, load directly
-            url.startsWith(webViewUrl) -> {
-                webView.loadUrl(url)
-            }
-
-            // Custom scheme: griyaseller://path -> map to dynamic seller base URL
+            url.startsWith(webViewUrl) -> webView.loadUrl(url)
             url.startsWith("griyaseller://") -> {
                 val path = data.path ?: "/"
                 val targetUrl = webViewUrl.trimEnd('/') + path
@@ -231,66 +276,80 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onNewIntent(intent: android.content.Intent?) {
+    override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         handleNotificationData()
         handleDeepLink(intent)
     }
 
     inner class SellerWebBridge {
-
         @JavascriptInterface
         fun getFCMToken(): String {
-            val sharedPref = getSharedPreferences("SellerFCMPrefs", MODE_PRIVATE)
-            return sharedPref.getString("fcm_token", "") ?: ""
+            return com.griyaecom.seller.utils.FirebaseHelper.getCurrentToken(this@MainActivity)
+                ?: ""
         }
 
         @JavascriptInterface
         fun subscribeToTopic(topic: String) {
-            FirebaseMessaging.getInstance().subscribeToTopic(topic)
-            Log.d("SellerApp", "Subscribed to topic: $topic")
+            lifecycleScope.launch {
+                com.griyaecom.seller.utils.FirebaseHelper.subscribeToTopics(
+                    listOf(topic),
+                    onSuccess = { Log.d("SellerApp", "Subscribed to topic: $it") },
+                    onError = { t, e -> Log.w("SellerApp", "Failed to subscribe to topic: $t", e) }
+                )
+            }
         }
 
         @JavascriptInterface
         fun unsubscribeFromTopic(topic: String) {
-            FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
-            Log.d("SellerApp", "Unsubscribed from topic: $topic")
-        }
-
-        @JavascriptInterface
-        fun sendTokenToServer(token: String, sellerId: String) {
-            Log.d("SellerApp", "Sending token to server: $token for seller: $sellerId")
-            // Implement your API call to send token to server
+            lifecycleScope.launch {
+                com.griyaecom.seller.utils.FirebaseHelper.unsubscribeFromTopics(
+                    listOf(topic),
+                    onSuccess = { Log.d("SellerApp", "Unsubscribed from topic: $it") },
+                    onError = { t, e ->
+                        Log.w(
+                            "SellerApp",
+                            "Failed to unsubscribe from topic: $t",
+                            e
+                        )
+                    }
+                )
+            }
         }
 
         @JavascriptInterface
         fun updateSellerStatus(status: String) {
             Log.d("SellerApp", "Seller status updated: $status")
-            // Update seller status (open, closed, busy)
-
-            // Subscribe/unsubscribe based on status
-            when (status) {
-                "open" -> {
-                    FirebaseMessaging.getInstance().subscribeToTopic("order_notifications")
-                    FirebaseMessaging.getInstance().subscribeToTopic("payment_notifications")
-                }
-                "closed" -> {
-                    FirebaseMessaging.getInstance().unsubscribeFromTopic("order_notifications")
-                    // Keep payment notifications even when closed
-                }
+            lifecycleScope.launch {
+                com.griyaecom.seller.utils.FirebaseHelper.updateSellerStatus(
+                    status,
+                    onSuccess = {
+                        runOnUiThread {
+                            when (status) {
+                                "open" -> showToast("You are now accepting orders")
+                                "closed" -> showToast("You are now closed")
+                                "busy" -> showToast("Status updated to busy")
+                            }
+                        }
+                    },
+                    onError = { exception ->
+                        Log.e("SellerApp", "Failed to update seller status", exception)
+                        runOnUiThread {
+                            showToast("Failed to update status. Please try again.")
+                        }
+                    }
+                )
             }
         }
 
         @JavascriptInterface
         fun setInventoryAlerts(enabled: Boolean, threshold: Int) {
             Log.d("SellerApp", "Inventory alerts: $enabled, threshold: $threshold")
-            // Store inventory alert preferences
             val sharedPref = getSharedPreferences("SellerPrefs", MODE_PRIVATE)
-            with(sharedPref.edit()) {
-                putBoolean("inventory_alerts_enabled", enabled)
-                putInt("inventory_threshold", threshold)
-                apply()
-            }
+            sharedPref.edit()
+                .putBoolean("inventory_alerts_enabled", enabled)
+                .putInt("inventory_threshold", threshold)
+                .apply()
 
             if (enabled) {
                 FirebaseMessaging.getInstance().subscribeToTopic("inventory_alerts")
@@ -302,14 +361,12 @@ class MainActivity : ComponentActivity() {
         @JavascriptInterface
         fun requestCameraPermission(): Boolean {
             val hasPermission = ContextCompat.checkSelfPermission(
-                this@MainActivity,
-                Manifest.permission.CAMERA
+                this@MainActivity, Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED
 
             if (!hasPermission) {
                 requestPermissionLauncher.launch(arrayOf(Manifest.permission.CAMERA))
             }
-
             return hasPermission
         }
 
@@ -340,10 +397,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         if (::webView.isInitialized && webView.canGoBack()) {
             webView.goBack()
         } else {
+            @Suppress("DEPRECATION")
             super.onBackPressed()
         }
     }

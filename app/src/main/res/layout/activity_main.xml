@@ -53,7 +53,7 @@
             android:layout_height="120dp"
             android:layout_marginBottom="24dp"
             android:src="@drawable/ic_error"
-            android:tint="@color/error_color" />
+            app:tint="@color/error_color" />
 
         <TextView
             android:id="@+id/errorTitle"

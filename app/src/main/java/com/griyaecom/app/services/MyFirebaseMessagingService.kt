@@ -126,7 +126,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         tag: String? = null
     ) {
         val intent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             // Add notification data as extras
             data.forEach { (key, value) ->
                 putExtra(key, value)
@@ -174,7 +174,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 val viewOrderIntent = Intent(this, MainActivity::class.java).apply {
                     putExtra("action", "view_order")
                     putExtra("order_id", orderId)
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
                 val viewOrderPendingIntent = PendingIntent.getActivity(
                     this,
@@ -187,7 +187,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             "chat_message" -> {
                 val replyIntent = Intent(this, MainActivity::class.java).apply {
                     putExtra("action", "open_chat")
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
                 val replyPendingIntent = PendingIntent.getActivity(
                     this,

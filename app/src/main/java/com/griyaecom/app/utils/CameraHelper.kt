@@ -18,7 +18,8 @@ import com.griyaecom.app.MainActivity
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class CameraHelper(private val activity: MainActivity) {
     
@@ -98,7 +99,7 @@ class CameraHelper(private val activity: MainActivity) {
 
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
                 putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
-                addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                flags = Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             }
 
             if (intent.resolveActivity(activity.packageManager) != null) {

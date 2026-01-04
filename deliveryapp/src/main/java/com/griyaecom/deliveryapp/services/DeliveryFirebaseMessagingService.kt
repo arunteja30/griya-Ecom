@@ -202,8 +202,8 @@ class DeliveryFirebaseMessagingService : FirebaseMessagingService() {
         val channelId = if (isLive) LIVE_CHANNEL_ID else CHANNEL_ID
 
         val intent = Intent(this, DriverMainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            putExtra("from_notification", true)
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            // Add notification data as extras
 
             // Add notification data as extras
             data.forEach { (key, value) ->
@@ -287,7 +287,7 @@ class DeliveryFirebaseMessagingService : FirebaseMessagingService() {
         val intent = Intent(this, DriverMainActivity::class.java).apply {
             putExtra("action", action)
             putExtra("order_id", orderId)
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
 
         val pendingIntent = PendingIntent.getActivity(

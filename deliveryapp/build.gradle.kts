@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.griyaecom.deliveryapp"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.griyaecom.deliveryapp"

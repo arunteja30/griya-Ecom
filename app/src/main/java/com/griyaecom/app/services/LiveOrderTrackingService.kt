@@ -1,12 +1,20 @@
 package com.griyaecom.app.services
 
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.google.firebase.database.*
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.griyaecom.app.MainActivity
 import com.griyaecom.app.R
 
@@ -20,18 +28,18 @@ class LiveOrderTrackingService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "live_order_tracking"
         private const val CHANNEL_NAME = "Live Order Tracking"
-        
+
         fun startService(context: Context, orderId: String) {
             val intent = Intent(context, LiveOrderTrackingService::class.java)
             intent.putExtra("order_id", orderId)
-            
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
             } else {
                 context.startService(intent)
             }
         }
-        
+
         fun stopService(context: Context) {
             val intent = Intent(context, LiveOrderTrackingService::class.java)
             context.stopService(intent)
@@ -43,27 +51,27 @@ class LiveOrderTrackingService : Service() {
     private var riderLocationRef: DatabaseReference? = null
     private var orderListener: ValueEventListener? = null
     private var locationListener: ValueEventListener? = null
-    
+
     private var currentOrderId: String? = null
     private var currentRiderId: String? = null
     private var notificationManager: NotificationManager? = null
 
     override fun onCreate() {
         super.onCreate()
-        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         createNotificationChannel()
         database = FirebaseDatabase.getInstance()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val orderId = intent?.getStringExtra("order_id")
-        
+
         if (orderId != null) {
             currentOrderId = orderId
             startForegroundTracking()
             setupOrderTracking(orderId)
         }
-        
+
         return START_STICKY
     }
 
@@ -75,7 +83,7 @@ class LiveOrderTrackingService : Service() {
             "Tracking your order in real-time...",
             NotificationCompat.PRIORITY_LOW
         )
-        
+
         startForeground(NOTIFICATION_ID, notification)
     }
 
@@ -99,10 +107,10 @@ class LiveOrderTrackingService : Service() {
 
     private fun setupRiderTracking(riderId: String) {
         if (currentRiderId == riderId) return // Already tracking this rider
-        
+
         // Remove previous listener
         riderLocationRef?.removeEventListener(locationListener!!)
-        
+
         currentRiderId = riderId
         riderLocationRef = database?.getReference("riderLocations")?.child(riderId)
         locationListener = object : ValueEventListener {
@@ -125,13 +133,13 @@ class LiveOrderTrackingService : Service() {
         if (order.riderId != null && order.riderId != currentRiderId) {
             setupRiderTracking(order.riderId!!)
         }
-        
+
         // Update persistent notification
         updatePersistentNotification(order)
-        
+
         // Send live update to web app
         sendLiveUpdateToWebApp(order)
-        
+
         // Check if tracking should stop
         if (shouldStopTracking(order.status)) {
             stopSelf()
@@ -146,13 +154,13 @@ class LiveOrderTrackingService : Service() {
     private fun updatePersistentNotification(order: Order) {
         val statusMessage = getStatusMessage(order.status)
         val title = "Order #${order.id}"
-        
+
         val notification = createPersistentNotification(
             title,
             statusMessage,
             NotificationCompat.PRIORITY_DEFAULT
         )
-        
+
         notificationManager?.notify(NOTIFICATION_ID, notification)
     }
 
@@ -166,14 +174,14 @@ class LiveOrderTrackingService : Service() {
             putExtra("action", "view_live_order")
             putExtra("order_id", currentOrderId)
         }
-        
+
         val pendingIntent = PendingIntent.getActivity(
             this,
             0,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
@@ -202,10 +210,10 @@ class LiveOrderTrackingService : Service() {
                 });
             }
         """.trimIndent()
-        
+
         // Send to MainActivity if available
-        MainActivity.getInstance()?.runOnUiThread {
-            MainActivity.getInstance()?.evaluateJavascript(jsCode)
+        MainActivity.Companion.getInstance()?.runOnUiThread {
+            MainActivity.Companion.getInstance()?.evaluateJavascript(jsCode)
         }
     }
 
@@ -221,8 +229,8 @@ class LiveOrderTrackingService : Service() {
             }
         """.trimIndent()
 
-        MainActivity.getInstance()?.runOnUiThread {
-            MainActivity.getInstance()?.evaluateJavascript(jsCode)
+        MainActivity.Companion.getInstance()?.runOnUiThread {
+            MainActivity.Companion.getInstance()?.evaluateJavascript(jsCode)
         }
 
     }
