@@ -47,6 +47,7 @@ import DeliveryPricingAdmin from "./pages/admin/DeliveryPricingAdmin";
 import MerchantEarningsAdmin from "./pages/admin/MerchantEarningsAdmin";
 import OrderTrackingPage from "./pages/OrderTrackingPage";
 import FloatingOrderTracker from "./components/FloatingOrderTracker";
+import AddressSelectorTestPage from "./pages/AddressSelectorTestPage";
 import './utils/devUtils'; // Development utilities
 import './utils/orderFlowTest'; // Order flow testing
 import './utils/errorHandling'; // Global error handling
@@ -78,6 +79,7 @@ export default function App() {
             <Route path="track-order" element={<OrderTrackingPage />} />
             <Route path="contact" element={<ContactPage />} />
             <Route path="cart" element={<CartPage />} />
+            <Route path="test-address" element={<AddressSelectorTestPage />} />
           </Route>
 
           {/* Admin routes */}

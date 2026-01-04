@@ -9,8 +9,6 @@ import NewOrderAlert from '../components/NewOrderAlert';
 import { loadPricingConfig, subscribeToPricingConfig } from '../utils/deliveryFeeCalculator';
 import { updateDriverEarnings, calculateDriverEarning } from '../utils/driverEarnings';
 import locationService from '../utils/locationService';
-import locationService from '../utils/locationService';
-import locationService from '../utils/locationService';
 
 export default function Dashboard() {
   const [orders, setOrders] = useState({});

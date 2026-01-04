@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAddress } from '../context/AddressContext';
-import AddressModal from './AddressModal';
+import BottomSheet from './BottomSheet';
+import AddressBottomSheet from './AddressBottomSheet';
 
 const AddressGuard = ({ children }) => {
   const { selectedAddress, getCurrentLocation, saveCurrentLocationAsAddress, isGettingLocation, locationError } = useAddress();
@@ -127,10 +128,15 @@ const AddressGuard = ({ children }) => {
         </div>
       </div>
 
-      <AddressModal 
+      <BottomSheet 
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-      />
+        title="Set Delivery Address"
+      >
+        <AddressBottomSheet 
+          onClose={() => setShowModal(false)}
+        />
+      </BottomSheet>
     </>
   );
 };

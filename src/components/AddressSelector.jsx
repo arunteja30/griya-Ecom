@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
 import { useAddress } from '../context/AddressContext';
-import AddressModal from './AddressModal';
+import BottomSheet from './BottomSheet';
+import AddressBottomSheet from './AddressBottomSheet';
 
 const AddressSelector = () => {
   const { selectedAddress } = useAddress();
-  const [showModal, setShowModal] = useState(false);
+  const [showBottomSheet, setShowBottomSheet] = useState(false);
+
+  const handleClick = () => {
+    setShowBottomSheet(true);
+  };
+
+  const handleClose = () => {
+    setShowBottomSheet(false);
+  };
 
   return (
     <>
       <div 
-        className="bg-white border-b border-gray-100 p-3 px-mobile cursor-pointer hover:bg-gray-50 transition-colors"
-        onClick={() => setShowModal(true)}
+        className="bg-white border-b border-gray-100 p-3 px-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={handleClick}
       >
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -46,10 +55,15 @@ const AddressSelector = () => {
         </div>
       </div>
 
-      <AddressModal 
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-      />
+      <BottomSheet 
+        isOpen={showBottomSheet}
+        onClose={handleClose}
+        title="Select Delivery Address"
+      >
+        <AddressBottomSheet 
+          onClose={handleClose}
+        />
+      </BottomSheet>
     </>
   );
 };
