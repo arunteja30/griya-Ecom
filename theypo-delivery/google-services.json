@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "596537223416",
+    "firebase_url": "https://swiggy-9f24c-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "swiggy-9f24c",
+    "storage_bucket": "swiggy-9f24c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:596537223416:android:c066fb7f43b895f27ff30d",
+        "android_client_info": {
+          "package_name": "com.mat.theypo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBltGfYAfJ-LtUwMTtzfQPxwOVt8DgNet4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:596537223416:android:a50071ce82d89a577ff30d",
+        "android_client_info": {
+          "package_name": "com.mat.theypodelivery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBltGfYAfJ-LtUwMTtzfQPxwOVt8DgNet4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

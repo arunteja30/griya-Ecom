@@ -17,3 +17,5 @@ rootProject.name = "GriyaMart"
 include(":app")
 include(":deliveryapp")
 include(":sellerapp")
+include(":theypo")
+include(":theypo-delivery")
