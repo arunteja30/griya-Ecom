@@ -12,11 +12,19 @@
         android:fitsSystemWindows="true"
         android:visibility="gone" />
 
-    <!-- Permission loading screen - initially visible -->
+    <!-- Splash Screen - initially visible -->
+    <include
+        android:id="@+id/splashScreen"
+        layout="@layout/splash_screen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Permission loading screen - initially hidden -->
     <include
         android:id="@+id/permissionLoadingLayout"
         layout="@layout/permission_loading"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 
 </FrameLayout>

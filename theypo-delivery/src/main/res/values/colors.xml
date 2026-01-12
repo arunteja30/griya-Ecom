@@ -10,4 +10,10 @@
     <color name="colorAccent">#FFBB86FC</color>
     <color name="colorPrimary">#FF3700B3</color>
 
+    <!-- Splash Screen Colors -->
+    <color name="splash_background">#FFFFFF</color>
+    <color name="splash_text_primary">#2C3E50</color>
+    <color name="splash_text_secondary">#7F8C8D</color>
+    <color name="splash_accent">#E67E22</color>
+
 </resources>

@@ -371,7 +371,7 @@ class WebAppInterface(
         Log.d(TAG, "openDialer called with number: $phoneNumber")
         try {
             val intent = Intent(Intent.ACTION_DIAL).apply {
-                data = "tel:$phoneNumber".toUri()
+                data = "tel:+91$phoneNumber".toUri()
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             context.startActivity(intent)

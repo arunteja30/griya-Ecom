@@ -7,6 +7,8 @@ import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.view.View
 import android.webkit.GeolocationPermissions
@@ -16,6 +18,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,21 +27,27 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.mat.theypo.utils.ConfigManager
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private lateinit var permissionLoadingLayout: View
+    private lateinit var splashScreen: View
+    private lateinit var splashLoadingText: TextView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationManager: LocationManager
     private lateinit var webAppInterface: WebAppInterface
     private var hasLocationPermission = false
     private var isLocationEnabled = false
-
-    // Change these URLs for customer/delivery
-    private val WEB_URL = "https://fags.onrender.com" // or delivery app URL
+    private var webViewUrl: String = ConfigManager.Defaults.THEYPO_URL
+    private var isConfigLoaded = false
+    private var isLoading = true
+    private val splashTimeoutHandler = Handler(Looper.getMainLooper())
 
     // Permission launcher
     private val locationPermissionLauncher = registerForActivityResult(
@@ -59,7 +68,7 @@ class MainActivity : AppCompatActivity() {
                         webAppInterface.onLocationPermissionGranted()
                     }
                     showWebView()
-                    webView.loadUrl(WEB_URL)
+                    webView.loadUrl(webViewUrl)
                 } else {
                     showLocationServicesDisabledDialog()
                 }
@@ -86,6 +95,7 @@ class MainActivity : AppCompatActivity() {
             showNotificationPermissionDeniedDialog()
         }
         // After handling notification permission (granted or denied), proceed with location
+        showPermissionScreen() // Transition from splash to permission screen
         requestLocationPermissionIfNeeded()
     }
 
@@ -100,6 +110,8 @@ class MainActivity : AppCompatActivity() {
         // Initialize views
         webView = findViewById(R.id.webView)
         permissionLoadingLayout = findViewById(R.id.permissionLoadingLayout)
+        splashScreen = findViewById(R.id.splashScreen)
+        splashLoadingText = splashScreen.findViewById(R.id.splashLoadingText)
 
         // Apply system insets to handle status bar properly
         applySystemInsets()
@@ -107,10 +119,10 @@ class MainActivity : AppCompatActivity() {
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        setupWebView()
-
-        // Request permissions in sequence: notification first, then location
-        requestNotificationPermission()
+        // Load config asynchronously
+        lifecycleScope.launch {
+            loadConfigAndSetup()
+        }
 
         // Setup back press handling
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -122,6 +134,38 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+
+    private suspend fun loadConfigAndSetup() {
+        // Update splash screen text
+        runOnUiThread {
+            splashLoadingText.text = "Loading configuration..."
+        }
+
+        try {
+            webViewUrl = ConfigManager.getTheypoWebUrl()
+            android.util.Log.d("TheypoApp", "Loaded webViewUrl: $webViewUrl")
+        } catch (e: Exception) {
+            android.util.Log.e("TheypoApp", "Failed to load config, using fallback: $webViewUrl", e)
+        } finally {
+            isLoading = false
+            isConfigLoaded = true
+        }
+
+        // Update splash screen text
+        runOnUiThread {
+            splashLoadingText.text = "Setting up app..."
+        }
+
+        setupWebView()
+
+        // Update splash screen text
+        runOnUiThread {
+            splashLoadingText.text = "Checking permissions..."
+        }
+
+        // Request permissions in sequence: notification first, then location
+        requestNotificationPermission()
     }
 
     private fun configureWindowInsets() {
@@ -216,8 +260,36 @@ class MainActivity : AppCompatActivity() {
                     return false // Let WebView handle navigation
                 }
 
+                override fun onPageStarted(
+                    view: WebView?,
+                    url: String?,
+                    favicon: android.graphics.Bitmap?
+                ) {
+                    super.onPageStarted(view, url, favicon)
+
+                    // Show loading if WebView is visible (for subsequent page loads)
+                    if (webView.visibility == View.VISIBLE) {
+                        runOnUiThread {
+                            splashLoadingText.text = "Loading page..."
+                            splashScreen.visibility = View.VISIBLE
+                            webView.visibility = View.GONE
+                        }
+                    }
+                }
+
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
+
+                    // Clear any pending timeout
+                    splashTimeoutHandler.removeCallbacksAndMessages(null)
+
+                    // Hide loading screens once page is loaded
+                    runOnUiThread {
+                        splashScreen.visibility = View.GONE
+                        permissionLoadingLayout.visibility = View.GONE
+                        webView.visibility = View.VISIBLE
+                    }
+
                     // Inject any initial JavaScript if needed
                     view?.evaluateJavascript(
                         """
@@ -270,7 +342,20 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onProgressChanged(view: WebView?, newProgress: Int) {
                     super.onProgressChanged(view, newProgress)
-                    // Update progress bar if you have one
+
+                    runOnUiThread {
+                        splashLoadingText.text = "Loading app... ${newProgress}%"
+
+                        // Hide splash screen when page is fully loaded
+                        if (newProgress >= 100) {
+                            // Clear any pending timeout
+                            splashTimeoutHandler.removeCallbacksAndMessages(null)
+
+                            splashScreen.visibility = View.GONE
+                            permissionLoadingLayout.visibility = View.GONE
+                            webView.visibility = View.VISIBLE
+                        }
+                    }
                 }
             }
         }
@@ -323,7 +408,7 @@ class MainActivity : AppCompatActivity() {
                 if (isLocationServicesEnabled()) {
                     isLocationEnabled = true
                     showWebView()
-                    webView.loadUrl(WEB_URL)
+                    webView.loadUrl(webViewUrl)
                 } else {
                     showLocationServicesDisabledDialog()
                 }
@@ -366,13 +451,37 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showWebView() {
-        webView.visibility = View.VISIBLE
-        permissionLoadingLayout.visibility = View.GONE
+        // Show splash screen with loading message while WebView loads
+        runOnUiThread {
+            splashLoadingText.text = "Loading app..."
+            splashScreen.visibility = View.VISIBLE
+            permissionLoadingLayout.visibility = View.GONE
+            webView.visibility = View.GONE
+        }
+
+        // Set a timeout to dismiss splash screen if WebView takes too long to load
+        splashTimeoutHandler.postDelayed({
+            if (splashScreen.visibility == View.VISIBLE) {
+                android.util.Log.d("TheypoApp", "Splash timeout reached, showing WebView")
+                runOnUiThread {
+                    splashScreen.visibility = View.GONE
+                    permissionLoadingLayout.visibility = View.GONE
+                    webView.visibility = View.VISIBLE
+                }
+            }
+        }, 10000) // 10 second timeout
     }
 
-    private fun showPermissionLoadingScreen() {
+    private fun showPermissionScreen() {
         webView.visibility = View.GONE
         permissionLoadingLayout.visibility = View.VISIBLE
+        splashScreen.visibility = View.GONE
+    }
+
+    private fun showSplashScreen() {
+        webView.visibility = View.GONE
+        permissionLoadingLayout.visibility = View.GONE
+        splashScreen.visibility = View.VISIBLE
     }
 
     private fun showLocationPermissionRequiredDialog() {
@@ -426,7 +535,7 @@ class MainActivity : AppCompatActivity() {
             isLocationEnabled = true
             Toast.makeText(this, "Location requirements satisfied", Toast.LENGTH_SHORT).show()
             showWebView()
-            webView.loadUrl(WEB_URL)
+            webView.loadUrl(webViewUrl)
         } else if (hasPermissions && !hasLocationPermission) {
             // Permission granted but need to check location services
             hasLocationPermission = true
@@ -475,7 +584,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun requestLocationPermissionIfNeeded() {
         // Show loading screen initially
-        showPermissionLoadingScreen()
+        showPermissionScreen()
 
         // Add a short delay to show the loading screen, then check permissions
         webView.postDelayed({
@@ -486,6 +595,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        splashTimeoutHandler.removeCallbacksAndMessages(null)
         webView.destroy()
     }
 
