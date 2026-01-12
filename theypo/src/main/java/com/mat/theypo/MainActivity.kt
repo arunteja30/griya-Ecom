@@ -1,6 +1,9 @@
 package com.mat.theypo
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
@@ -24,6 +27,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -48,7 +52,9 @@ class MainActivity : AppCompatActivity() {
     private var isConfigLoaded = false
     private var isLoading = true
     private val splashTimeoutHandler = Handler(Looper.getMainLooper())
-
+    private var activeOrderNotificationId: Int? = null
+    private val ACTIVE_ORDER_NOTIFICATION_ID = 1001
+    private val NOTIFICATION_CHANNEL_ID = "customer_app_notifications"
     // Permission launcher
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -118,6 +124,9 @@ class MainActivity : AppCompatActivity() {
 
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        // Create notification channel for active order notifications
+        createNotificationChannel()
 
         // Load config asynchronously
         lifecycleScope.launch {
@@ -613,4 +622,532 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Create notification channel for Android 8.0+ (API 26+)
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                "Order Updates",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Real-time notifications for your food delivery orders"
+                enableLights(true)
+                lightColor = android.graphics.Color.BLUE
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 250, 250, 250) // Custom vibration pattern
+                setShowBadge(true)
+                setBypassDnd(false)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+            }
+
+            // Create additional channel for delivery updates (higher priority)
+            val deliveryChannel = NotificationChannel(
+                "${NOTIFICATION_CHANNEL_ID}_delivery",
+                "Delivery Alerts",
+                NotificationManager.IMPORTANCE_MAX
+            ).apply {
+                description = "Critical delivery status updates"
+                enableLights(true)
+                lightColor = android.graphics.Color.RED
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 500, 200, 500) // More prominent vibration
+                setShowBadge(true)
+                setBypassDnd(true) // Allow during Do Not Disturb
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+            }
+
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(channel)
+            notificationManager.createNotificationChannel(deliveryChannel)
+        }
+    }
+
+    // Show active order notification (called by bridge)
+    fun showActiveOrderNotification(orderId: String, status: String, restaurantName: String) {
+        // Check if notification permission is granted (for Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                android.util.Log.w("MainActivity", "Notification permission not granted")
+                return
+            }
+        }
+
+        // Main intent to open order tracking
+        val trackOrderIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("orderId", orderId)
+            putExtra("deepLink", "/order-tracking/$orderId")
+        }
+
+        val trackOrderPendingIntent = PendingIntent.getActivity(
+            this,
+            ACTIVE_ORDER_NOTIFICATION_ID,
+            trackOrderIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Call restaurant action
+        val callRestaurantIntent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.parse("tel:+918888888888") // Default restaurant number
+        }
+        val callPendingIntent = PendingIntent.getActivity(
+            this,
+            ACTIVE_ORDER_NOTIFICATION_ID + 1,
+            callRestaurantIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Help & Support action
+        val helpIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("deepLink", "/help-support")
+        }
+        val helpPendingIntent = PendingIntent.getActivity(
+            this,
+            ACTIVE_ORDER_NOTIFICATION_ID + 2,
+            helpIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val statusDetails = getStatusDetails(status)
+        val statusText = statusDetails[0]
+        val statusEmoji = statusDetails[1]
+        val progressText = statusDetails[2]
+        val estimatedTime = statusDetails[3]
+
+        // Create custom big style notification
+        val bigStyle = NotificationCompat.BigTextStyle()
+            .bigText("$statusEmoji $statusText\n🏪 From: $restaurantName\n⏰ $estimatedTime\n📋 Order #$orderId")
+            .setBigContentTitle("$statusEmoji Your Order Update")
+            .setSummaryText("Tap to track • $progressText")
+
+        val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("$statusEmoji $statusText")
+            .setContentText("🏪 $restaurantName • ⏰ $estimatedTime")
+            .setSubText("Order #$orderId")
+            .setStyle(bigStyle)
+            .setOngoing(true) // Keep notification persistent
+            .setAutoCancel(false)
+            .setContentIntent(trackOrderPendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setColor(getStatusColor(status))
+            .setColorized(true)
+            // Add action buttons like Swiggy
+            // Custom sound and vibration based on status
+            .setDefaults(getNotificationDefaults(status))
+
+        // Add progress indicator for certain statuses
+        when (status) {
+            "preparing", "ready_for_pickup", "picked_up" -> {
+                val progress = getProgressPercentage(status)
+                builder.setProgress(100, progress, false)
+                    .setSubText("$progressText • $progress% complete")
+            }
+
+            "out_for_delivery" -> {
+                builder.setProgress(0, 0, true) // Indeterminate progress
+                    .setSubText("$progressText • Tracking live location")
+            }
+        }
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        try {
+            android.util.Log.d(
+                "MainActivity",
+                "Showing enhanced notification for order: $orderId, status: $status"
+            )
+            notificationManager.notify(ACTIVE_ORDER_NOTIFICATION_ID, builder.build())
+            activeOrderNotificationId = ACTIVE_ORDER_NOTIFICATION_ID
+            android.util.Log.d("MainActivity", "Enhanced notification shown successfully")
+        } catch (e: SecurityException) {
+            android.util.Log.e("MainActivity", "Failed to show notification: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+
+    // Show delivery notification with live tracking (like Swiggy)
+    fun showDeliveryTrackingNotification(
+        orderId: String,
+        driverName: String,
+        estimatedTime: String,
+        driverPhone: String
+    ) {
+        val trackOrderIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("orderId", orderId)
+            putExtra("deepLink", "/live-tracking/$orderId")
+        }
+
+        val trackOrderPendingIntent = PendingIntent.getActivity(
+            this,
+            ACTIVE_ORDER_NOTIFICATION_ID + 10,
+            trackOrderIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Call driver action
+        val callDriverIntent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.parse("tel:$driverPhone")
+        }
+        val callDriverPendingIntent = PendingIntent.getActivity(
+            this,
+            ACTIVE_ORDER_NOTIFICATION_ID + 11,
+            callDriverIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Share live location action
+        val shareLocationIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, "Track my order live: https://yourapp.com/track/$orderId")
+        }
+        val shareLocationPendingIntent = PendingIntent.getActivity(
+            this,
+            ACTIVE_ORDER_NOTIFICATION_ID + 12,
+            Intent.createChooser(shareLocationIntent, "Share tracking"),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val bigStyle = NotificationCompat.BigTextStyle()
+            .bigText("🚚 $driverName is on the way to you!\n\n📍 Live tracking available\n⏰ Estimated delivery: $estimatedTime\n📞 Call driver for updates\n📋 Order #$orderId")
+            .setBigContentTitle("🚚 Your order is out for delivery")
+            .setSummaryText("Tap to track live location")
+
+        val builder = NotificationCompat.Builder(this, "${NOTIFICATION_CHANNEL_ID}_delivery")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("🚚 Out for Delivery - $estimatedTime")
+            .setContentText("$driverName is bringing your order")
+            .setSubText("Order #$orderId • Tap for live tracking")
+            .setStyle(bigStyle)
+            .setOngoing(true)
+            .setAutoCancel(false)
+            .setContentIntent(trackOrderPendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setColor(android.graphics.Color.parseColor("#FF5722")) // Orange-red for delivery
+            .setColorized(true)
+            .addAction(
+                android.R.drawable.ic_menu_call,
+                "Call $driverName",
+                callDriverPendingIntent
+            )
+            .addAction(
+                android.R.drawable.ic_menu_share,
+                "Share Location",
+                shareLocationPendingIntent
+            )
+            .addAction(
+                android.R.drawable.ic_menu_help,
+                "Help & Support",
+                createHelpPendingIntent()
+            )
+            .setProgress(0, 0, true) // Indeterminate progress for live tracking
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.notify(ACTIVE_ORDER_NOTIFICATION_ID + 10, builder.build())
+    }
+
+    // Show order placed notification (like Swiggy confirmation)
+    fun showOrderPlacedNotification(
+        orderId: String,
+        restaurantName: String,
+        totalAmount: String,
+        estimatedTime: String
+    ) {
+        val orderDetailsIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("orderId", orderId)
+            putExtra("deepLink", "/order-details/$orderId")
+        }
+
+        val orderDetailsPendingIntent = PendingIntent.getActivity(
+            this,
+            ACTIVE_ORDER_NOTIFICATION_ID + 20,
+            orderDetailsIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val bigStyle = NotificationCompat.BigTextStyle()
+            .bigText("✅ Order successfully placed!\n\n🏪 Restaurant: $restaurantName\n💰 Total: $totalAmount\n⏰ Estimated delivery: $estimatedTime\n📋 Order ID: $orderId\n\nYour delicious meal is being prepared!")
+            .setBigContentTitle("🎉 Order Confirmed!")
+            .setSummaryText("Tap to view order details")
+
+        val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("🎉 Order Confirmed - $estimatedTime")
+            .setContentText("$restaurantName • $totalAmount")
+            .setSubText("Order #$orderId")
+            .setStyle(bigStyle)
+            .setAutoCancel(true)
+            .setContentIntent(orderDetailsPendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setColor(android.graphics.Color.parseColor("#4CAF50")) // Green for success
+            .setColorized(true)
+            .addAction(
+                android.R.drawable.ic_menu_view,
+                "View Order",
+                orderDetailsPendingIntent
+            )
+//            .addAction(
+//                android.R.drawable.ic_menu_call,
+//                "Call Restaurant",
+//                createCallRestaurantPendingIntent()
+//            )
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.notify(ACTIVE_ORDER_NOTIFICATION_ID + 20, builder.build())
+
+        // Auto-dismiss after 10 seconds and show persistent tracking notification
+        Handler(Looper.getMainLooper()).postDelayed({
+            notificationManager.cancel(ACTIVE_ORDER_NOTIFICATION_ID + 20)
+        }, 10000)
+    }
+
+    // Show delivery completed notification (like Swiggy delivery confirmation)
+    fun showDeliveryCompletedNotification(
+        orderId: String,
+        restaurantName: String,
+        deliveryTime: String
+    ) {
+        val rateOrderIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("orderId", orderId)
+            putExtra("deepLink", "/rate-order/$orderId")
+        }
+
+        val rateOrderPendingIntent = PendingIntent.getActivity(
+            this,
+            ACTIVE_ORDER_NOTIFICATION_ID + 30,
+            rateOrderIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val reorderIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("restaurantName", restaurantName)
+            putExtra("deepLink", "/restaurant/$restaurantName/menu")
+        }
+
+        val reorderPendingIntent = PendingIntent.getActivity(
+            this,
+            ACTIVE_ORDER_NOTIFICATION_ID + 31,
+            reorderIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val bigStyle = NotificationCompat.BigTextStyle()
+            .bigText("🎉 Your order has been delivered!\n\n🏪 From: $restaurantName\n⏰ Delivered in: $deliveryTime\n📋 Order #$orderId\n\n😋 Enjoy your meal! How was your experience?")
+            .setBigContentTitle("🎉 Order Delivered Successfully!")
+            .setSummaryText("Rate your experience • Reorder anytime")
+
+        val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("🎉 Delivered! Enjoy your meal")
+            .setContentText("$restaurantName • Order #$orderId")
+            .setSubText("Delivered in $deliveryTime")
+            .setStyle(bigStyle)
+            .setAutoCancel(true)
+            .setContentIntent(rateOrderPendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setColor(android.graphics.Color.parseColor("#4CAF50")) // Green for success
+            .setColorized(true)
+//            .addAction(
+//                android.R.drawable.ic_menu_edit,
+//                "Rate Order",
+//                rateOrderPendingIntent
+//            )
+//            .addAction(
+//                android.R.drawable.star_big_on,
+//                "Reorder",
+//                reorderPendingIntent
+//            )
+//            .addAction(
+//                android.R.drawable.ic_menu_help,
+//                "Support",
+//                createHelpPendingIntent()
+//            )
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.notify(ACTIVE_ORDER_NOTIFICATION_ID + 30, builder.build())
+
+        // Clear any persistent tracking notifications
+        hideActiveOrderNotification()
+    }
+
+    // Helper method to create help pending intent
+    private fun createHelpPendingIntent(): PendingIntent {
+        val helpIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("deepLink", "/help-support")
+        }
+        return PendingIntent.getActivity(
+            this,
+            ACTIVE_ORDER_NOTIFICATION_ID + 100,
+            helpIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    // Helper method to create call restaurant pending intent
+    private fun createCallRestaurantPendingIntent(): PendingIntent {
+        val callRestaurantIntent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.parse("tel:+918888888888") // Default restaurant number
+        }
+        return PendingIntent.getActivity(
+            this,
+            ACTIVE_ORDER_NOTIFICATION_ID + 101,
+            callRestaurantIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    // Enhanced method to show promotional notifications (like Swiggy offers)
+    fun showPromotionalNotification(
+        title: String,
+        message: String,
+        offerCode: String?,
+        imageUrl: String?
+    ) {
+        val promoIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("deepLink", "/offers")
+        }
+
+        val promoPendingIntent = PendingIntent.getActivity(
+            this,
+            ACTIVE_ORDER_NOTIFICATION_ID + 200,
+            promoIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("🎁 $title")
+            .setContentText(message)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText("🎁 $message\n\n${offerCode?.let { "Use code: $it" } ?: ""}"))
+            .setAutoCancel(true)
+            .setContentIntent(promoPendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setCategory(NotificationCompat.CATEGORY_PROMO)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setColor(android.graphics.Color.parseColor("#FF9800")) // Orange for promotions
+            .setColorized(true)
+            .addAction(
+                android.R.drawable.ic_menu_view,
+                "View Offers",
+                promoPendingIntent
+            )
+
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.notify(ACTIVE_ORDER_NOTIFICATION_ID + 200, builder.build())
+    }
+
+    // Get status details with emojis and descriptions
+    private fun getStatusDetails(status: String): Array<String> {
+        return when (status) {
+            "pending" -> arrayOf("Order Placed", "📝", "Order received", "Confirming in 2-3 mins")
+            "confirmed" -> arrayOf(
+                "Order Confirmed",
+                "✅",
+                "Preparation starting",
+                "Ready in 15-20 mins"
+            )
+
+            "preparing" -> arrayOf(
+                "Being Prepared",
+                "👨‍🍳",
+                "Cooking in progress",
+                "Ready in 10-15 mins"
+            )
+
+            "ready_for_pickup" -> arrayOf(
+                "Ready for Pickup",
+                "📦",
+                "Packed & ready",
+                "Pickup in 5 mins"
+            )
+
+            "picked_up" -> arrayOf("Picked Up", "🏃‍♂️", "On the way", "Delivery in 15-20 mins")
+            "out_for_delivery" -> arrayOf(
+                "Out for Delivery",
+                "🚚",
+                "Almost there",
+                "Arriving in 5-10 mins"
+            )
+
+            "delivered" -> arrayOf("Delivered", "🎉", "Order completed", "Enjoy your meal!")
+            else -> arrayOf(status, "📍", "Status update", "Check app for details")
+        }
+    }
+
+    // Get status-specific colors
+    private fun getStatusColor(status: String): Int {
+        return when (status) {
+            "pending" -> android.graphics.Color.parseColor("#FF9800") // Orange
+            "confirmed" -> android.graphics.Color.parseColor("#4CAF50") // Green
+            "preparing" -> android.graphics.Color.parseColor("#2196F3") // Blue
+            "ready_for_pickup" -> android.graphics.Color.parseColor("#9C27B0") // Purple
+            "picked_up" -> android.graphics.Color.parseColor("#FF5722") // Deep Orange
+            "out_for_delivery" -> android.graphics.Color.parseColor("#F44336") // Red
+            "delivered" -> android.graphics.Color.parseColor("#4CAF50") // Green
+            else -> android.graphics.Color.parseColor("#607D8B") // Blue Grey
+        }
+    }
+
+    // Get progress percentage for visual progress bar
+    private fun getProgressPercentage(status: String): Int {
+        return when (status) {
+            "pending" -> 10
+            "confirmed" -> 25
+            "preparing" -> 50
+            "ready_for_pickup" -> 75
+            "picked_up" -> 85
+            "out_for_delivery" -> 95
+            "delivered" -> 100
+            else -> 0
+        }
+    }
+
+    // Get notification defaults based on status importance
+    private fun getNotificationDefaults(status: String): Int {
+        return when (status) {
+            "confirmed", "ready_for_pickup", "out_for_delivery", "delivered" -> {
+                NotificationCompat.DEFAULT_ALL // Sound + Vibration + Lights
+            }
+
+            "picked_up" -> {
+                NotificationCompat.DEFAULT_VIBRATE // Just vibration
+            }
+
+            else -> {
+                NotificationCompat.DEFAULT_LIGHTS // Just lights, no sound for frequent updates
+            }
+        }
+    }
+
+    // Hide active order notification
+    fun hideActiveOrderNotification() {
+        activeOrderNotificationId?.let { id ->
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.cancel(id)
+            activeOrderNotificationId = null
+        }
+    }
 }

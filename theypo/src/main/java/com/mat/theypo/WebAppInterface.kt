@@ -8,6 +8,7 @@ import android.location.Location
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.widget.Toast
@@ -29,6 +30,7 @@ class WebAppInterface(
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     @JavascriptInterface
     fun requestLocation() {
         if (!hasLocationPermission()) {
@@ -38,7 +40,7 @@ class WebAppInterface(
 
         getCurrentLocation { lat, lng, error ->
             if (error != null) {
-                callJavaScript("window.receiveLocationError", error)
+                callJavaScript("window.receiveLocationError", "\"$error\"")
             } else {
                 callJavaScript("window.receiveLocation", lat.toString(), lng.toString())
             }
@@ -59,7 +61,7 @@ class WebAppInterface(
             putExtra(LocationService.EXTRA_ORDER_ID, orderId)
         }
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(intent)
         } else {
             context.startService(intent)
@@ -129,13 +131,32 @@ class WebAppInterface(
     fun hasLocationPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
+            Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
     }
 
     fun onLocationPermissionGranted() {
         // Notify web app that permission was granted
         callJavaScript("window.onLocationPermissionGranted")
+    }
+
+    @JavascriptInterface
+    fun showActiveOrderBanner(orderId: String, status: String, restaurantName: String) {
+        Log.d("WebAppInterface", "Showing active order banner: $orderId, $status, $restaurantName")
+        if (context is MainActivity) {
+            context.runOnUiThread {
+                context.showActiveOrderNotification(orderId, status, restaurantName)
+            }
+        }
+    }
+
+    @JavascriptInterface
+    fun hideActiveOrderBanner() {
+        if (context is MainActivity) {
+            context.runOnUiThread {
+                context.hideActiveOrderNotification()
+            }
+        }
     }
 
     @RequiresPermission(anyOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
