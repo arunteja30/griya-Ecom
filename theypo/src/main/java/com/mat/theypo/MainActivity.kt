@@ -745,13 +745,13 @@ class MainActivity : AppCompatActivity() {
 
         // Add progress indicator for certain statuses
         when (status) {
-            "preparing", "ready_for_pickup", "picked_up" -> {
+            "preparing", "ready_for_pickup", "picked_up", "accepted", "arrived_at_restaurant" -> {
                 val progress = getProgressPercentage(status)
                 builder.setProgress(100, progress, false)
                     .setSubText("$progressText • $progress% complete")
             }
 
-            "out_for_delivery" -> {
+            "out_for_delivery", "on_the_way" -> {
                 builder.setProgress(0, 0, true) // Indeterminate progress
                     .setSubText("$progressText • Tracking live location")
             }
@@ -1151,3 +1151,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+
