@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.griyaecom.seller"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.griyaecom.seller"

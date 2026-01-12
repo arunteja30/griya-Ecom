@@ -58,7 +58,7 @@ class LiveOrderTrackingService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         createNotificationChannel()
         database = FirebaseDatabase.getInstance()
     }
@@ -212,8 +212,8 @@ class LiveOrderTrackingService : Service() {
         """.trimIndent()
 
         // Send to MainActivity if available
-        MainActivity.Companion.getInstance()?.runOnUiThread {
-            MainActivity.Companion.getInstance()?.evaluateJavascript(jsCode)
+        MainActivity.getInstance()?.runOnUiThread {
+            MainActivity.getInstance()?.evaluateJavascript(jsCode)
         }
     }
 
@@ -229,8 +229,8 @@ class LiveOrderTrackingService : Service() {
             }
         """.trimIndent()
 
-        MainActivity.Companion.getInstance()?.runOnUiThread {
-            MainActivity.Companion.getInstance()?.evaluateJavascript(jsCode)
+        MainActivity.getInstance()?.runOnUiThread {
+            MainActivity.getInstance()?.evaluateJavascript(jsCode)
         }
 
     }

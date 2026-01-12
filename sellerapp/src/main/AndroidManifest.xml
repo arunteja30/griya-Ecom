@@ -51,7 +51,7 @@
             </intent-filter>
         </service>
 
-         <!-- Live Seller Tracking Service -->
+        <!-- Live Seller Tracking Service -->
         <service
             android:name=".services.LiveSellerTrackingService"
             android:enabled="true"

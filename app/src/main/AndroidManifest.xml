@@ -57,7 +57,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="griyamart.onrender.com"
+                    android:host="hungrimart.onrender.com"
                     android:scheme="https" />
             </intent-filter>
 
@@ -82,7 +82,7 @@
 
         <!-- Live Order Tracking Service -->
         <service
-            android:name="com.griyaecom.app.services.LiveOrderTrackingService"
+            android:name=".services.LiveOrderTrackingService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />

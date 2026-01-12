@@ -348,7 +348,6 @@ class MainActivity : AppCompatActivity() {
                 val targetUrl = webViewUrl.trimEnd('/') + path
                 webView.loadUrl(targetUrl)
             }
-
             else -> loadWebApp()
         }
     }

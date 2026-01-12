@@ -44,8 +44,11 @@ class MainActivity : AppCompatActivity() {
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
+        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
         when {
-            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true -> {
+            fineGranted || coarseGranted -> {
                 hasLocationPermission = true
                 Toast.makeText(this, "Location permission granted", Toast.LENGTH_SHORT).show()
 
@@ -61,10 +64,14 @@ class MainActivity : AppCompatActivity() {
                     showLocationServicesDisabledDialog()
                 }
             }
-
             else -> {
-                hasLocationPermission = false
-                showLocationPermissionDeniedDialog()
+                // Permission denied, check if permanently denied
+                if (!shouldShowLocationRationale()) {
+                    showLocationSettingsDialog()
+                } else {
+                    // Show rationale and request again
+                    showLocationPermissionDeniedDialog()
+                }
             }
         }
     }
@@ -74,7 +81,12 @@ class MainActivity : AppCompatActivity() {
     ) { isGranted ->
         if (isGranted) {
             Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show()
+        } else {
+            // Show custom dialog for notification permission denial
+            showNotificationPermissionDeniedDialog()
         }
+        // After handling notification permission (granted or denied), proceed with location
+        requestLocationPermissionIfNeeded()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,6 +108,8 @@ class MainActivity : AppCompatActivity() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         setupWebView()
+
+        // Request permissions in sequence: notification first, then location
         requestNotificationPermission()
 
         // Setup back press handling
@@ -108,9 +122,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
-
-        // Check both location permissions and location services
-        checkLocationRequirements()
     }
 
     private fun setupWebView() {
@@ -265,33 +276,69 @@ class MainActivity : AppCompatActivity() {
         return (this * resources.displayMetrics.density).toInt()
     }
 
-    private fun checkLocationRequirements() {
-        // Show loading screen initially
-        showPermissionLoadingScreen()
+    private fun checkLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+    }
 
-        // Add a short delay to show the loading screen, then check permissions
-        webView.postDelayed({
-            if (!hasLocationPermissions()) {
-                // Immediately show permission request dialog
+    private fun shouldShowLocationRationale(): Boolean {
+        return shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
+                shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)
+    }
+
+    private fun showLocationSettingsDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Location Permission Required")
+            .setMessage("This app needs location access to function properly. Please enable it in Settings.")
+            .setPositiveButton("Go to Settings") { _, _ ->
+                openAppSettings()
+            }
+            .setNegativeButton("Exit App") { _, _ ->
+                finish()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun requestLocationPermission() {
+        locationPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+    }
+
+    private fun initializeLocationFlow() {
+        when {
+            checkLocationPermission() -> {
+                // Permission already granted
+                hasLocationPermission = true
+                if (isLocationServicesEnabled()) {
+                    isLocationEnabled = true
+                    showWebView()
+                    webView.loadUrl(WEB_URL)
+                } else {
+                    showLocationServicesDisabledDialog()
+                }
+            }
+
+            shouldShowLocationRationale() -> {
+                // Show rationale first
                 showLocationPermissionRequiredDialog()
-                return@postDelayed
             }
 
-            hasLocationPermission = true
-
-            // Then check if location services are enabled
-            if (!isLocationServicesEnabled()) {
-                showLocationServicesDisabledDialog()
-                return@postDelayed
+            else -> {
+                // Request permission directly
+                requestLocationPermission()
             }
-
-            isLocationEnabled = true
-
-            // Both permissions and location services are available
-            Toast.makeText(this, "Location access granted", Toast.LENGTH_SHORT).show()
-            showWebView()
-            webView.loadUrl(WEB_URL)
-        }, 1500) // Show loading for 1.5 seconds
+        }
     }
 
     private fun isLocationServicesEnabled(): Boolean {
@@ -326,18 +373,6 @@ class MainActivity : AppCompatActivity() {
     private fun showPermissionLoadingScreen() {
         webView.visibility = View.GONE
         permissionLoadingLayout.visibility = View.VISIBLE
-    }
-
-    private fun hasLocationPermissions(): Boolean {
-        val fineLocationPermission = ContextCompat.checkSelfPermission(
-            this, Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        val coarseLocationPermission = ContextCompat.checkSelfPermission(
-            this, Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        return fineLocationPermission || coarseLocationPermission
     }
 
     private fun showLocationPermissionRequiredDialog() {
@@ -381,9 +416,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-
         // Re-check all requirements when returning from settings
-        val hasPermissions = hasLocationPermissions()
+        val hasPermissions = checkLocationPermission()
         val hasLocationServices = isLocationServicesEnabled()
 
         if (hasPermissions && hasLocationServices && !hasLocationPermission) {
@@ -411,21 +445,21 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun requestLocationPermission() {
-        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        } else {
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        }
-        locationPermissionLauncher.launch(permissions)
-    }
+//    private fun requestLocationPermission() {
+//        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//            arrayOf(
+//                Manifest.permission.ACCESS_FINE_LOCATION,
+//                Manifest.permission.ACCESS_COARSE_LOCATION,
+//                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+//            )
+//        } else {
+//            arrayOf(
+//                Manifest.permission.ACCESS_FINE_LOCATION,
+//                Manifest.permission.ACCESS_COARSE_LOCATION
+//            )
+//        }
+//        locationPermissionLauncher.launch(permissions)
+//    }
 
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -435,8 +469,38 @@ class MainActivity : AppCompatActivity() {
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                // Notification permission already granted, proceed with location
+                requestLocationPermissionIfNeeded()
             }
+        } else {
+            // For older Android versions, no notification permission needed
+            requestLocationPermissionIfNeeded()
         }
+    }
+
+    private fun requestLocationPermissionIfNeeded() {
+        // Show loading screen initially
+        showPermissionLoadingScreen()
+
+        // Add a short delay to show the loading screen, then check permissions
+        webView.postDelayed({
+            initializeLocationFlow()
+        }, 1500) // Show loading for 1.5 seconds
+    }
+
+    private fun showNotificationPermissionDeniedDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("📱 Notification Permission")
+            .setMessage("Notifications help you stay updated with delivery assignments and important alerts. You can still use the app, but you may miss important updates.")
+            .setPositiveButton("Enable in Settings") { _, _ ->
+                openAppSettings()
+            }
+            .setNegativeButton("Continue Without") { _, _ ->
+                // Continue to location permission
+            }
+            .setCancelable(false)
+            .show()
     }
 
 
