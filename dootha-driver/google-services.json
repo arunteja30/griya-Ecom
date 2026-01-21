@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "482395187112",
+    "firebase_url": "https://uber-90550-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "uber-90550",
+    "storage_bucket": "uber-90550.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:482395187112:android:ff402d48baa62017f6df9d",
+        "android_client_info": {
+          "package_name": "com.mat.doothadriver"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2WzlMvRFWwEH2g1DdxySApzKy6jG7Ltg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

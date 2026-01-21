@@ -1,11 +1,7 @@
 package com.mat.theypo
 
 import android.Manifest
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.Intent
 import android.location.Location
 import android.os.Build
@@ -14,12 +10,7 @@ import android.os.Looper
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
+import com.google.android.gms.location.*
 import com.google.firebase.database.FirebaseDatabase
 
 class LocationService : Service() {
@@ -27,6 +18,7 @@ class LocationService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     private var orderId: String? = null
+    private var deliveryPartnerId: String? = null
     private val database = FirebaseDatabase.getInstance()
     private lateinit var notificationManager: NotificationManager
     private var locationUpdateCount = 0
@@ -37,6 +29,7 @@ class LocationService : Service() {
         const val ACTION_STOP_TRACKING = "STOP_TRACKING"
         const val ACTION_STOP_FROM_NOTIFICATION = "STOP_FROM_NOTIFICATION"
         const val EXTRA_ORDER_ID = "ORDER_ID"
+        const val EXTRA_DELIVERY_PARTNER_ID = "deliveryPartnerId"
         const val NOTIFICATION_CHANNEL_ID = "location_tracking_channel"
         const val NOTIFICATION_ID = 1001
     }
@@ -59,7 +52,12 @@ class LocationService : Service() {
         when (intent?.action) {
             ACTION_START_TRACKING -> {
                 orderId = intent.getStringExtra(EXTRA_ORDER_ID)
-                Log.d(TAG, "Starting location tracking for order: $orderId")
+                deliveryPartnerId = intent.getStringExtra(EXTRA_DELIVERY_PARTNER_ID)
+                    ?: intent.getStringExtra("deliveryPartnerId") // Support both key formats
+                Log.d(
+                    TAG,
+                    "Starting location tracking for order: $orderId, partnerId: $deliveryPartnerId"
+                )
                 startForeground(NOTIFICATION_ID, createNotification())
                 Log.d(TAG, "Foreground service started with notification")
                 try {
@@ -72,7 +70,10 @@ class LocationService : Service() {
             }
 
             ACTION_STOP_TRACKING, ACTION_STOP_FROM_NOTIFICATION -> {
-                Log.d(TAG, "Stopping location tracking for order: $orderId")
+                Log.d(
+                    TAG,
+                    "Stopping location tracking for order: $orderId, partnerId: $deliveryPartnerId"
+                )
                 stopLocationUpdates()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()

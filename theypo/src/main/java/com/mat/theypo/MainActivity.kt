@@ -739,19 +739,22 @@ class MainActivity : AppCompatActivity() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setColor(getStatusColor(status))
             .setColorized(true)
-            // Add action buttons like Swiggy
+            // Add status-specific action buttons
+            .also { builder ->
+                addStatusSpecificActions(builder, status, orderId, restaurantName)
+            }
             // Custom sound and vibration based on status
             .setDefaults(getNotificationDefaults(status))
 
         // Add progress indicator for certain statuses
         when (status) {
-            "preparing", "ready_for_pickup", "picked_up", "accepted", "arrived_at_restaurant" -> {
+            "preparing", "ready_for_pickup", "picked_up" -> {
                 val progress = getProgressPercentage(status)
                 builder.setProgress(100, progress, false)
                     .setSubText("$progressText • $progress% complete")
             }
 
-            "out_for_delivery", "on_the_way" -> {
+            "out_for_delivery" -> {
                 builder.setProgress(0, 0, true) // Indeterminate progress
                     .setSubText("$progressText • Tracking live location")
             }

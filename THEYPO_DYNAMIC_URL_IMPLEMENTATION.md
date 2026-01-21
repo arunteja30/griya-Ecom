@@ -21,12 +21,10 @@ Database:
 ## Implementation Details
 
 ### ConfigManager Paths
-
 - **Theypo App**: `appConfig/theypo/webViewUrl`
 - **Theypo Delivery App**: `appConfig/theypoDelivery/webViewUrl`
 
 ### Default Fallback URLs
-
 - **Theypo App**: `https://fags.onrender.com`
 - **Theypo Delivery App**: `https://thepo-delivery.onrender.com`
 

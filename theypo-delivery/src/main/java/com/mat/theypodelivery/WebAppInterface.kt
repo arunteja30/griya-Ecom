@@ -6,11 +6,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
-import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.provider.Settings
 import android.util.Log
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -66,116 +64,45 @@ class WebAppInterface(
 
     @JavascriptInterface
     fun startLocationTracking(deliveryPartnerId: String, orderId: String) {
-        Log.d(TAG, "=== startLocationTracking Called ===")
-        Log.d(TAG, "Partner ID: '$deliveryPartnerId'")
-        Log.d(TAG, "Order ID: '$orderId'")
-        Log.d(TAG, "Order ID is null/empty: ${orderId.isEmpty()}")
-        Log.d(TAG, "Order ID equals 'no-order': ${orderId == "no-order"}")
-
-        // Handle null parameters that might come from JavaScript as "null" strings
-        val safeDeliveryPartnerId =
-            if (deliveryPartnerId == "null" || deliveryPartnerId == "undefined") {
-                Log.w(
-                    TAG,
-                    "⚠️ deliveryPartnerId received as '$deliveryPartnerId', converting to empty string"
-                )
-                ""
-            } else {
-                deliveryPartnerId
-            }
-
-        val safeOrderId = if (orderId == "null" || orderId == "undefined") {
-            Log.w(TAG, "⚠️ orderId received as '$orderId', converting to 'no-order'")
-            "no-order"
-        } else {
-            orderId
-        }
-
-        // Validate inputs
-        if (safeDeliveryPartnerId.isEmpty()) {
-            Log.e(TAG, "❌ CRITICAL: deliveryPartnerId is empty!")
-            Toast.makeText(context, "Error: Delivery Partner ID is required", Toast.LENGTH_SHORT)
-                .show()
-            return
-        }
+        Log.d(TAG, "Starting location tracking - Partner: $deliveryPartnerId, Order: $orderId")
 
         if (!hasLocationPermission()) {
-            Log.w(TAG, "❌ Location permission not granted for tracking")
+            Log.w(TAG, "Location permission not granted for tracking")
             Toast.makeText(context, "Location permission required", Toast.LENGTH_SHORT).show()
             onRequestLocationPermission()
             return
         }
 
-        // Normalize order ID - handle null, empty, or "no-order"
-        val normalizedOrderId = when {
-            safeOrderId.isEmpty() || safeOrderId == "no-order" || safeOrderId.equals(
-                "null",
-                ignoreCase = true
-            ) -> {
-                Log.d(TAG, "No active order - partner going online")
-                null
-            }
-
-            else -> {
-                Log.d(TAG, "Active delivery order: $safeOrderId")
-                safeOrderId
-            }
-        }
-
-        Log.d(TAG, "Normalized Order ID: $normalizedOrderId")
-        Log.d(TAG, "Starting location tracking service for partner: $safeDeliveryPartnerId")
-
+        Log.d(
+            TAG,
+            "Starting location tracking service for partner: $deliveryPartnerId, order: $orderId"
+        )
         // Start foreground service for continuous location tracking
         val intent = Intent(context, LocationService::class.java).apply {
             action = LocationService.ACTION_START_TRACKING
-            putExtra("deliveryPartnerId", safeDeliveryPartnerId)
-            putExtra("orderId", normalizedOrderId)
-
-            // Add default zone data (can be updated later via updateDeliveryZone)
-            putExtra(LocationService.EXTRA_DELIVERY_ZONE, "pk4HklhD1kBNq1XT4KVS")
-            putExtra(LocationService.EXTRA_ZONE_NAME, "huzurabad")
-            putExtra(LocationService.EXTRA_ZONE_STATUS, "in-zone")
-            putExtra(LocationService.EXTRA_IS_AVAILABLE, true)
-            putExtra(LocationService.EXTRA_IS_ONLINE, true)
+            putExtra("deliveryPartnerId", deliveryPartnerId)
+            putExtra("orderId", if (orderId == "no-order") null else orderId)
         }
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                Log.d(TAG, "Starting foreground service for Android O+")
+                Log.d(TAG, "Starting foreground service for location tracking")
                 context.startForegroundService(intent)
             } else {
-                Log.d(TAG, "Starting regular service for older Android")
+                Log.d(TAG, "Starting service for location tracking")
                 context.startService(intent)
             }
-            Log.i(TAG, "✅ Location tracking service started successfully")
+            Log.i(TAG, "Location tracking service started successfully")
 
-            val message = if (normalizedOrderId != null) {
-                "📍 Location tracking started for delivery #${normalizedOrderId.takeLast(6)}"
+            val message = if (orderId != "no-order") {
+                "Location tracking started for delivery"
             } else {
-                "📍 You are online - Ready to receive orders"
+                "You are online - Location tracking active"
             }
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-
-            // Notify web app about successful tracking start
-            callJavaScript(
-                "window.onLocationTrackingStarted",
-                "\"$safeDeliveryPartnerId\"",
-                "\"${normalizedOrderId ?: "no-order"}\""
-            )
-
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Failed to start location tracking service", e)
-            Toast.makeText(
-                context,
-                "Failed to start location tracking: ${e.message}",
-                Toast.LENGTH_LONG
-            ).show()
-
-            // Notify web app about failure
-            callJavaScript(
-                "window.onLocationTrackingError",
-                "\"Failed to start tracking: ${e.message}\""
-            )
+            Log.e(TAG, "Failed to start location tracking service", e)
+            Toast.makeText(context, "Failed to start location tracking", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -238,71 +165,6 @@ class WebAppInterface(
         } catch (e: Exception) {
             Log.e(TAG, "Failed to stop location tracking service", e)
             Toast.makeText(context, "Failed to stop location tracking", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    @JavascriptInterface
-    fun startLocationTrackingWithZone(
-        deliveryPartnerId: String,
-        orderId: String,
-        zoneData: String
-    ) {
-        Log.d(
-            TAG,
-            "startLocationTrackingWithZone called - Partner: $deliveryPartnerId, Order: $orderId"
-        )
-
-        if (!hasLocationPermission()) {
-            Log.w(TAG, "Location permission not granted for tracking")
-            Toast.makeText(context, "Location permission required", Toast.LENGTH_SHORT).show()
-            onRequestLocationPermission()
-            return
-        }
-
-        try {
-            val zoneInfo = org.json.JSONObject(zoneData)
-            val deliveryZone = zoneInfo.optString("deliveryZone", "pk4HklhD1kBNq1XT4KVS")
-            val zoneName = zoneInfo.optString("zoneName", "huzurabad")
-            val zoneStatus = zoneInfo.optString("zoneStatus", "in-zone")
-            val isAvailable = zoneInfo.optBoolean("isAvailable", true)
-            val isOnline = zoneInfo.optBoolean("isOnline", true)
-
-            Log.d(TAG, "Starting location tracking service with zone data:")
-            Log.d(TAG, "  - Zone: $zoneName ($deliveryZone)")
-            Log.d(TAG, "  - Status: $zoneStatus")
-            Log.d(TAG, "  - Available: $isAvailable, Online: $isOnline")
-
-            // Start foreground service for continuous location tracking with zone data
-            val intent = Intent(context, LocationService::class.java).apply {
-                action = LocationService.ACTION_START_TRACKING
-                putExtra("deliveryPartnerId", deliveryPartnerId)
-                putExtra("orderId", if (orderId == "no-order") null else orderId)
-                putExtra(LocationService.EXTRA_DELIVERY_ZONE, deliveryZone)
-                putExtra(LocationService.EXTRA_ZONE_NAME, zoneName)
-                putExtra(LocationService.EXTRA_ZONE_STATUS, zoneStatus)
-                putExtra(LocationService.EXTRA_IS_AVAILABLE, isAvailable)
-                putExtra(LocationService.EXTRA_IS_ONLINE, isOnline)
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                Log.d(TAG, "Starting foreground service for location tracking")
-                context.startForegroundService(intent)
-            } else {
-                Log.d(TAG, "Starting service for location tracking")
-                context.startService(intent)
-            }
-            Log.i(TAG, "Location tracking service started successfully with zone data")
-
-            val message = if (orderId != "no-order") {
-                "Location tracking started for delivery in $zoneName"
-            } else {
-                "You are online in $zoneName - Location tracking active"
-            }
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to start location tracking service with zone data", e)
-            Toast.makeText(context, "Failed to start location tracking", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -509,7 +371,7 @@ class WebAppInterface(
         Log.d(TAG, "openDialer called with number: $phoneNumber")
         try {
             val intent = Intent(Intent.ACTION_DIAL).apply {
-                data = "tel:+91$phoneNumber".toUri()
+                data = "tel:$phoneNumber".toUri()
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             context.startActivity(intent)
@@ -517,76 +379,6 @@ class WebAppInterface(
         } catch (e: Exception) {
             Log.e(TAG, "Failed to open dialer", e)
             Toast.makeText(context, "Cannot open dialer", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    @JavascriptInterface
-    fun checkBatteryOptimization(): Boolean {
-        Log.d(TAG, "checkBatteryOptimization called")
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val powerManager =
-                context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-            val isIgnoringOptimization =
-                powerManager.isIgnoringBatteryOptimizations(context.packageName)
-            Log.d(TAG, "Battery optimization ignored: $isIgnoringOptimization")
-            isIgnoringOptimization
-        } else {
-            Log.d(TAG, "Battery optimization not applicable on this Android version")
-            true
-        }
-    }
-
-    @JavascriptInterface
-    fun requestBatteryOptimizationExemption() {
-        Log.d(TAG, "requestBatteryOptimizationExemption called")
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val powerManager =
-                    context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-                if (!powerManager.isIgnoringBatteryOptimizations(context.packageName)) {
-                    val intent = Intent().apply {
-                        action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-                        data = Uri.parse("package:${context.packageName}")
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
-                    context.startActivity(intent)
-                    Log.d(TAG, "Battery optimization settings opened")
-                    Toast.makeText(
-                        context,
-                        "Please allow this app to run in background for continuous location tracking",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else {
-                    Log.d(TAG, "App is already exempt from battery optimization")
-                    Toast.makeText(
-                        context,
-                        "App is already optimized for background running",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            } else {
-                Log.d(TAG, "Battery optimization not applicable on this Android version")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to open battery optimization settings", e)
-            // Fallback to general battery settings
-            try {
-                val intent = Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                context.startActivity(intent)
-                Toast.makeText(
-                    context,
-                    "Please check battery settings to allow background running",
-                    Toast.LENGTH_LONG
-                ).show()
-            } catch (e2: Exception) {
-                Toast.makeText(
-                    context,
-                    "Please check your device's battery settings to allow this app to run in background",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
         }
     }
 
@@ -644,243 +436,6 @@ class WebAppInterface(
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to execute JavaScript: $script", e)
             }
-        }
-    }
-
-    // Delivery Zone and Status Management
-    @JavascriptInterface
-    fun updateDeliveryZone(
-        deliveryPartnerId: String,
-        zoneId: String,
-        zoneName: String,
-        zoneStatus: String
-    ) {
-        Log.d(
-            TAG,
-            "updateDeliveryZone called - Partner: $deliveryPartnerId, Zone: $zoneName ($zoneId), Status: $zoneStatus"
-        )
-
-        try {
-            // First update the running LocationService if active
-            val serviceIntent = Intent(context, LocationService::class.java).apply {
-                action = LocationService.ACTION_UPDATE_ZONE
-                putExtra(LocationService.EXTRA_DELIVERY_ZONE, zoneId)
-                putExtra(LocationService.EXTRA_ZONE_NAME, zoneName)
-                putExtra(LocationService.EXTRA_ZONE_STATUS, zoneStatus)
-            }
-            context.startService(serviceIntent)
-
-            val zoneData = hashMapOf<String, Any?>(
-                "deliveryZone" to zoneId,
-                "zoneName" to zoneName,
-                "zoneStatus" to zoneStatus,
-                "lastZoneCheck" to com.google.firebase.database.ServerValue.TIMESTAMP
-            )
-
-            // Update zone information in Firebase
-            com.google.firebase.database.FirebaseDatabase.getInstance()
-                .reference
-                .child("deliveryPartners")
-                .child(deliveryPartnerId)
-                .updateChildren(zoneData)
-                .addOnSuccessListener {
-                    Log.d(
-                        TAG,
-                        "✅ Delivery zone updated successfully for partner: $deliveryPartnerId"
-                    )
-                    Toast.makeText(context, "Zone updated: $zoneName", Toast.LENGTH_SHORT).show()
-                }
-                .addOnFailureListener { error ->
-                    Log.e(TAG, "❌ Failed to update delivery zone", error)
-                    Toast.makeText(context, "Failed to update zone", Toast.LENGTH_SHORT).show()
-                }
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Error updating delivery zone", e)
-        }
-    }
-
-    @JavascriptInterface
-    fun updatePartnerAvailability(
-        deliveryPartnerId: String,
-        isAvailable: Boolean,
-        isOnline: Boolean
-    ) {
-        Log.d(
-            TAG,
-            "updatePartnerAvailability called - Partner: $deliveryPartnerId, Available: $isAvailable, Online: $isOnline"
-        )
-
-        try {
-            // First update the running LocationService if active
-            val serviceIntent = Intent(context, LocationService::class.java).apply {
-                action = LocationService.ACTION_UPDATE_AVAILABILITY
-                putExtra(LocationService.EXTRA_IS_AVAILABLE, isAvailable)
-                putExtra(LocationService.EXTRA_IS_ONLINE, isOnline)
-            }
-            context.startService(serviceIntent)
-
-            val availabilityData = hashMapOf<String, Any?>(
-                "isAvailable" to isAvailable,
-                "isOnline" to isOnline,
-                "lastUpdated" to com.google.firebase.database.ServerValue.TIMESTAMP
-            )
-
-            // Update availability status in Firebase
-            com.google.firebase.database.FirebaseDatabase.getInstance()
-                .reference
-                .child("deliveryPartners")
-                .child(deliveryPartnerId)
-                .updateChildren(availabilityData)
-                .addOnSuccessListener {
-                    Log.d(
-                        TAG,
-                        "✅ Partner availability updated successfully for partner: $deliveryPartnerId"
-                    )
-                    val status = when {
-                        isOnline && isAvailable -> "Online & Available"
-                        isOnline && !isAvailable -> "Online & Busy"
-                        else -> "Offline"
-                    }
-                    Toast.makeText(context, "Status: $status", Toast.LENGTH_SHORT).show()
-                }
-                .addOnFailureListener { error ->
-                    Log.e(TAG, "❌ Failed to update partner availability", error)
-                    Toast.makeText(context, "Failed to update status", Toast.LENGTH_SHORT).show()
-                }
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Error updating partner availability", e)
-        }
-    }
-
-    @JavascriptInterface
-    fun initializeDeliveryPartner(deliveryPartnerId: String, partnerData: String) {
-        Log.d(TAG, "initializeDeliveryPartner called with partner: $deliveryPartnerId")
-
-        try {
-            val partnerInfo = org.json.JSONObject(partnerData)
-
-            val initialData = hashMapOf<String, Any?>(
-                "uid" to deliveryPartnerId,
-                "isOnline" to true,
-                "isAvailable" to true,
-                "deliveryZone" to partnerInfo.optString("deliveryZone", "pk4HklhD1kBNq1XT4KVS"),
-                "zoneName" to partnerInfo.optString("zoneName", "huzurabad"),
-                "zoneStatus" to partnerInfo.optString("zoneStatus", "in-zone"),
-                "lastUpdated" to com.google.firebase.database.ServerValue.TIMESTAMP,
-                "lastZoneCheck" to com.google.firebase.database.ServerValue.TIMESTAMP,
-                "partnerName" to partnerInfo.optString("name", ""),
-                "phoneNumber" to partnerInfo.optString("phone", ""),
-                "vehicleType" to partnerInfo.optString("vehicleType", ""),
-                "vehicleNumber" to partnerInfo.optString("vehicleNumber", "")
-            )
-
-            // Initialize delivery partner data in Firebase
-            com.google.firebase.database.FirebaseDatabase.getInstance()
-                .reference
-                .child("deliveryPartners")
-                .child(deliveryPartnerId)
-                .updateChildren(initialData)
-                .addOnSuccessListener {
-                    Log.d(TAG, "✅ Delivery partner initialized successfully: $deliveryPartnerId")
-                    callJavaScript("window.onPartnerInitialized", "\"$deliveryPartnerId\"")
-                }
-                .addOnFailureListener { error ->
-                    Log.e(TAG, "❌ Failed to initialize delivery partner", error)
-                    callJavaScript("window.onPartnerInitializationError", "\"${error.message}\"")
-                }
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Error initializing delivery partner", e)
-            callJavaScript("window.onPartnerInitializationError", "\"${e.message}\"")
-        }
-    }
-
-    @JavascriptInterface
-    fun getDeliveryPartnerStatus(deliveryPartnerId: String) {
-        Log.d(TAG, "getDeliveryPartnerStatus called for partner: $deliveryPartnerId")
-
-        try {
-            com.google.firebase.database.FirebaseDatabase.getInstance()
-                .reference
-                .child("deliveryPartners")
-                .child(deliveryPartnerId)
-                .get()
-                .addOnSuccessListener { snapshot ->
-                    if (snapshot.exists()) {
-                        val partnerData = snapshot.value
-                        Log.d(TAG, "✅ Partner data retrieved: $partnerData")
-
-                        val jsonData = org.json.JSONObject()
-                        jsonData.put("success", true)
-                        jsonData.put("data", partnerData.toString())
-
-                        callJavaScript("window.onPartnerStatusReceived", "\"${jsonData}\"")
-                    } else {
-                        Log.w(TAG, "❌ No data found for partner: $deliveryPartnerId")
-                        callJavaScript("window.onPartnerStatusError", "\"Partner data not found\"")
-                    }
-                }
-                .addOnFailureListener { error ->
-                    Log.e(TAG, "❌ Failed to retrieve partner status", error)
-                    callJavaScript("window.onPartnerStatusError", "\"${error.message}\"")
-                }
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Error getting delivery partner status", e)
-            callJavaScript("window.onPartnerStatusError", "\"${e.message}\"")
-        }
-    }
-
-    @JavascriptInterface
-    fun testLocationTrackingCall(deliveryPartnerId: String, orderId: String) {
-        Log.d(TAG, "=== TEST: testLocationTrackingCall ===")
-        Log.d(TAG, "This is a test call to verify JavaScript bridge is working")
-        Log.d(TAG, "Received - Partner: '$deliveryPartnerId', Order: '$orderId'")
-
-        Toast.makeText(
-            context,
-            "Test call received!\nPartner: ${deliveryPartnerId.take(10)}...\nOrder: ${orderId}",
-            Toast.LENGTH_LONG
-        ).show()
-
-        // Call the actual method
-        startLocationTracking(deliveryPartnerId, orderId)
-    }
-
-    @JavascriptInterface
-    fun debugLocationTracking(): String {
-        Log.d(TAG, "=== DEBUG: Location Tracking Status ===")
-
-        val hasPermission = hasLocationPermission()
-        val serviceRunning = isLocationServiceRunning()
-
-        val debugInfo = org.json.JSONObject().apply {
-            put("hasLocationPermission", hasPermission)
-            put("isServiceRunning", serviceRunning)
-            put("androidVersion", Build.VERSION.SDK_INT)
-            put("packageName", context.packageName)
-            put("timestamp", System.currentTimeMillis())
-        }
-
-        Log.d(TAG, "Debug info: $debugInfo")
-        Toast.makeText(context, "Debug info logged - check console", Toast.LENGTH_SHORT).show()
-
-        return debugInfo.toString()
-    }
-
-    private fun isLocationServiceRunning(): Boolean {
-        return try {
-            val manager =
-                context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
-            for (service in manager.getRunningServices(Integer.MAX_VALUE)) {
-                if (LocationService::class.java.name == service.service.className) {
-                    Log.d(TAG, "LocationService is running")
-                    return true
-                }
-            }
-            Log.d(TAG, "LocationService is NOT running")
-            false
-        } catch (e: Exception) {
-            Log.e(TAG, "Error checking service status", e)
-            false
         }
     }
 

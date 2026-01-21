@@ -35,7 +35,6 @@ Android applications:
 ## 🔧 Current Build Issues to Fix:
 
 ### 1. Google Services Configuration
-
 The current google-services.json file only contains the main app configuration. You need to:
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
@@ -46,11 +45,9 @@ The current google-services.json file only contains the main app configuration. 
 4. Replace the current files in each app directory
 
 ### 2. Dependency Version Compatibility
-
 The current Compose BOM version (2024.09.00) requires newer Gradle plugin. Options:
 
 **Option A: Downgrade Dependencies (Recommended)**
-
 ```kotlin
 // In deliveryapp/build.gradle.kts and sellerapp/build.gradle.kts
 dependencies {
@@ -67,14 +64,12 @@ Update build.gradle.kts (project level) to use newer AGP version.
 ## 📱 App Features Summary:
 
 ### Main App (Customer)
-
 - **WebView URL**: `https://hungrimart.onrender.com`
 - **Features**: Order tracking, delivery updates, promotions
 - **JavaScript Interface**: `window.AndroidInterface`
 - **Topics**: `customer_updates`, `order_updates`, `delivery_updates`
 
 ### Seller App
-
 - **WebView URL**: `https://seller.hungrimart.onrender.com`
 - **Features**: Order management, inventory alerts, payment tracking
 - **JavaScript Interface**: `window.SellerApp`
@@ -98,7 +93,6 @@ Update build.gradle.kts (project level) to use newer AGP version.
 ## 🚀 Next Steps to Complete Implementation:
 
 ### 1. Fix Firebase Configuration
-
 ```bash
 # After updating google-services.json files
 cd /Volumes/Arunteja/work/mobile/griyamart
@@ -107,7 +101,6 @@ cd /Volumes/Arunteja/work/mobile/griyamart
 ```
 
 ### 2. Update Dependencies (if needed)
-
 ```kotlin
 // Update deliveryapp/build.gradle.kts and sellerapp/build.gradle.kts
 dependencies {
@@ -120,7 +113,6 @@ dependencies {
 ```
 
 ### 3. Test Implementation
-
 ```bash
 # Build all apps
 ./gradlew assembleDebug
@@ -132,9 +124,7 @@ dependencies {
 ```
 
 ### 4. Server-Side Integration
-
 Your backend server needs to:
-
 1. Store FCM tokens by app type and user ID
 2. Send targeted notifications to specific app types
 3. Use the notification data structure documented in the JavaScript bridge docs

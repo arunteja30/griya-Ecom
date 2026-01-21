@@ -29,6 +29,8 @@ const liveNotifications = require('./live-notifications');
 exports.onLiveOrderUpdate = liveNotifications.onLiveOrderUpdate;
 exports.onLiveRiderLocationUpdate = liveNotifications.onLiveRiderLocationUpdate;
 exports.onEnhancedRiderLocationUpdate = liveNotifications.onEnhancedRiderLocationUpdate;
+exports.onEnhancedLiveOrderUpdate = liveNotifications.onEnhancedLiveOrderUpdate;
+exports.onDriverOrderAssignment = liveNotifications.onDriverOrderAssignment;
 exports.cleanupLiveOrders = liveNotifications.cleanupLiveOrders;
 exports.sendBatchLiveUpdates = liveNotifications.sendBatchLiveUpdates;
 

@@ -11,8 +11,8 @@ import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.griyaecom.app.MainActivity
 import com.griyaecom.app.R
+import com.griyaecom.app.MainActivity
 import kotlin.random.Random
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {

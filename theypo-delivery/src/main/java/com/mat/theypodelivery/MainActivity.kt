@@ -1,7 +1,6 @@
 package com.mat.theypodelivery
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
@@ -19,8 +18,8 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.TextView
 import android.widget.Toast
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -541,26 +540,16 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Location requirements satisfied", Toast.LENGTH_SHORT).show()
             showWebView()
             webView.loadUrl(webViewUrl)
-
-            // Check battery optimization when location is ready
-            checkBatteryOptimizationOnResume()
         } else if (hasPermissions && !hasLocationPermission) {
             // Permission granted but need to check location services
             hasLocationPermission = true
             if (!hasLocationServices) {
                 showLocationServicesDisabledDialog()
-            } else {
-                // Location services are available too
-                isLocationEnabled = true
-                checkBatteryOptimizationOnResume()
             }
         } else if (!hasPermissions && hasLocationPermission) {
             // Permission was revoked
             hasLocationPermission = false
             showLocationPermissionRequiredDialog()
-        } else if (hasPermissions && hasLocationServices) {
-            // Everything is ready, check battery optimization
-            checkBatteryOptimizationOnResume()
         }
 
         webView.evaluateJavascript(
@@ -660,41 +649,5 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkBatteryOptimizationOnResume() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val powerManager = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-            if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
-                // Only show this dialog once per session
-                val prefs = getSharedPreferences("theypo_delivery_prefs", Context.MODE_PRIVATE)
-                val hasShownBatteryDialog = prefs.getBoolean("has_shown_battery_dialog", false)
-
-                if (!hasShownBatteryDialog) {
-                    showBatteryOptimizationDialog()
-                    prefs.edit().putBoolean("has_shown_battery_dialog", true).apply()
-                }
-            }
-        }
-    }
-
-    private fun showBatteryOptimizationDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Background Location Tracking")
-            .setMessage("For continuous location tracking even when the app is in background, please allow this app to run without battery optimization.\n\nThis ensures your location is tracked during deliveries.")
-            .setPositiveButton("Optimize App") { _, _ ->
-                if (::webAppInterface.isInitialized) {
-                    webAppInterface.requestBatteryOptimizationExemption()
-                }
-            }
-            .setNegativeButton("Skip") { dialog, _ ->
-                dialog.dismiss()
-                Toast.makeText(
-                    this,
-                    "⚠️ Location tracking may stop when app is in background",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-            .setCancelable(false)
-            .show()
-    }
 
 }
