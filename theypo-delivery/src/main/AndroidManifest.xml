@@ -60,7 +60,9 @@
             android:name=".LocationService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="location" />
+            android:foregroundServiceType="location"
+            android:persistent="true"
+            android:stopWithTask="false" />
 
         <!-- Firebase Messaging Service -->
         <service
