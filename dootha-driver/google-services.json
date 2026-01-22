@@ -8,6 +8,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:482395187112:android:c45dc6bbe0150e9cf6df9d",
+        "android_client_info": {
+          "package_name": "com.mat.dootha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2WzlMvRFWwEH2g1DdxySApzKy6jG7Ltg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:482395187112:android:ff402d48baa62017f6df9d",
         "android_client_info": {
           "package_name": "com.mat.doothadriver"

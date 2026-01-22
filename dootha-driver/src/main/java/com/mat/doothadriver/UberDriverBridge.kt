@@ -18,8 +18,14 @@ import android.webkit.WebView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.*
-import com.google.firebase.database.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationAvailability
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ServerValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import org.json.JSONObject
@@ -65,47 +71,92 @@ class UberDriverBridge(
     }
 
     private fun setupLocationCallback() {
-        Log.d(TAG, "🚫 OLD setupLocationCallback called - DISABLED")
-        Log.d(TAG, "🔄 All location tracking now handled by LocationTrackingService")
-
-        // Disable the old location callback system
-        // All location tracking should go through LocationTrackingService
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 super.onLocationResult(locationResult)
 
-                Log.d(TAG, "🚫 OLD location callback received - IGNORING")
-                Log.d(TAG, "🔄 LocationTrackingService should handle location updates")
+                for ((index, location) in locationResult.locations.withIndex()) {
+                    Log.d(TAG, "=== Driver Location Update #${index + 1} ===")
+                    Log.d(TAG, "  - lat: ${location.latitude}")
+                    Log.d(TAG, "  - lng: ${location.longitude}")
+                    Log.d(TAG, "  - accuracy: ${location.accuracy}m")
+                    Log.d(TAG, "  - speed: ${location.speed}m/s")
+                    Log.d(TAG, "  - bearing: ${location.bearing}°")
+                    Log.d(TAG, "  - time: ${location.time}")
 
-                // Don't process location updates in the old system anymore
-                // updateDriverLocationInFirebase is now disabled
+                    updateDriverLocationInFirebase(location)
+                }
             }
 
             override fun onLocationAvailability(availability: LocationAvailability) {
                 super.onLocationAvailability(availability)
-                Log.d(TAG, "🚫 OLD location availability callback - IGNORING")
+                Log.d(TAG, "=== Driver Location Availability ===")
+                Log.d(TAG, "Available: ${availability.isLocationAvailable}")
             }
         }
     }
 
     private fun updateDriverLocationInFirebase(location: Location) {
-        Log.d(TAG, "🚫 OLD updateDriverLocationInFirebase called - DISABLED")
-        Log.d(TAG, "🔄 New LocationTrackingService should handle all location updates")
-
-        // This method is now disabled - all location updates go through LocationTrackingService
-        // Keep the old code commented for reference but don't execute it
-
-        /*
         currentDriverId?.let { driverId ->
             Log.d(TAG, "=== Firebase Driver Update ===")
             Log.d(TAG, "Driver ID: $driverId")
             Log.d(TAG, "Current ride ID: $currentRideId")
             Log.d(TAG, "Driver status: $driverStatus")
             Log.d(TAG, "Location: lat=${location.latitude}, lng=${location.longitude}")
-            // ... rest of old implementation disabled
+
+            val locationData = mapOf(
+                "latitude" to location.latitude,
+                "longitude" to location.longitude,
+                "accuracy" to location.accuracy.toDouble(),
+                "speed" to location.speed.toDouble(),
+                "bearing" to location.bearing.toDouble(),
+                "timestamp" to System.currentTimeMillis(),
+                "lastUpdated" to ServerValue.TIMESTAMP
+            )
+
+            // Update driver location in Realtime Database
+            val driverRef = realtimeDb.child("drivers").child(driverId)
+            val driverData = mapOf(
+                "uid" to driverId,
+                "currentLocation" to mapOf(
+                    "lat" to location.latitude,
+                    "lng" to location.longitude
+                ),
+                "location" to locationData,
+                "status" to driverStatus,
+                "isOnline" to (driverStatus != "offline"),
+                "isAvailable" to (driverStatus == "available"),
+                "activeRideId" to currentRideId,
+                "lastUpdated" to ServerValue.TIMESTAMP
+            )
+
+            driverRef.setValue(driverData)
+                .addOnSuccessListener {
+                    Log.d(TAG, "✅ Driver data updated successfully in Realtime Database")
+                }
+                .addOnFailureListener { error ->
+                    Log.e(TAG, "❌ Failed to update driver data", error)
+                }
+
+            // Update active ride location if there's an active ride
+            currentRideId?.let { rideId ->
+                Log.d(TAG, "Updating ride location for rideId: $rideId")
+
+                val rideLocationRef =
+                    realtimeDb.child("rides").child(rideId).child("driverLocation")
+                rideLocationRef.setValue(locationData)
+                    .addOnSuccessListener {
+                        Log.d(TAG, "✅ Ride location updated for ride: $rideId")
+                    }
+                    .addOnFailureListener { error ->
+                        Log.e(TAG, "❌ Failed to update ride location for: $rideId", error)
+                    }
+            } ?: run {
+                Log.d(TAG, "No active ride - skipping ride location update")
+            }
         }
-        */
     }
+
 
     @JavascriptInterface
     fun startLocationTracking(driverId: String, rideId: String) {
@@ -1099,7 +1150,98 @@ class UberDriverBridge(
         }
     }
 
-    // ...existing code...
+    /**
+     * Test Firebase write operations directly from WebView
+     */
+    @JavascriptInterface
+    fun testFirebaseWriteFromBridge(): String {
+        Log.d(TAG, "🧪 Testing Firebase write from Bridge")
+
+        return try {
+            val testData = mapOf(
+                "timestamp" to System.currentTimeMillis(),
+                "test" to "Bridge connectivity test",
+                "platform" to "android",
+                "source" to "UberDriverBridge"
+            )
+
+            val database = FirebaseDatabase.getInstance()
+            database.reference.child("test").child("bridge_test")
+                .setValue(testData)
+                .addOnSuccessListener {
+                    Log.d(TAG, "✅ Bridge Firebase test write successful")
+                    callWebViewSuccess(
+                        "onFirebaseTestResult", mapOf(
+                            "success" to true,
+                            "message" to "Firebase write test successful"
+                        )
+                    )
+                }
+                .addOnFailureListener { error ->
+                    Log.e(TAG, "❌ Bridge Firebase test write failed", error)
+                    callWebViewError("Firebase write test failed: ${error.message}")
+                }
+
+            "✅ Bridge Firebase write test initiated"
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Bridge Firebase test error", e)
+            "❌ Error: ${e.message}"
+        }
+    }
+
+    /**
+     * Get the driver webview URL from Firebase RTDB
+     */
+    @JavascriptInterface
+    fun getDriverWebViewUrl(): String {
+        Log.d(TAG, "🔗 Getting driver WebView URL from RTDB")
+
+        return try {
+            // Return immediate fallback for synchronous call
+            val fallback = "https://dootha-driver.onrender.com"
+
+            // Start async fetch from Firebase
+            val configRef = FirebaseDatabase.getInstance().reference
+                .child("appConfig").child("doothaDriver").child("webViewUrl")
+
+            configRef.get()
+                .addOnSuccessListener { snapshot ->
+                    val url = snapshot.getValue(String::class.java)
+                    if (!url.isNullOrEmpty()) {
+                        Log.d(TAG, "✅ Got driver URL from Firebase: $url")
+                        callWebViewSuccess(
+                            "onDriverUrlFetched", mapOf(
+                                "url" to url,
+                                "success" to true,
+                                "source" to "firebase"
+                            )
+                        )
+                    } else {
+                        Log.w(TAG, "⚠️ No URL found in Firebase, using fallback")
+                        callWebViewSuccess(
+                            "onDriverUrlFetched", mapOf(
+                                "url" to fallback,
+                                "success" to true,
+                                "source" to "fallback",
+                                "reason" to "empty_value"
+                            )
+                        )
+                    }
+                }
+                .addOnFailureListener { error ->
+                    Log.e(TAG, "❌ Failed to get driver URL from Firebase", error)
+                    callWebViewError("Failed to get driver URL: ${error.message}")
+                }
+
+            // Return immediate fallback
+            fallback
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error getting driver URL", e)
+            "https://dootha-driver.onrender.com"
+        }
+    }
 
     private fun callWebViewSuccess(functionName: String, data: Map<String, Any>) {
         try {
@@ -1154,4 +1296,119 @@ class UberDriverBridge(
             // Keep tracking active but reduce frequency if needed
         }
     }
+
+    /**
+     * Generic method to write data to Firebase Realtime Database
+     * @param path The RTDB path (e.g., "rides/rideId/status" or "drivers/driverId/currentLocation")
+     * @param dataJson The JSON string data to write
+     * @return Success/error status as JSON string
+     */
+    @JavascriptInterface
+    fun writeToRTDB(path: String, dataJson: String): String {
+        return try {
+            Log.d(TAG, "📝 Writing to RTDB path: $path")
+            Log.d(TAG, "📝 Data: $dataJson")
+
+            val data = JSONObject(dataJson)
+            val dataMap = jsonToMap(data)
+
+            val rtdbRef = realtimeDb.child(path)
+            rtdbRef.setValue(dataMap)
+                .addOnSuccessListener {
+                    Log.d(TAG, "✅ Successfully wrote to RTDB: $path")
+                    callWebViewSuccess(
+                        "onRTDBWriteSuccess", mapOf(
+                            "path" to path,
+                            "message" to "Data written successfully"
+                        )
+                    )
+                }
+                .addOnFailureListener { error ->
+                    Log.e(TAG, "❌ Failed to write to RTDB: $path", error)
+                    callWebViewError("Failed to write to RTDB: ${error.message}")
+                }
+
+            JSONObject().apply {
+                put("success", true)
+                put("message", "Write operation initiated")
+                put("path", path)
+            }.toString()
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error writing to RTDB", e)
+            JSONObject().apply {
+                put("success", false)
+                put("error", e.message)
+                put("path", path)
+            }.toString()
+        }
+    }
+
+    /**
+     * Generic method to update specific fields in Firebase Realtime Database
+     * @param path The RTDB path to update
+     * @param updatesJson The JSON string with field updates
+     * @return Success/error status as JSON string
+     */
+    @JavascriptInterface
+    fun updateRTDB(path: String, updatesJson: String): String {
+        return try {
+            Log.d(TAG, "📝 Updating RTDB path: $path")
+            Log.d(TAG, "📝 Updates: $updatesJson")
+
+            val updates = JSONObject(updatesJson)
+            val updateMap = jsonToMap(updates)
+
+            val rtdbRef = realtimeDb.child(path)
+            rtdbRef.updateChildren(updateMap)
+                .addOnSuccessListener {
+                    Log.d(TAG, "✅ Successfully updated RTDB: $path")
+                    callWebViewSuccess(
+                        "onRTDBUpdateSuccess", mapOf(
+                            "path" to path,
+                            "message" to "Data updated successfully"
+                        )
+                    )
+                }
+                .addOnFailureListener { error ->
+                    Log.e(TAG, "❌ Failed to update RTDB: $path", error)
+                    callWebViewError("Failed to update RTDB: ${error.message}")
+                }
+
+            JSONObject().apply {
+                put("success", true)
+                put("message", "Update operation initiated")
+                put("path", path)
+            }.toString()
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Error updating RTDB", e)
+            JSONObject().apply {
+                put("success", false)
+                put("error", e.message)
+                put("path", path)
+            }.toString()
+        }
+    }
+
+    /**
+     * Helper method to convert JSONObject to Map recursively
+     */
+    private fun jsonToMap(json: JSONObject): Map<String, Any> {
+        val map = HashMap<String, Any>()
+
+        val keys = json.keys()
+        while (keys.hasNext()) {
+            val key = keys.next()
+            val value = json.get(key)
+
+            when (value) {
+                is JSONObject -> map[key] = jsonToMap(value)
+                else -> map[key] = value
+            }
+        }
+
+        return map
+    }
 }
+

@@ -17,8 +17,15 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.*
-import com.google.firebase.database.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationAvailability
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 
 /**
  * Dootha Driver Continuous Location Update Service
@@ -219,7 +226,7 @@ class DriverLocationService : Service() {
         isTrackingActive = true
 
         // Send test location immediately to verify connectivity
-        sendTestLocationUpdate()
+//        sendTestLocationUpdate()
 
         Log.d(TAG, "✅ Continuous location tracking started for driver: $driverId")
         if (rideId != null) {
@@ -736,6 +743,141 @@ class DriverLocationService : Service() {
         sendLocationToRTDB(testLocation, System.currentTimeMillis())
 
         Log.d(TAG, "🧪 TEST LOCATION SENT TO RTDB")
+    }
+
+    /**
+     * Test Firebase RTDB connectivity and write operations
+     * Call this method to verify Firebase is working properly
+     */
+    private fun testFirebaseConnectivity() {
+        Log.d(TAG, "🧪 === TESTING FIREBASE RTDB CONNECTIVITY ===")
+
+        val testDriverId = this.driverId ?: "test_driver_${System.currentTimeMillis()}"
+
+        // Test 1: Simple write test
+        val testData = mapOf(
+            "test" to true,
+            "timestamp" to System.currentTimeMillis(),
+            "driverId" to testDriverId,
+            "platform" to "android",
+            "serviceVersion" to "1.0.0",
+            "testType" to "connectivity_verification"
+        )
+
+        Log.d(TAG, "🧪 Test 1: Writing to test/driver_location_service")
+        rtdb.child("test").child("driver_location_service")
+            .setValue(testData)
+            .addOnSuccessListener {
+                Log.d(TAG, "✅ TEST 1 SUCCESS: Basic Firebase write working")
+
+                // Test 2: Write to available_drivers path
+                testAvailableDriversWrite(testDriverId)
+            }
+            .addOnFailureListener { error ->
+                Log.e(TAG, "❌ TEST 1 FAILED: Basic Firebase write failed", error)
+                Log.e(TAG, "❌ Error message: ${error.message}")
+
+
+                // Check Firebase configuration
+                checkFirebaseConfiguration()
+            }
+    }
+
+    /**
+     * Test writing to available_drivers path specifically
+     */
+    private fun testAvailableDriversWrite(testDriverId: String) {
+        Log.d(TAG, "🧪 Test 2: Writing to available_drivers/$testDriverId")
+
+        val locationTestData = mapOf(
+            "driverId" to testDriverId,
+            "isOnline" to true,
+            "isAvailable" to true,
+            "latitude" to 12.9716,
+            "longitude" to 77.5946,
+            "timestamp" to System.currentTimeMillis(),
+            "accuracy" to 5.0,
+            "speed" to 0.0,
+            "platform" to "android_test",
+            "bearing" to 0.0
+        )
+
+        rtdb.child("available_drivers").child(testDriverId)
+            .setValue(locationTestData)
+            .addOnSuccessListener {
+                Log.d(TAG, "✅ TEST 2 SUCCESS: available_drivers write working")
+
+                // Test 3: Read the data back
+                testFirebaseRead(testDriverId)
+            }
+            .addOnFailureListener { error ->
+                Log.e(TAG, "❌ TEST 2 FAILED: available_drivers write failed", error)
+                Log.e(TAG, "❌ This is the same path used for real location updates")
+            }
+    }
+
+    /**
+     * Test reading data from Firebase to verify connectivity
+     */
+    private fun testFirebaseRead(testDriverId: String) {
+        Log.d(TAG, "🧪 Test 3: Reading from available_drivers/$testDriverId")
+
+        rtdb.child("available_drivers").child(testDriverId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.exists()) {
+                    val data = snapshot.value
+                    Log.d(TAG, "✅ TEST 3 SUCCESS: Firebase read working")
+                    Log.d(TAG, "✅ Read data: $data")
+                    Log.d(TAG, "✅ ALL FIREBASE TESTS PASSED - Firebase is working correctly!")
+                } else {
+                    Log.w(TAG, "⚠️ TEST 3 WARNING: Data written but not found on read")
+                }
+
+                // Clean up test data
+                cleanupTestData(testDriverId)
+            }
+            .addOnFailureListener { error ->
+                Log.e(TAG, "❌ TEST 3 FAILED: Firebase read failed", error)
+            }
+    }
+
+    /**
+     * Clean up test data
+     */
+    private fun cleanupTestData(testDriverId: String) {
+        Log.d(TAG, "🧹 Cleaning up test data")
+
+        rtdb.child("available_drivers").child(testDriverId).removeValue()
+        rtdb.child("test").child("driver_location_service").removeValue()
+
+        Log.d(TAG, "✅ Test cleanup complete")
+    }
+
+    /**
+     * Check Firebase configuration
+     */
+    private fun checkFirebaseConfiguration() {
+        Log.d(TAG, "🔧 === CHECKING FIREBASE CONFIGURATION ===")
+
+        try {
+            val app = com.google.firebase.FirebaseApp.getInstance()
+            val options = app.options
+
+            Log.d(TAG, "✅ Firebase App initialized")
+            Log.d(TAG, "✅ Project ID: ${options.projectId}")
+            Log.d(TAG, "✅ Application ID: ${options.applicationId}")
+            Log.d(TAG, "✅ Database URL: ${options.databaseUrl}")
+            Log.d(TAG, "✅ API Key: ${options.apiKey?.take(8)}...***")
+
+            // Check database instance
+            val database = FirebaseDatabase.getInstance()
+            Log.d(TAG, "✅ Database instance: ${database.javaClass.simpleName}")
+            Log.d(TAG, "✅ Database reference: ${rtdb.javaClass.simpleName}")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Firebase configuration error", e)
+        }
     }
 
     override fun onDestroy() {
