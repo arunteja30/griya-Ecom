@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Library name -->
+    <string name="background_location_lib_name">Background Location Library</string>
+
+    <!-- Notification defaults -->
+    <string name="notification_channel_name">Location Tracking</string>
+    <string name="notification_channel_description">Tracks your location in the background</string>
+    <string name="notification_title">Location Tracking Active</string>
+    <string name="notification_content_running">Your location is being tracked</string>
+    <string name="notification_content_paused">Location tracking paused</string>
+    <string name="notification_content_starting">Starting location tracking...</string>
+    <string name="notification_content_error">Error: Location tracking failed</string>
+
+    <!-- Notification actions -->
+    <string name="notification_action_stop">Stop</string>
+    <string name="notification_action_pause">Pause</string>
+    <string name="notification_action_resume">Resume</string>
+
+    <!-- Permission rationale -->
+    <string name="permission_rationale_basic">Location permissions are required to track your location.</string>
+    <string name="permission_rationale_background">Background location permission is needed for continuous tracking when the app is not in use.</string>
+    <string name="permission_rationale_all">Location permissions are required for tracking. Please grant all requested permissions.</string>
+
+    <!-- Battery optimization -->
+    <string name="battery_optimization_title">Battery Optimization</string>
+    <string name="battery_optimization_message">To ensure reliable location tracking, please disable battery optimization for this app.</string>
+    <string name="battery_optimization_button">Open Settings</string>
+
+    <!-- Error messages -->
+    <string name="error_permissions_missing">Location permissions are missing</string>
+    <string name="error_location_services_disabled">Location services are disabled</string>
+    <string name="error_network_unavailable">Network unavailable for uploading location data</string>
+    <string name="error_config_invalid">Invalid configuration provided</string>
+    <string name="error_service_failed">Location service failed to start</string>
+</resources>

@@ -741,7 +741,7 @@ class MainActivity : AppCompatActivity() {
             .setColorized(true)
             // Add status-specific action buttons
             .also { builder ->
-                addStatusSpecificActions(builder, status, orderId, restaurantName)
+//                addStatusSpecificActions(builder, status, orderId, restaurantName)
             }
             // Custom sound and vibration based on status
             .setDefaults(getNotificationDefaults(status))

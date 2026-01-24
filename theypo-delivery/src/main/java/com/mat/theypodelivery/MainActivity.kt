@@ -3,6 +3,8 @@ package com.mat.theypodelivery
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
@@ -10,6 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.webkit.GeolocationPermissions
 import android.webkit.JsResult
@@ -18,8 +21,8 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Toast
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -30,8 +33,17 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import com.griyamart.backgroundlocation.BackgroundLocationManager
+import com.griyamart.backgroundlocation.config.BackgroundLocationConfig
+import com.griyamart.backgroundlocation.config.FirebaseConfig
+import com.griyamart.backgroundlocation.config.LocationConfig
+import com.griyamart.backgroundlocation.config.LocationPriority
+import com.griyamart.backgroundlocation.config.PayloadConfig
 import com.mat.theypodelivery.utils.ConfigManager
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class MainActivity : AppCompatActivity() {
 
@@ -73,6 +85,7 @@ class MainActivity : AppCompatActivity() {
                     showLocationServicesDisabledDialog()
                 }
             }
+
             else -> {
                 // Permission denied, check if permanently denied
                 if (!shouldShowLocationRationale()) {
@@ -144,9 +157,9 @@ class MainActivity : AppCompatActivity() {
 
         try {
             webViewUrl = ConfigManager.getTheypoDeliveryWebUrl()
-            android.util.Log.d("TheypoDeliveryApp", "Loaded webViewUrl: $webViewUrl")
+            Log.d("TheypoDeliveryApp", "Loaded webViewUrl: $webViewUrl")
         } catch (e: Exception) {
-            android.util.Log.e(
+            Log.e(
                 "TheypoDeliveryApp",
                 "Failed to load config, using fallback: $webViewUrl",
                 e
@@ -161,7 +174,8 @@ class MainActivity : AppCompatActivity() {
             splashLoadingText.text = "Setting up app..."
         }
 
-        setupWebView()
+//        setupWebView()
+        setupBackgroundLocation()
 
         // Update splash screen text
         runOnUiThread {
@@ -170,6 +184,86 @@ class MainActivity : AppCompatActivity() {
 
         // Request permissions in sequence: notification first, then location
         requestNotificationPermission()
+    }
+
+
+    private fun setupBackgroundLocation() {
+// In your MainActivity or Service
+
+        FirebaseAuth.getInstance().signInAnonymously()
+            .addOnSuccessListener {
+                Log.d("AUTH", "Signed in anonymously")
+            }
+            .addOnFailureListener {
+                Log.e("AUTH", "Auth failed", it)
+            }
+
+
+        FirebaseDatabase.getInstance()
+            .reference
+            .child("drivers")
+            .child("driverId")
+            .setValue("arun")
+        // 🔥 Firebase Configuration
+        val firebaseConfig = FirebaseConfig(
+            enabled = true,
+            databaseUrl = "https://swiggy-9f24c-default-rtdb.asia-southeast1.firebasedatabase.app", // Optional: custom DB URL
+            rootPath = "driver_locations",              // Root path in RTDB
+            userIdPath = "drivers/{userId}/location",   // Dynamic path with user ID
+            enableRealtimeUpdates = true                // Update 'current' location in real-time
+        )
+
+        val payloadConfig = PayloadConfig(
+            includeAltitude = true,
+            includeAccuracy = true,
+            includeBearing = true,
+            includeProvider = true,
+            includeSpeed = true,
+            includeTimestamp = true,
+            userId = "driver_123",
+            deviceId = UUID.randomUUID().toString(),
+            customFields = mapOf(
+                "driver_name" to "John Doe",
+                "vehicle_type" to "motorcycle"
+            )
+        )
+        val locationConfig = LocationConfig(
+            60000L, // 1 minute
+            30000L, // 30 seconds
+            10f, // 10 meters
+            LocationPriority.LOW_POWER,
+            10000L,
+            false,
+            true, true
+        )
+        val notificationConfig = com.griyamart.backgroundlocation.config.NotificationConfig(
+            "background_location_tracking",
+            "Location Tracking",
+            "Tracks your location in the background",
+            2001,
+            "Location Tracking Active",
+            "Your location is being tracked",
+            true,
+            "Stop Tracking",
+            "Pause Tracking",
+            null, // Resource name without extension
+            null,
+            true,
+            false
+        )
+        val backgroundLocationConfig = BackgroundLocationConfig(
+            locationConfig,
+            null,
+            firebaseConfig, notificationConfig,
+            payloadConfig,
+            true
+        )
+
+
+        val locationManager = BackgroundLocationManager.getInstance(this)
+        locationManager.initialize(backgroundLocationConfig)
+        locationManager.startTracking()
+
     }
 
     private fun setupWebView() {
@@ -220,7 +314,7 @@ class MainActivity : AppCompatActivity() {
                 override fun onPageStarted(
                     view: WebView?,
                     url: String?,
-                    favicon: android.graphics.Bitmap?
+                    favicon: Bitmap?
                 ) {
                     super.onPageStarted(view, url, favicon)
 
@@ -265,7 +359,7 @@ class MainActivity : AppCompatActivity() {
                     message: String?,
                     result: JsResult?
                 ): Boolean {
-                    androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
+                    AlertDialog.Builder(this@MainActivity)
                         .setMessage(message)
                         .setPositiveButton("OK") { _, _ -> result?.confirm() }
                         .setCancelable(false)
@@ -280,7 +374,7 @@ class MainActivity : AppCompatActivity() {
                     message: String?,
                     result: JsResult?
                 ): Boolean {
-                    androidx.appcompat.app.AlertDialog.Builder(this@MainActivity)
+                    AlertDialog.Builder(this@MainActivity)
                         .setMessage(message)
                         .setPositiveButton("OK") { _, _ -> result?.confirm() }
                         .setNegativeButton("Cancel") { _, _ -> result?.cancel() }
@@ -333,7 +427,7 @@ class MainActivity : AppCompatActivity() {
 
         // Set status bar to be transparent
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            window.statusBarColor = Color.TRANSPARENT
         }
     }
 
@@ -466,7 +560,7 @@ class MainActivity : AppCompatActivity() {
         // Set a timeout to dismiss splash screen if WebView takes too long to load
         splashTimeoutHandler.postDelayed({
             if (splashScreen.visibility == View.VISIBLE) {
-                android.util.Log.d("TheypoDeliveryApp", "Splash timeout reached, showing WebView")
+                Log.d("TheypoDeliveryApp", "Splash timeout reached, showing WebView")
                 runOnUiThread {
                     splashScreen.visibility = View.GONE
                     permissionLoadingLayout.visibility = View.GONE

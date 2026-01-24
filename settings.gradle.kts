@@ -21,3 +21,5 @@ include(":theypo")
 include(":theypo-delivery")
 include(":dootha-driver")
 include(":dootha")
+include(":backgroundlocationlib")
+
