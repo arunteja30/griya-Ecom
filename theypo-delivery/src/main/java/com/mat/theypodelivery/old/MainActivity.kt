@@ -1,4 +1,4 @@
-package com.mat.theypodelivery
+package com.mat.theypodelivery.old
 
 import android.Manifest
 import android.content.Intent
@@ -40,7 +40,9 @@ import com.griyamart.backgroundlocation.config.BackgroundLocationConfig
 import com.griyamart.backgroundlocation.config.FirebaseConfig
 import com.griyamart.backgroundlocation.config.LocationConfig
 import com.griyamart.backgroundlocation.config.LocationPriority
+import com.griyamart.backgroundlocation.config.NotificationConfig
 import com.griyamart.backgroundlocation.config.PayloadConfig
+import com.mat.theypodelivery.R
 import com.mat.theypodelivery.utils.ConfigManager
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -236,7 +238,7 @@ class MainActivity : AppCompatActivity() {
             false,
             true, true
         )
-        val notificationConfig = com.griyamart.backgroundlocation.config.NotificationConfig(
+        val notificationConfig = NotificationConfig(
             "background_location_tracking",
             "Location Tracking",
             "Tracks your location in the background",

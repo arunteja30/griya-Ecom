@@ -1,5 +1,6 @@
-package com.mat.theypo
+package com.mat.theypodelivery
 
+import android.Manifest
 import android.R
 import android.annotation.SuppressLint
 import android.app.PendingIntent
@@ -7,10 +8,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
+import android.webkit.GeolocationPermissions
 import android.webkit.JavascriptInterface
+import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -22,36 +26,33 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.json.JSONObject
 
 /**
- * Full-featured WebView host for the customer app.
+ * Full-featured WebView host for the delivery partner app.
  * Includes: splash screen, permissions, offline handling, progress bar, error pages
  */
 class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
 
     companion object {
-        // TODO: change this to your real deployed customer-web URL
-        private const val WEB_APP_URL = "https://fags.onrender.com"
-        const val NOTIFICATION_CHANNEL_ID = "customer_app_notifications"
-        private const val ACTIVE_ORDER_NOTIFICATION_ID = 1001
+        // TODO: change this to your real deployed delivery-simple URL
+        private const val WEB_APP_URL = "https://thepo-delivery.onrender.com"
+        const val NOTIFICATION_CHANNEL_ID = "delivery_app_notifications"
     }
 
     private lateinit var webView: WebView
     private lateinit var progressBar: ProgressBar
     private lateinit var permissionManager: PermissionManager
     private lateinit var networkMonitor: NetworkMonitor
-    private lateinit var bridgeImpl: AndroidBridgeImpl
-    private lateinit var notificationBridge: MobileNotificationBridge
     private var isOfflineShown = false
-    private var activeOrderNotificationId: Int? = null
 
     private val notificationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == PushNotificationService.ACTION_FOREGROUND_NOTIFICATION) {
+            if (intent?.action == PushNotificationService.Companion.ACTION_FOREGROUND_NOTIFICATION) {
                 val title = intent.getStringExtra("title") ?: "New Update"
                 val body = intent.getStringExtra("body") ?: ""
                 val orderId = intent.getStringExtra("orderId")
@@ -80,7 +81,6 @@ class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
         // Create container layout
         val container = FrameLayout(this)
 
-
         // Create WebView
         webView = WebView(this)
         container.addView(
@@ -95,10 +95,7 @@ class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 8
-            ).apply {
-                // Position progress bar at the top, accounting for status bar
-                topMargin = 0
-            }
+            )
             progressDrawable = resources.getDrawable(R.drawable.progress_horizontal, null)
             visibility = View.GONE
         }
@@ -106,13 +103,11 @@ class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
 
         setContentView(container)
 
-        // Initialize managers and bridges
+        // Initialize permission manager
         permissionManager = PermissionManager(this)
-        networkMonitor = NetworkMonitor(this, this)
-        bridgeImpl = AndroidBridgeImpl(this, webView)
-        notificationBridge = MobileNotificationBridge(this, webView)
 
-        // Register network monitor
+        // Initialize network monitor
+        networkMonitor = NetworkMonitor(this)
         networkMonitor.register()
 
         // Configure WebView
@@ -127,50 +122,39 @@ class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
             allowFileAccess = true
             allowContentAccess = true
             setGeolocationEnabled(true)
-
-            // Improve WebView rendering and prevent content from being cut off
-            layoutAlgorithm = WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING
-            builtInZoomControls = false
+            setGeolocationDatabasePath(filesDir.path)
+            setSupportZoom(true)
+            builtInZoomControls = true
             displayZoomControls = false
-            setSupportZoom(false)
-
-            // Enable viewport meta tag support for proper mobile rendering
-            useWideViewPort = true
-            loadWithOverviewMode = true
+            mediaPlaybackRequiresUserGesture = false
         }
 
-        // Add CSS to prevent content from going under system bars
-        val systemBarsCss = """
-            javascript:(function() {
-                var style = document.createElement('style');
-                style.innerHTML = `
-                    * { box-sizing: border-box; }
-                    body { 
-                        margin: 0 !important; 
-                        padding: 0 !important; 
-                        min-height: 100vh !important;
-                        overflow-x: hidden !important;
-                    }
-                    .app-container, #root, #app { 
-                        min-height: 100vh !important; 
-                        padding-bottom: env(safe-area-inset-bottom) !important;
-                    }
-                `;
-                document.head.appendChild(style);
-            })()
-        """.trimIndent()
-
         // Add JavaScript interfaces (bridges)
-        webView.addJavascriptInterface(notificationBridge, "mobileNotificationBridge")
-        webView.addJavascriptInterface(bridgeImpl, "AndroidBridge")
+        val bridge = AndroidBridgeImpl(this, webView)
+        webView.addJavascriptInterface(bridge, "AndroidBridge")
+        webView.addJavascriptInterface(createPermissionBridge(), "mobilePermissionBridge")
+        webView.addJavascriptInterface(createNotificationBridge(), "mobileNotificationBridge")
 
-        // Set WebChromeClient for progress tracking
+        // Set WebChromeClient for progress tracking and geolocation permissions
         webView.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
                 progressBar.progress = newProgress
                 if (newProgress == 100) {
                     progressBar.visibility = View.GONE
                 }
+            }
+
+            override fun onGeolocationPermissionsShowPrompt(
+                origin: String?,
+                callback: GeolocationPermissions.Callback?
+            ) {
+                // Always grant geolocation permission for our app
+                callback?.invoke(origin, true, false)
+            }
+
+            override fun onPermissionRequest(request: PermissionRequest?) {
+                // Handle other permission requests (camera, microphone, etc.)
+                request?.grant(request.resources)
             }
         }
 
@@ -185,43 +169,6 @@ class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 progressBar.visibility = View.GONE
-
-                // Inject CSS to handle system bars properly
-                try {
-                    val safeCss = """
-                        javascript:(function() {
-                            try {
-                                var meta = document.createElement('meta');
-                                meta.name = 'viewport';
-                                meta.content = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
-                                document.head.appendChild(meta);
-                                
-                                var style = document.createElement('style');
-                                style.innerHTML = 
-                                    ':root {' +
-                                        '--safe-area-inset-top: env(safe-area-inset-top);' +
-                                        '--safe-area-inset-bottom: env(safe-area-inset-bottom);' +
-                                    '}' +
-                                    'body {' + 
-                                        'padding-top: var(--safe-area-inset-top) !important;' +
-                                        'padding-bottom: var(--safe-area-inset-bottom) !important;' +
-                                        'margin: 0 !important;' +
-                                    '}' +
-                                    '.app-header, .navbar, .header {' +
-                                        'padding-top: calc(var(--safe-area-inset-top) + 10px) !important;' +
-                                    '}';
-                                document.head.appendChild(style);
-                            } catch(e) {
-                                console.log('CSS injection failed:', e);
-                            }
-                        })()
-                    """.trimIndent()
-
-                    view?.evaluateJavascript(safeCss, null)
-                } catch (e: Exception) {
-                    // If CSS injection fails, continue without it
-                    e.printStackTrace()
-                }
             }
 
             override fun onReceivedError(
@@ -243,7 +190,7 @@ class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
             }
         }
 
-        // Handle deep links from notifications
+        // Check for deep link from notification
         handleDeepLink(intent)
 
         // Request permissions
@@ -252,12 +199,16 @@ class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
         // Load web app
         webView.loadUrl(WEB_APP_URL)
 
+        // Handle deep link from notification
+        handleDeepLink(intent)
+
         // Register broadcast receiver for foreground notifications
         LocalBroadcastManager.getInstance(this).registerReceiver(
             notificationReceiver,
-            IntentFilter(PushNotificationService.ACTION_FOREGROUND_NOTIFICATION)
+            IntentFilter(PushNotificationService.Companion.ACTION_FOREGROUND_NOTIFICATION)
         )
     }
+
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -268,6 +219,8 @@ class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
     private fun handleDeepLink(intent: Intent) {
         val deepLink = intent.getStringExtra("deepLink")
         val orderId = intent.getStringExtra("orderId")
+        val action = intent.getStringExtra("EXTRA_ACTION")
+        val legacyOrderId = intent.getStringExtra("EXTRA_ORDER_ID")
 
         if (deepLink != null) {
             // Navigate to specific page via WebView URL
@@ -278,62 +231,81 @@ class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
                 )
             }
         } else if (orderId != null) {
-            // Navigate to order tracking page
+            // Navigate to active delivery page
             webView.post {
                 webView.evaluateJavascript(
-                    "window.location.href = '/track-order/$orderId';",
+                    "window.location.href = '/active-delivery/$orderId';",
                     null
                 )
+            }
+        } else if (legacyOrderId != null) {
+            // Legacy handling - inject JavaScript to navigate to order
+            webView.post {
+                val js = when (action) {
+                    "ACCEPT_ORDER" -> "window.handleNotificationAction && window.handleNotificationAction('$legacyOrderId', 'accept');"
+                    "VIEW_ORDER" -> "window.handleNotificationAction && window.handleNotificationAction('$legacyOrderId', 'view');"
+                    else -> "window.location.hash = '/active-delivery';"
+                }
+                webView.evaluateJavascript(js, null)
+            }
+        }
+    }
+
+    private fun handleLegacyDeepLink(intent: Intent) {
+        val orderId = intent.getStringExtra("EXTRA_ORDER_ID")
+        val action = intent.getStringExtra("EXTRA_ACTION")
+
+        if (orderId != null) {
+            // Inject JavaScript to navigate to order
+            webView.post {
+                val js = when (action) {
+                    "ACCEPT_ORDER" -> "window.handleNotificationAction && window.handleNotificationAction('$orderId', 'accept');"
+                    "VIEW_ORDER" -> "window.handleNotificationAction && window.handleNotificationAction('$orderId', 'view');"
+                    else -> "window.location.hash = '/active-delivery';"
+                }
+                webView.evaluateJavascript(js, null)
             }
         }
     }
 
     private fun requestAllPermissions() {
-        // First request location
-        permissionManager.requestLocationPermissions(object : PermissionManager.PermissionCallback {
-            override fun onGranted() {
+        permissionManager.requestLocationPermission(object : PermissionManager.PermissionCallback {
+
+            override fun onPermissionGranted() {
                 Toast.makeText(
                     this@HybridWebActivity,
-                    "Location enabled - we can show nearby restaurants",
+                    "Location permissions granted",
                     Toast.LENGTH_SHORT
                 ).show()
-                // Then request notifications
-                requestNotifications()
+                requestBackgroundLocationIfNeeded()
             }
 
-            override fun onDenied() {
+            override fun onPermissionDenied() {
                 Toast.makeText(
                     this@HybridWebActivity,
-                    "Location helps us show nearby restaurants",
+                    "Location permissions required for delivery tracking",
                     Toast.LENGTH_LONG
                 ).show()
-                // Still request notifications
-                requestNotifications()
+
             }
         })
     }
 
-    private fun requestNotifications() {
-        permissionManager.requestNotificationPermission(object :
+    private fun requestBackgroundLocationIfNeeded() {
+        permissionManager.requestBackgroundLocationPermission(object :
             PermissionManager.PermissionCallback {
-            override fun onGranted() {
-                Toast.makeText(this@HybridWebActivity, "Notifications enabled", Toast.LENGTH_SHORT)
-                    .show()
+            override fun onPermissionGranted() {
+                Toast.makeText(
+                    this@HybridWebActivity,
+                    "Background location enabled",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
 
-            override fun onDenied() {
-                // Optional feature
+            override fun onPermissionDenied() {
+                // Optional, app can still work with foreground location
             }
         })
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        permissionManager.handlePermissionResult(requestCode, permissions, grantResults)
     }
 
     private fun showErrorPage(message: String) {
@@ -383,6 +355,10 @@ class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
         webView.loadData(errorHtml, "text/html", "UTF-8")
     }
 
+    private fun createNotificationBridge(): MobileNotificationBridge {
+        return MobileNotificationBridge(this)
+    }
+
     // Network listener callbacks
     override fun onNetworkAvailable() {
         runOnUiThread {
@@ -408,6 +384,13 @@ class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        networkMonitor.unregister()
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationReceiver)
+
+    }
+
     override fun onBackPressed() {
         if (webView.canGoBack()) {
             webView.goBack()
@@ -416,70 +399,60 @@ class HybridWebActivity : AppCompatActivity(), NetworkMonitor.NetworkListener {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationReceiver)
-        networkMonitor.unregister()
-    }
+    private fun createPermissionBridge() = object {
+        @JavascriptInterface
+        fun requestBackgroundLocationPermission() {
+            runOnUiThread {
+                permissionManager.requestBackgroundLocationPermission(object :
+                    PermissionManager.PermissionCallback {
+                    override fun onPermissionGranted() {
+                        webView.evaluateJavascript(
+                            "window.onBackgroundLocationPermissionGranted && window.onBackgroundLocationPermissionGranted()",
+                            null
+                        )
+                    }
 
-    // Show active order notification (called by bridge)
-    fun showActiveOrderNotification(orderId: String, status: String, restaurantName: String) {
-        val intent = Intent(this, HybridWebActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("orderId", orderId)
-            putExtra("deepLink", "/order-tracking/$orderId")
-        }
-
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            ACTIVE_ORDER_NOTIFICATION_ID,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val statusText = when (status) {
-            "pending" -> "Order Placed"
-            "confirmed" -> "Order Confirmed"
-            "preparing" -> "Being Prepared"
-            "ready_for_pickup" -> "Ready for Pickup"
-            "picked_up" -> "Picked Up"
-            "out_for_delivery" -> "Out for Delivery"
-            else -> status
-        }
-
-        val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_dialog_info)
-            .setContentTitle(statusText)
-            .setContentText(restaurantName)
-            .setOngoing(true) // Make it persistent
-            .setAutoCancel(false)
-            .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setCategory(NotificationCompat.CATEGORY_STATUS)
-
-        with(NotificationManagerCompat.from(this)) {
-            try {
-                notify(ACTIVE_ORDER_NOTIFICATION_ID, builder.build())
-                activeOrderNotificationId = ACTIVE_ORDER_NOTIFICATION_ID
-            } catch (e: SecurityException) {
-                e.printStackTrace()
+                    override fun onPermissionDenied() {
+                        webView.evaluateJavascript(
+                            "window.onBackgroundLocationPermissionDenied && window.onBackgroundLocationPermissionDenied()",
+                            null
+                        )
+                    }
+                })
             }
         }
-    }
 
-    // Hide active order notification
-    fun hideActiveOrderNotification() {
-        activeOrderNotificationId?.let { id ->
-            NotificationManagerCompat.from(this).cancel(id)
-            activeOrderNotificationId = null
+        @JavascriptInterface
+        fun requestNotificationPermission() {
+            runOnUiThread {
+                permissionManager.requestNotificationPermission(object :
+                    PermissionManager.PermissionCallback {
+                    override fun onPermissionGranted() {
+                        webView.evaluateJavascript(
+                            "window.onNotificationPermissionGranted && window.onNotificationPermissionGranted()",
+                            null
+                        )
+                    }
+
+                    override fun onPermissionDenied() {
+                        webView.evaluateJavascript(
+                            "window.onNotificationPermissionDenied && window.onNotificationPermissionDenied()",
+                            null
+                        )
+                    }
+                })
+            }
         }
     }
 }
 
-class MobileNotificationBridge1(
-    private val context: Context,
-    private val activity: HybridWebActivity
-) {
+/**
+ * JS interface that matches the web-side MobileNotificationBridge.
+ *
+ * JS signature:
+ *   window.mobileNotificationBridge.notifyStatusChange(orderId, status, payloadJson?)
+ */
+class MobileNotificationBridge1(private val context: Context) {
 
     @JavascriptInterface
     fun notifyStatusChange(orderId: String, status: String, payloadJson: String?) {
@@ -490,32 +463,59 @@ class MobileNotificationBridge1(
             val body = payload?.optString("body").takeUnless { it.isNullOrEmpty() }
                 ?: "Order $orderId status changed to $status"
 
-            showLocalNotification(title, body)
+            showLocalNotificationWithActions(orderId, title, body)
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(context, "Bridge error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
-    @JavascriptInterface
-    fun showActiveOrderBanner(orderId: String, status: String, restaurantName: String) {
-        activity.showActiveOrderNotification(orderId, status, restaurantName)
-    }
+    private fun showLocalNotificationWithActions(orderId: String, title: String, body: String) {
+        // Create intent for viewing order
+        val viewIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            action = "VIEW_ORDER"
+            putExtra("ORDER_ID", orderId)
+        }
+        val viewPendingIntent = PendingIntent.getBroadcast(
+            context,
+            orderId.hashCode(),
+            viewIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
-    @JavascriptInterface
-    fun hideActiveOrderBanner() {
-        activity.hideActiveOrderNotification()
-    }
+        // Create intent for accepting order
+        val acceptIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            action = "ACCEPT_ORDER"
+            putExtra("ORDER_ID", orderId)
+        }
+        val acceptPendingIntent = PendingIntent.getBroadcast(
+            context,
+            orderId.hashCode() + 1,
+            acceptIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
-    private fun showLocalNotification(title: String, body: String) {
+        // Build notification with actions
         val builder = NotificationCompat.Builder(context, HybridWebActivity.NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(body)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .addAction(R.drawable.ic_menu_view, "View", viewPendingIntent)
+            .addAction(R.drawable.ic_input_add, "Accept", acceptPendingIntent)
 
         with(NotificationManagerCompat.from(context)) {
-            notify(System.currentTimeMillis().toInt(), builder.build())
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                Toast.makeText(context, "Notification permission not granted", Toast.LENGTH_SHORT)
+                    .show()
+                return
+            }
+            notify(orderId.hashCode(), builder.build())
         }
     }
 }

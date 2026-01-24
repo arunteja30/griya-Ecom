@@ -1,4 +1,4 @@
-package com.mat.theypodelivery
+package com.mat.theypodelivery.old
 
 import android.Manifest
 import android.app.ActivityManager
@@ -9,6 +9,7 @@ import android.location.Location
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Log
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -19,6 +20,7 @@ import androidx.core.net.toUri
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.firebase.messaging.FirebaseMessaging
 
 class WebAppInterface(
     private val context: Context,
@@ -172,7 +174,7 @@ class WebAppInterface(
     fun getDeviceToken(callback: String) {
         Log.d(TAG, "getDeviceToken called with callback: $callback")
         // Get FCM token
-        com.google.firebase.messaging.FirebaseMessaging.getInstance().token
+        FirebaseMessaging.getInstance().token
             .addOnSuccessListener { token ->
                 Log.d(TAG, "FCM token retrieved successfully: ${token.take(20)}...")
                 callJavaScript(callback, "\"$token\"")
@@ -189,7 +191,7 @@ class WebAppInterface(
         Log.d(TAG, "vibrate called with duration: ${milliseconds}ms")
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager =
-                context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as android.os.VibratorManager
+                context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
             vibratorManager.defaultVibrator
         } else {
             @Suppress("DEPRECATION")

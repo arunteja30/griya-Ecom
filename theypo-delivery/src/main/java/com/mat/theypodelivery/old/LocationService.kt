@@ -1,7 +1,12 @@
-package com.mat.theypodelivery
+package com.mat.theypodelivery.old
 
 import android.Manifest
-import android.app.*
+import android.R
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Intent
 import android.location.Location
 import android.os.Build
@@ -10,8 +15,16 @@ import android.os.Looper
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
-import com.google.android.gms.location.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationAvailability
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ServerValue
+import java.util.Date
 
 class LocationService : Service() {
 
@@ -125,7 +138,7 @@ class LocationService : Service() {
                     Log.d(TAG, "  - lng: ${location.longitude}")
                     Log.d(TAG, "  - accuracy: ${location.accuracy}m")
                     Log.d(TAG, "  - provider: ${location.provider}")
-                    Log.d(TAG, "  - time: ${location.time} (${java.util.Date(location.time)})")
+                    Log.d(TAG, "  - time: ${location.time} (${Date(location.time)})")
 
                     updateLocationToFirebase(location)
                 } ?: Log.w(TAG, "❌ LocationResult contains null location")
@@ -194,9 +207,9 @@ class LocationService : Service() {
             "accuracy" to location.accuracy,
             "speed" to location.speed,
             "heading" to location.bearing,
-            "timestamp" to com.google.firebase.database.ServerValue.TIMESTAMP,
+            "timestamp" to ServerValue.TIMESTAMP,
             "activeOrderId" to currentOrderId,
-            "lastUpdated" to com.google.firebase.database.ServerValue.TIMESTAMP
+            "lastUpdated" to ServerValue.TIMESTAMP
         )
 
         Log.d(TAG, "Preparing to update Firebase with data: $locationData")
@@ -254,7 +267,7 @@ class LocationService : Service() {
         val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Delivery Partner Active")
             .setContentText(message)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // Use your own icon
+            .setSmallIcon(R.drawable.ic_dialog_info) // Use your own icon
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setSilent(true) // Prevent sound on initial creation

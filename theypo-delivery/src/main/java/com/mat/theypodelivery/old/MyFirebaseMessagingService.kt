@@ -1,5 +1,6 @@
-package com.mat.theypodelivery
+package com.mat.theypodelivery.old
 
+import android.R
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -78,7 +79,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(message)
             .setAutoCancel(true)
@@ -90,11 +91,13 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         // Add custom styling for different notification types
         when (data["type"]) {
             "new_order" -> {
-                notificationBuilder.color = resources.getColor(R.color.colorAccent, null)
+                notificationBuilder.color =
+                    resources.getColor(com.mat.theypodelivery.R.color.colorAccent, null)
             }
 
             "order_update" -> {
-                notificationBuilder.color = resources.getColor(R.color.colorPrimary, null)
+                notificationBuilder.color =
+                    resources.getColor(com.mat.theypodelivery.R.color.colorPrimary, null)
             }
         }
 
