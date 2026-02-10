@@ -24,3 +24,4 @@ include(":dootha")
 include(":backgroundlocationlib")
 
 include(":purni")
+include(":purni-delivery")
