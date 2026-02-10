@@ -586,8 +586,14 @@ class HybridWebActivity : AppCompatActivity() {
             "hybrid" -> {
                 // Hybrid mode - intelligent navigation based on context
                 when {
-                    // Check if we're on a main page that should trigger exit
+                    // Check if we're on a main page or login page that should trigger exit
                     isMainPagePath(currentPath) -> {
+                        Log.d(TAG, "On main/login page ($currentPath) - handling app exit")
+                        handleAppExit()
+                    }
+                    // Check if we're specifically on login page (additional safety check)
+                    isLoginPage(currentPath) -> {
+                        Log.d(TAG, "On login page ($currentPath) - exiting app")
                         handleAppExit()
                     }
                     // Check if WebView can go back
@@ -613,9 +619,36 @@ class HybridWebActivity : AppCompatActivity() {
     }
 
     private fun isMainPagePath(path: String): Boolean {
-        // Check if the current path represents a main/home page
-        val mainPaths = listOf("/", "/home", "/dashboard", "/main", "/index")
+        // Check if the current path represents a main/home page or login page
+        val mainPaths = listOf(
+            "/",
+            "/home",
+            "/dashboard",
+            "/main",
+            "/index",
+            "/login",           // Login page - should exit app on back
+            "/signin",          // Alternative login page
+            "/auth",            // Auth page
+            "/welcome"          // Welcome/onboarding page
+        )
         return mainPaths.contains(path) || path.isEmpty()
+    }
+
+    private fun isLoginPage(path: String): Boolean {
+        // Specific login page detection
+        val loginPaths = listOf(
+            "/login",
+            "/signin",
+            "/auth",
+            "/authentication",
+            "/welcome",
+            "/onboarding"
+        )
+        return loginPaths.any { loginPath ->
+            path.equals(loginPath, ignoreCase = true) ||
+                    path.startsWith("$loginPath/", ignoreCase = true) ||
+                    path.startsWith("$loginPath?", ignoreCase = true)
+        }
     }
 
     private fun handleNativeBackNavigation() {
@@ -658,7 +691,7 @@ class HybridWebActivity : AppCompatActivity() {
 
         if (baseUrl.isEmpty()) return false
 
-        // Define patterns for home/main pages where back should exit
+        // Define patterns for home/main pages and login pages where back should exit
         // These are relative to any domain
         val homePatterns = listOf(
             "^$baseUrl/?$",                    // Just the domain
@@ -668,7 +701,11 @@ class HybridWebActivity : AppCompatActivity() {
             "^$baseUrl/main/?$",               // /main
             "^$baseUrl/index/?$",              // /index
             "^$baseUrl/index.html?$",          // /index.html
-            "^$baseUrl/#/?$"                   // Single page app root
+            "^$baseUrl/#/?$",                  // Single page app root
+            "^$baseUrl/login/?$",              // /login - should exit app
+            "^$baseUrl/signin/?$",             // /signin - should exit app
+            "^$baseUrl/auth/?$",               // /auth - should exit app
+            "^$baseUrl/welcome/?$"             // /welcome - should exit app
         )
 
         return homePatterns.any { pattern ->
