@@ -23,3 +23,4 @@ include(":dootha-driver")
 include(":dootha")
 include(":backgroundlocationlib")
 
+include(":purni")
