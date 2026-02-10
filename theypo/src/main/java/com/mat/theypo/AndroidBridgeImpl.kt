@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
+import android.os.Handler
 import android.os.Looper
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -14,17 +15,12 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import org.json.JSONException
+import org.json.JSONObject
 
 /**
- * Native implementation for window.AndroidBridge used by customer-web.
- * Simplified version (no location tracking to Firebase) - just basic features.
+ * Native implementation for window.AndroidBridge used by customer app.
+ * Provides essential functionality for the WebView interface.
  */
 class AndroidBridgeImpl(
     private val activity: Activity,
@@ -32,315 +28,186 @@ class AndroidBridgeImpl(
 ) {
     private val fusedClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(activity)
-
-    private var orderTrackingListener: ValueEventListener? = null
-    private var currentOrderRef: DatabaseReference? = null
-    private var currentOrderId: String? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     @JavascriptInterface
     fun isAndroidApp(): Boolean = true
 
+    // Back button handling support for web app
     @JavascriptInterface
-    fun authenticateUser(email: String, password: String) {
-        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(activity) { task ->
-                if (task.isSuccessful) {
-                    val user = FirebaseAuth.getInstance().currentUser
-                    runOnUiThread {
-                        webView.evaluateJavascript(
-                            "window.onAuthenticationSuccess && window.onAuthenticationSuccess('${user?.uid}', '${user?.email}')",
-                            null
-                        )
+    fun initializeWebViewService() {
+        runOnUiThread {
+            webView.evaluateJavascript(
+                """
+                window.webViewService = {
+                    goBack: function() {
+                        if (window.history.length > 1) {
+                            window.history.back();
+                        } else {
+                            AndroidBridge.exitApp();
+                        }
                     }
-                } else {
-                    runOnUiThread {
-                        webView.evaluateJavascript(
-                            "window.onAuthenticationError && window.onAuthenticationError('${task.exception?.message}')",
-                            null
-                        )
-                    }
-                }
-            }
-    }
-
-    @JavascriptInterface
-    fun getCurrentUser(): String {
-        val user = FirebaseAuth.getInstance().currentUser
-        return if (user != null) {
-            "{\"uid\":\"${user.uid}\",\"email\":\"${user.email}\"}"
-        } else {
-            "{}"
+                };
+            """.trimIndent(), null
+            )
         }
     }
 
     @JavascriptInterface
-    fun showToast(message: String) {
-        Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
+    fun exitApp() {
+        mainHandler.post {
+            activity.finish()
+        }
     }
 
     @JavascriptInterface
-    fun requestLocation() {
-        if (!ensureLocationPermission()) {
-            sendLocationError("Location permission not granted")
+    fun getCurrentLocation() {
+        if (!hasLocationPermission()) {
+            requestLocationPermission()
             return
         }
 
-        if (ActivityCompat.checkSelfPermission(
-                activity,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            sendLocationError("Location permission not granted")
-            return
-        }
-
-        fusedClient.getCurrentLocation(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            null
-        ).addOnSuccessListener { location: Location? ->
-            if (location != null) {
-                sendLocationToJs(location)
-            } else {
-                fusedClient.lastLocation.addOnSuccessListener { lastLocation ->
-                    if (lastLocation != null) {
-                        sendLocationToJs(lastLocation)
-                    } else {
-                        sendLocationError("No location available")
-                    }
-                }
-            }
-        }.addOnFailureListener {
-            sendLocationError(it.message ?: "Failed to get location")
-        }
-    }
-
-    @JavascriptInterface
-    fun getDeviceToken(callbackName: String) {
-        val fakeToken = "CUSTOMER_FAKE_TOKEN"
-        val js = "$callbackName('$fakeToken')"
-        runOnUiThread { webView.evaluateJavascript(js, null) }
-    }
-
-    @JavascriptInterface
-    fun vibrate(milliseconds: Int) {
-        // Stub - can implement vibration if needed
-    }
-
-    @JavascriptInterface
-    fun hasLocationPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            activity,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    @JavascriptInterface
-    fun openExternalLink(url: String) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        activity.startActivity(intent)
-    }
-
-    @JavascriptInterface
-    fun shareText(text: String) {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, text)
-        }
-        activity.startActivity(Intent.createChooser(intent, "Share"))
-    }
-
-    @JavascriptInterface
-    fun makeCall(phoneNumber: String) {
         try {
-            val intent = Intent(Intent.ACTION_DIAL).apply {
+            fusedClient.lastLocation.addOnSuccessListener { location: Location? ->
+                val result = if (location != null) {
+                    JSONObject().apply {
+                        put("latitude", location.latitude)
+                        put("longitude", location.longitude)
+                        put("accuracy", location.accuracy)
+                    }.toString()
+                } else {
+                    JSONObject().apply {
+                        put("error", "Location not available")
+                    }.toString()
+                }
+
+                runOnUiThread {
+                    webView.evaluateJavascript(
+                        "window.onLocationResult && window.onLocationResult($result)",
+                        null
+                    )
+                }
+            }.addOnFailureListener { exception ->
+                val errorResult = JSONObject().apply {
+                    put("error", exception.message ?: "Unknown location error")
+                }.toString()
+
+                runOnUiThread {
+                    webView.evaluateJavascript(
+                        "window.onLocationResult && window.onLocationResult($errorResult)",
+                        null
+                    )
+                }
+            }
+        } catch (e: SecurityException) {
+            showToast("Location permission required")
+        }
+    }
+
+    @JavascriptInterface
+    fun requestLocationPermission() {
+        if (!hasLocationPermission()) {
+            ActivityCompat.requestPermissions(
+                activity,
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                1001
+            )
+        }
+    }
+
+    @JavascriptInterface
+    fun makePhoneCall(phoneNumber: String) {
+        try {
+            val intent = Intent(Intent.ACTION_CALL).apply {
                 data = Uri.parse("tel:$phoneNumber")
             }
-            activity.startActivity(intent)
+
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.CALL_PHONE)
+                == PackageManager.PERMISSION_GRANTED
+            ) {
+                activity.startActivity(intent)
+            } else {
+                // Fall back to dial intent if no call permission
+                val dialIntent = Intent(Intent.ACTION_DIAL).apply {
+                    data = Uri.parse("tel:$phoneNumber")
+                }
+                activity.startActivity(dialIntent)
+            }
         } catch (e: Exception) {
             showToast("Unable to make call: ${e.message}")
         }
     }
 
     @JavascriptInterface
-    fun initiatePayment(amount: String, orderId: String): String {
+    fun showToast(message: String) {
         runOnUiThread {
-            try {
-                showToast("Payment of ₹$amount initiated")
+            Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
-                val result = """
-                    {
-                        "success": true,
-                        "orderId": "$orderId",
-                        "paymentId": "pay_${System.currentTimeMillis()}",
-                        "amount": "$amount",
-                        "method": "razorpay"
+    @JavascriptInterface
+    fun shareContent(params: String) {
+        try {
+            val json = JSONObject(params)
+            val text = json.optString("text", "")
+            val url = json.optString("url", "")
+            val title = json.optString("title", "Share")
+
+            mainHandler.post {
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    val shareText = if (url.isNotEmpty()) "$text $url" else text
+                    putExtra(Intent.EXTRA_TEXT, shareText)
+
+                    if (title.isNotEmpty()) {
+                        putExtra(Intent.EXTRA_SUBJECT, title)
                     }
-                """.trimIndent()
-
-                val js = "window.handlePaymentResult && window.handlePaymentResult('$result')"
-                webView.evaluateJavascript(js, null)
-            } catch (e: Exception) {
-                showToast("Payment error: ${e.message}")
-            }
-        }
-        return "Payment initiated"
-    }
-
-    @JavascriptInterface
-    fun openLocationPicker(title: String, initialLat: Double, initialLng: Double): String {
-        runOnUiThread {
-            try {
-                showToast("Opening location picker: $title")
-
-                val result = """
-                    {
-                        "latitude": $initialLat,
-                        "longitude": $initialLng,
-                        "address": "Selected Location",
-                        "timestamp": ${System.currentTimeMillis()}
-                    }
-                """.trimIndent()
-
-                val js = "window.handleLocationSelected && window.handleLocationSelected('$result')"
-                webView.evaluateJavascript(js, null)
-            } catch (e: Exception) {
-                showToast("Location picker error: ${e.message}")
-            }
-        }
-        return "Location picker opened"
-    }
-
-    @JavascriptInterface
-    fun submitRating(rideId: String, rating: Int, feedback: String): String {
-        runOnUiThread {
-            try {
-                showToast("Rating submitted: $rating stars")
-
-                val result = """
-                    {
-                        "success": true,
-                        "rideId": "$rideId",
-                        "rating": $rating,
-                        "feedback": "$feedback",
-                        "timestamp": ${System.currentTimeMillis()}
-                    }
-                """.trimIndent()
-
-                val js = "window.handleRatingSubmitted && window.handleRatingSubmitted('$result')"
-                webView.evaluateJavascript(js, null)
-            } catch (e: Exception) {
-                showToast("Rating error: ${e.message}")
-            }
-        }
-        return "Rating submitted"
-    }
-
-    @JavascriptInterface
-    fun trackRide(rideId: String): String {
-        runOnUiThread {
-            try {
-                showToast("Starting ride tracking for: $rideId")
-
-                val trackingData = """
-                    {
-                        "rideId": "$rideId",
-                        "status": "on_trip",
-                        "driverLocation": {
-                            "latitude": 12.9716,
-                            "longitude": 77.5946
-                        },
-                        "estimatedTime": 15,
-                        "distance": "2.3 km"
-                    }
-                """.trimIndent()
-
-                val js = "window.handleRideTracking && window.handleRideTracking('$trackingData')"
-                webView.evaluateJavascript(js, null)
-            } catch (e: Exception) {
-                showToast("Tracking error: ${e.message}")
-            }
-        }
-        return "Ride tracking started"
-    }
-
-    @JavascriptInterface
-    fun showActiveOrderBanner(orderId: String, status: String, restaurantName: String) {
-        runOnUiThread {
-            showToast("Order $orderId: $status")
-        }
-    }
-
-    @JavascriptInterface
-    fun hideActiveOrderBanner() {
-        runOnUiThread {
-            showToast("Order banner hidden")
-        }
-    }
-
-    @JavascriptInterface
-    fun startOrderTracking(orderId: String) {
-        runOnUiThread {
-            currentOrderId = orderId
-
-            orderTrackingListener?.let { listener ->
-                currentOrderRef?.removeEventListener(listener)
-            }
-
-            val database = FirebaseDatabase.getInstance()
-            currentOrderRef = database.getReference("orders").child(orderId)
-
-            orderTrackingListener = object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val status = snapshot.child("status").getValue(String::class.java) ?: "pending"
-                    val restaurantName =
-                        snapshot.child("restaurantName").getValue(String::class.java)
-                            ?: "Restaurant"
-                    showToast("Order $orderId: $status")
                 }
 
-                override fun onCancelled(error: DatabaseError) {
-                    showToast("Failed to track order: ${error.message}")
-                }
+                activity.startActivity(Intent.createChooser(shareIntent, "Share"))
             }
-
-            currentOrderRef?.addValueEventListener(orderTrackingListener!!)
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
     @JavascriptInterface
-    fun stopOrderTracking() {
-        runOnUiThread {
-            orderTrackingListener?.let { listener ->
-                currentOrderRef?.removeEventListener(listener)
+    fun openAppSettings() {
+        mainHandler.post {
+            val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            intent.data = Uri.parse("package:${activity.packageName}")
+            activity.startActivity(intent)
+        }
+    }
+
+    @JavascriptInterface
+    fun setStatusBar(params: String) {
+        try {
+            val json = JSONObject(params)
+            val color = json.optString("color", "#FFFFFF")
+            val lightContent = json.optBoolean("lightContent", false)
+
+            mainHandler.post {
+                // Status bar customization can be implemented here if needed
+                // For now, we'll just acknowledge the call
             }
-            orderTrackingListener = null
-            currentOrderRef = null
-            currentOrderId = null
-            showToast("Stopped order tracking")
+        } catch (e: JSONException) {
+            e.printStackTrace()
         }
     }
 
-    private fun ensureLocationPermission(): Boolean {
-        val granted = hasLocationPermission()
-        if (!granted) {
-            ActivityCompat.requestPermissions(
-                activity,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                1001
-            )
-        }
-        return granted
-    }
-
-    private fun sendLocationToJs(location: Location) {
-        val js =
-            "window.receiveLocation && window.receiveLocation('${location.latitude}','${location.longitude}')"
-        runOnUiThread { webView.evaluateJavascript(js, null) }
-    }
-
-    private fun sendLocationError(message: String) {
-        val js = "window.receiveLocationError && window.receiveLocationError('$message')"
-        runOnUiThread { webView.evaluateJavascript(js, null) }
+    private fun hasLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            activity,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    activity,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun runOnUiThread(block: () -> Unit) {

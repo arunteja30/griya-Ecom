@@ -1,12 +1,9 @@
 package com.mat.theypo
 
-import android.R
 import android.app.Activity
 import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
-import android.os.Build
-import android.os.VibrationEffect
 import android.os.Vibrator
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -50,9 +47,10 @@ class MobileNotificationBridge(
     fun playNotificationSound(soundFile: String?) {
         try {
             // Create a notification just to play the sound, then cancel it
-            val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notification =
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 Notification.Builder(activity, "customer_alerts")
-                    .setSmallIcon(R.drawable.ic_dialog_info)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
                     .setContentTitle("")
                     .setContentText("")
                     .setDefaults(Notification.DEFAULT_SOUND)
@@ -60,7 +58,7 @@ class MobileNotificationBridge(
             } else {
                 @Suppress("DEPRECATION")
                 Notification.Builder(activity)
-                    .setSmallIcon(R.drawable.ic_dialog_info)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
                     .setContentTitle("")
                     .setContentText("")
                     .setDefaults(Notification.DEFAULT_SOUND)
@@ -95,8 +93,13 @@ class MobileNotificationBridge(
                 // Parse pattern like "[100, 50, 100]" or use gentle default
                 val vibrationPattern = parseVibrationPattern(pattern)
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator.vibrate(VibrationEffect.createWaveform(vibrationPattern, -1))
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    vibrator.vibrate(
+                        android.os.VibrationEffect.createWaveform(
+                            vibrationPattern,
+                            -1
+                        )
+                    )
                 } else {
                     @Suppress("DEPRECATION")
                     vibrator.vibrate(vibrationPattern, -1)
@@ -178,9 +181,10 @@ class MobileNotificationBridge(
      */
     private fun showSystemNotification(title: String, body: String) {
         try {
-            val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notification =
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 Notification.Builder(activity, "customer_alerts")
-                    .setSmallIcon(R.drawable.ic_dialog_info)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
                     .setContentTitle(title)
                     .setContentText(body)
                     .setDefaults(Notification.DEFAULT_SOUND)
@@ -189,7 +193,7 @@ class MobileNotificationBridge(
             } else {
                 @Suppress("DEPRECATION")
                 Notification.Builder(activity)
-                    .setSmallIcon(R.drawable.ic_dialog_info)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
                     .setContentTitle(title)
                     .setContentText(body)
                     .setDefaults(Notification.DEFAULT_SOUND)

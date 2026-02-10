@@ -67,4 +67,7 @@ dependencies {
 
     // Coroutines for async operations
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
+    // Background location library
+    implementation(project(":backgroundlocationlib"))
 }

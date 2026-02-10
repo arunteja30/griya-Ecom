@@ -1,10 +1,10 @@
 package com.mat.theypo
 
-import android.R
 import android.app.ActivityManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
@@ -52,7 +52,7 @@ class PushNotificationService : FirebaseMessagingService() {
     }
 
     private fun isAppInForeground(): Boolean {
-        val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val appProcesses = activityManager.runningAppProcesses ?: return false
 
         val packageName = applicationContext.packageName
@@ -91,7 +91,7 @@ class PushNotificationService : FirebaseMessagingService() {
 
         val pendingIntent = PendingIntent.getActivity(
             this,
-            0,
+            0, 
             intent,
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -100,7 +100,7 @@ class PushNotificationService : FirebaseMessagingService() {
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_dialog_info) // Replace with your app icon
+            .setSmallIcon(android.R.drawable.ic_dialog_info) // Replace with your app icon
             .setContentTitle(title)
             .setContentText(messageBody)
             .setAutoCancel(true)
@@ -116,7 +116,7 @@ class PushNotificationService : FirebaseMessagingService() {
                     500
                 )
             )
-
+        
         // Enable heads-up notification for foreground
         if (isForeground) {
             notificationBuilder
@@ -124,7 +124,8 @@ class PushNotificationService : FirebaseMessagingService() {
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
         }
 
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // Create notification channel for Android O and above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

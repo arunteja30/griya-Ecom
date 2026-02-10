@@ -98,7 +98,7 @@ class PermissionManager(private val activity: AppCompatActivity) {
             REQUEST_LOCATION -> {
                 val granted = grantResults.isNotEmpty() &&
                         grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-
+                
                 if (granted) {
                     pendingLocationCallback?.onGranted()
                 } else {
@@ -106,11 +106,10 @@ class PermissionManager(private val activity: AppCompatActivity) {
                 }
                 pendingLocationCallback = null
             }
-
             REQUEST_NOTIFICATIONS -> {
                 val granted = grantResults.isNotEmpty() &&
                         grantResults[0] == PackageManager.PERMISSION_GRANTED
-
+                
                 if (granted) {
                     pendingNotificationCallback?.onGranted()
                 } else {

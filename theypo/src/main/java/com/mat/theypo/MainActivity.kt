@@ -40,7 +40,6 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
-    private lateinit var permissionLoadingLayout: View
     private lateinit var splashScreen: View
     private lateinit var splashLoadingText: TextView
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -101,7 +100,6 @@ class MainActivity : AppCompatActivity() {
             showNotificationPermissionDeniedDialog()
         }
         // After handling notification permission (granted or denied), proceed with location
-        showPermissionScreen() // Transition from splash to permission screen
         requestLocationPermissionIfNeeded()
     }
 
@@ -115,7 +113,6 @@ class MainActivity : AppCompatActivity() {
 
         // Initialize views
         webView = findViewById(R.id.webView)
-        permissionLoadingLayout = findViewById(R.id.permissionLoadingLayout)
         splashScreen = findViewById(R.id.splashScreen)
         splashLoadingText = splashScreen.findViewById(R.id.splashLoadingText)
 
@@ -199,14 +196,6 @@ class MainActivity : AppCompatActivity() {
     private fun applySystemInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
-            // Apply padding to permission loading layout
-            permissionLoadingLayout.setPadding(
-                32.dpToPx(),
-                systemBars.top + 32.dpToPx(),
-                32.dpToPx(),
-                systemBars.bottom + 32.dpToPx()
-            )
 
             // Apply padding to WebView
             webView.setPadding(
@@ -295,7 +284,6 @@ class MainActivity : AppCompatActivity() {
                     // Hide loading screens once page is loaded
                     runOnUiThread {
                         splashScreen.visibility = View.GONE
-                        permissionLoadingLayout.visibility = View.GONE
                         webView.visibility = View.VISIBLE
                     }
 
@@ -361,7 +349,6 @@ class MainActivity : AppCompatActivity() {
                             splashTimeoutHandler.removeCallbacksAndMessages(null)
 
                             splashScreen.visibility = View.GONE
-                            permissionLoadingLayout.visibility = View.GONE
                             webView.visibility = View.VISIBLE
                         }
                     }
@@ -464,7 +451,6 @@ class MainActivity : AppCompatActivity() {
         runOnUiThread {
             splashLoadingText.text = "Loading app..."
             splashScreen.visibility = View.VISIBLE
-            permissionLoadingLayout.visibility = View.GONE
             webView.visibility = View.GONE
         }
 
@@ -474,22 +460,14 @@ class MainActivity : AppCompatActivity() {
                 android.util.Log.d("TheypoApp", "Splash timeout reached, showing WebView")
                 runOnUiThread {
                     splashScreen.visibility = View.GONE
-                    permissionLoadingLayout.visibility = View.GONE
                     webView.visibility = View.VISIBLE
                 }
             }
         }, 10000) // 10 second timeout
     }
 
-    private fun showPermissionScreen() {
-        webView.visibility = View.GONE
-        permissionLoadingLayout.visibility = View.VISIBLE
-        splashScreen.visibility = View.GONE
-    }
-
     private fun showSplashScreen() {
         webView.visibility = View.GONE
-        permissionLoadingLayout.visibility = View.GONE
         splashScreen.visibility = View.VISIBLE
     }
 
@@ -592,8 +570,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestLocationPermissionIfNeeded() {
-        // Show loading screen initially
-        showPermissionScreen()
 
         // Add a short delay to show the loading screen, then check permissions
         webView.postDelayed({
